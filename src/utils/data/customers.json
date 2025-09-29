@@ -1,0 +1,20 @@
+[
+  {
+    "customer_code": 1,
+    "shop_code": 1,
+    "name": "Nguyễn Văn A",
+    "email": "nguyenvana@gmail.com",
+    "phone_number": "0901234567",
+    "total_orders": 5,
+    "last_booking_date": "2024-01-20"
+  },
+  {
+    "customer_code": 2,
+    "shop_code": 1,
+    "name": "Trần Thị B",
+    "email": "tranthib@gmail.com",
+    "phone_number": "0907654321",
+    "total_orders": 2,
+    "last_booking_date": "2024-01-21"
+  }
+]

@@ -1,0 +1,24 @@
+@import "./styles/base.css";
+@import "./styles/layout.css";
+@import "./styles/forms.css";
+@import "./styles/buttons.css";
+@import "./styles/cards.css";
+@import "./styles/tables.css";
+@import "./styles/modal.css";
+@import "./styles/utilities.css";
+
+/* Page/Component specific sau */
+@import "./styles/fields.css";
+@import "./styles/field-card.css";
+@import "./styles/spinner.css";
+@import "./styles/nav.css";
+@import "./styles/footer.css";
+@import "./styles/home.css";
+@import "./styles/booking.css";
+@import "./styles/field-detail.css";
+@import "./styles/shop.css";
+@import "./styles/skin.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

@@ -1,0 +1,21 @@
+.card {
+  @apply bg-white rounded-xl shadow-md overflow-hidden;
+}
+.card-body {
+  @apply p-4;
+}
+.card-title {
+  @apply text-lg font-semibold text-gray-900;
+}
+.card-subtitle {
+  @apply text-sm text-gray-500;
+}
+.card-actions {
+  @apply mt-3 flex items-center justify-between;
+}
+.badge {
+  @apply inline-flex items-center text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-700;
+}
+.price {
+  @apply text-emerald-700 font-semibold;
+}

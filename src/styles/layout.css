@@ -1,0 +1,24 @@
+.page {
+  @apply min-h-screen bg-gray-50;
+}
+.container {
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8;
+}
+.section {
+  @apply bg-white rounded-xl shadow-md p-6;
+}
+.header-center {
+  @apply text-center mb-8;
+}
+.title-xl {
+  @apply text-4xl font-bold text-gray-900;
+}
+.subtitle {
+  @apply text-xl text-gray-600;
+}
+.grid-cards {
+  @apply grid md:grid-cols-2 lg:grid-cols-3 gap-8;
+}
+.results-bar {
+  @apply flex justify-between items-center mb-6;
+}

@@ -1,0 +1,5 @@
+[
+  { "level_code": 1, "level_type": "admin" },
+  { "level_code": 2, "level_type": "shop" },
+  { "level_code": 3, "level_type": "cus" }
+]

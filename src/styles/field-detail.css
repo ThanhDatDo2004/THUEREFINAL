@@ -1,0 +1,26 @@
+/* src/styles/field-detail.css */
+.field-page { @apply min-h-screen bg-gray-50; }
+.field-container { @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8; }
+
+.field-hero { @apply bg-white rounded-xl shadow-md p-6; }
+.field-title { @apply text-3xl font-bold text-gray-900; }
+.field-sub { @apply text-sm text-gray-600; }
+
+.status-chip { @apply px-3 py-1 rounded-full text-sm font-medium; }
+.status-trong { @apply bg-green-100 text-green-800; }
+.status-bao-tri { @apply bg-yellow-100 text-yellow-800; }
+.status-khac { @apply bg-gray-100 text-gray-800; }
+
+.detail-section { @apply bg-white rounded-xl shadow-md p-6; }
+.detail-row { @apply flex items-start justify-between mb-4; }
+
+.rating { @apply flex items-center text-amber-500; }
+.rating-icon { @apply w-5 h-5 fill-current; }
+.rating-text { @apply ml-1 font-medium; }
+
+.meta { @apply flex items-center gap-2 text-gray-600 text-sm; }
+.meta-icon { @apply w-5 h-5; }
+
+.booking-panel { @apply bg-white rounded-xl shadow-md p-6; }
+.slot-grid { @apply grid grid-cols-2 md:grid-cols-4 gap-3; }
+.slot-btn { @apply inline-flex items-center justify-center rounded-lg px-4 py-2 font-medium transition-colors border border-gray-300 text-gray-700 hover:bg-gray-50; }

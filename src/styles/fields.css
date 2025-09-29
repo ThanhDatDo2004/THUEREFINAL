@@ -1,0 +1,13 @@
+/* src/styles/fields.css */
+.panel {
+  @apply bg-white rounded-xl shadow-md p-6 mb-8;
+} /* thay section bằng utility */
+.filters-grid {
+  @apply grid md:grid-cols-4 gap-4 pt-4 border-t border-gray-200;
+}
+.results-title {
+  @apply text-2xl font-bold text-gray-900;
+}
+.price-info {
+  @apply text-gray-600;
+}

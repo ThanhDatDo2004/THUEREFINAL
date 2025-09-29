@@ -1,0 +1,15 @@
+.btn {
+  @apply inline-flex items-center justify-center rounded-lg px-4 py-2 font-medium transition-colors;
+}
+.btn-primary {
+  @apply btn bg-emerald-600 text-white hover:bg-emerald-700;
+}
+.btn-outline {
+  @apply btn border border-gray-300 text-gray-700 hover:bg-gray-50;
+}
+.btn-link {
+  @apply text-emerald-600 hover:text-emerald-700;
+}
+.filter-toggle {
+  @apply flex items-center space-x-2 text-gray-600 hover:text-emerald-600 font-medium mb-4;
+}

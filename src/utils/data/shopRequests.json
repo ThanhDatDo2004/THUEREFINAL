@@ -1,0 +1,12 @@
+[
+  {
+    "request_id": 1,
+    "full_name": "Nguyễn Văn Shop",
+    "email": "newshop@gmail.com",
+    "phone_number": "0908888888",
+    "address": "789 Hai Bà Trưng, Quận 1, TP.HCM",
+    "message": "Tôi muốn mở shop cho thuê sân cầu lông và tennis",
+    "created_at": "2024-01-15T09:00:00Z",
+    "status": "pending"
+  }
+]

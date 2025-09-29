@@ -1,0 +1,12 @@
+.navbar {
+  @apply bg-white border-b border-gray-200;
+}
+.navbar-inner {
+  @apply container flex items-center justify-between py-3;
+}
+.nav-link {
+  @apply text-gray-700 hover:text-emerald-600 px-3 py-2;
+}
+.active {
+  @apply text-emerald-700 font-semibold;
+}

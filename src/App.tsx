@@ -1,0 +1,140 @@
+// src/App.tsx
+import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./contexts/AuthContext";
+
+import Layout from "./components/layouts/Layout";
+import PrivateRoute from "./components/common/PrivateRoute";
+
+import HomePage from "./pages/HomePage";
+import LoginPage from "./pages/auth/LoginPage";
+import RegisterPage from "./pages/auth/RegisterPage";
+import FieldsPage from "./pages/FieldsPage";
+import FieldDetailPage from "./pages/FieldDetailPage";
+import BookingPage from "./pages/BookingPage";
+
+// Shop
+import ShopLayout from "./pages/shop/ShopLayout";
+import ShopOverview from "./pages/shop/ShopOverview";
+import ShopFieldsPage from "./pages/shop/ShopFieldsPage";
+import ShopBookingsPage from "./pages/shop/ShopBookingsPage";
+import ShopCustomersPage from "./pages/shop/ShopCustomersPage";
+import ShopRevenuePage from "./pages/shop/ShopRevenuePage";
+import ShopSettingsPage from "./pages/shop/ShopSettingsPage";
+
+// Admin
+import AdminLayout from "./pages/admin/AdminLayout";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminUsersPage from "./pages/admin/AdminUsersPage";
+import AdminShopsPage from "./pages/admin/AdminShopsPage";
+import AdminRequestsPage from "./pages/admin/AdminRequestsPage";
+
+function App() {
+  return (
+    <AuthProvider>
+      <Router>
+        <Routes>
+          {/* Auth Routes (no layout) */}
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+
+          {/* Public Routes (with layout) */}
+          <Route
+            path="/"
+            element={
+              <Layout>
+                <HomePage />
+              </Layout>
+            }
+          />
+          <Route
+            path="/fields"
+            element={
+              <Layout>
+                <FieldsPage />
+              </Layout>
+            }
+          />
+          <Route
+            path="/fields/:id"
+            element={
+              <Layout>
+                <FieldDetailPage />
+              </Layout>
+            }
+          />
+
+          {/* Protected Routes */}
+          <Route
+            path="/booking/:id"
+            element={
+              <PrivateRoute>
+                <Layout showFooter={false}>
+                  <BookingPage />
+                </Layout>
+              </PrivateRoute>
+            }
+          />
+
+          {/* Shop Routes (nested) */}
+          <Route
+            path="/shop/*"
+            element={
+              <PrivateRoute requiredLevel="shop">
+                <Layout showFooter={false}>
+                  <ShopLayout />
+                </Layout>
+              </PrivateRoute>
+            }
+          >
+            <Route index element={<ShopOverview />} />
+            <Route path="fields" element={<ShopFieldsPage />} />
+            <Route path="bookings" element={<ShopBookingsPage />} />
+            <Route path="customers" element={<ShopCustomersPage />} />
+            <Route path="revenue" element={<ShopRevenuePage />} />
+            <Route path="settings" element={<ShopSettingsPage />} />
+          </Route>
+
+          {/* Admin Routes (nested) */}
+          <Route
+            path="/admin/*"
+            element={
+              <PrivateRoute requiredLevel="admin">
+                <Layout showFooter={false}>
+                  <AdminLayout />
+                </Layout>
+              </PrivateRoute>
+            }
+          >
+            {/* Cho phép cả /admin (index) và /admin/dashboard */}
+            <Route index element={<AdminDashboard />} />
+            <Route path="dashboard" element={<AdminDashboard />} />
+            <Route path="users" element={<AdminUsersPage />} />
+            <Route path="shops" element={<AdminShopsPage />} />
+            <Route path="requests" element={<AdminRequestsPage />} />
+          </Route>
+
+          {/* 404 Route */}
+          <Route
+            path="*"
+            element={
+              <Layout>
+                <div className="min-h-screen flex items-center justify-center">
+                  <div className="text-center">
+                    <h1 className="title-xl mb-4">404</h1>
+                    <p className="text-gray-600 mb-8">Trang không tìm thấy</p>
+                    <a href="/" className="btn-primary">
+                      Về trang chủ
+                    </a>
+                  </div>
+                </div>
+              </Layout>
+            }
+          />
+        </Routes>
+      </Router>
+    </AuthProvider>
+  );
+}
+
+export default App;

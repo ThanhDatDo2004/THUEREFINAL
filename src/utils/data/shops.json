@@ -1,0 +1,20 @@
+[
+  {
+    "shop_code": 1,
+    "user_code": 2,
+    "shop_name": "ThanhDat Premium",
+    "address": "123 Nguyễn Trãi, Quận 1, TP.HCM",
+    "bank_account_number": "1234567890",
+    "bank_name": "Vietcombank",
+    "isapproved": 1
+  },
+  {
+    "shop_code": 2,
+    "user_code": 3,
+    "shop_name": "Tennis Club Elite",
+    "address": "456 Lê Lợi, Quận 3, TP.HCM",
+    "bank_account_number": "0987654321",
+    "bank_name": "Techcombank",
+    "isapproved": 1
+  }
+]

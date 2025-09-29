@@ -1,0 +1,20 @@
+[
+  {
+    "revenue_code": 1,
+    "shop_code": 1,
+    "total_income": 5000000,
+    "total_expense": 1000000,
+    "Balance": 4000000,
+    "Month": 1,
+    "Year": 2024
+  },
+  {
+    "revenue_code": 2,
+    "shop_code": 2,
+    "total_income": 3000000,
+    "total_expense": 800000,
+    "Balance": 2200000,
+    "Month": 1,
+    "Year": 2024
+  }
+]

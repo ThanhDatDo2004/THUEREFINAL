@@ -1,0 +1,26 @@
+/* src/styles/footer.css */
+.footer {
+  @apply bg-gray-900 text-white;
+}
+.footer-inner {
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12;
+}
+.footer-grid {
+  @apply grid grid-cols-1 md:grid-cols-4 gap-8;
+}
+.footer-title {
+  @apply text-lg font-bold;
+}
+.footer-text {
+  @apply text-gray-300;
+}
+.footer-link {
+  @apply text-gray-300 hover:text-white transition-colors;
+}
+.footer-badge {
+  @apply inline-flex items-center px-2 py-1 rounded-full bg-emerald-600 text-white text-xs;
+}
+/* Thêm padding cho dòng bản quyền để canh mép với grid trên */
+.footer-copy {
+  @apply border-t border-white/10 mt-8 pt-4 text-center text-sm text-gray-300 px-4 sm:px-6 lg:px-8;
+}

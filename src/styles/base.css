@@ -1,0 +1,8 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Tokens tuỳ chọn */
+:root {
+  --brand: #059669; /* emerald-600 */
+}

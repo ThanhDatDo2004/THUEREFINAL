@@ -1,0 +1,16 @@
+/* src/styles/utilities.css */
+.center {
+  @apply flex items-center justify-center;
+}
+.muted {
+  @apply text-gray-500;
+}
+.empty {
+  @apply text-center py-12;
+}
+.empty-icon-wrap {
+  @apply w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4;
+}
+.empty-icon {
+  @apply w-8 h-8 text-gray-400;
+}

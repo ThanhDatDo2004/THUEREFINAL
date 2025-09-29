@@ -1,0 +1,38 @@
+[
+  {
+    "field_code": 1,
+    "shop_code": 1,
+    "field_name": "Sân bóng đá số 1",
+    "sport_type": "bóng đá",
+    "price_per_hour": 200000,
+    "address": "123 Nguyễn Trãi, Quận 1, TP.HCM",
+    "status": "trống"
+  },
+  {
+    "field_code": 2,
+    "shop_code": 1,
+    "field_name": "Sân cầu lông A",
+    "sport_type": "cầu lông",
+    "price_per_hour": 80000,
+    "address": "123 Nguyễn Trãi, Quận 1, TP.HCM",
+    "status": "trống"
+  },
+  {
+    "field_code": 3,
+    "shop_code": 2,
+    "field_name": "Sân tennis VIP",
+    "sport_type": "tennis",
+    "price_per_hour": 150000,
+    "address": "456 Lê Lợi, Quận 3, TP.HCM",
+    "status": "trống"
+  },
+  {
+    "field_code": 4,
+    "shop_code": 1,
+    "field_name": "Sân bóng đá số 2",
+    "sport_type": "bóng đá",
+    "price_per_hour": 250000,
+    "address": "123 Nguyễn Trãi, Quận 1, TP.HCM",
+    "status": "bảo trì"
+  }
+]

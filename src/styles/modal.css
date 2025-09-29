@@ -1,0 +1,12 @@
+.modal {
+  @apply fixed inset-0 bg-black/30 flex items-center justify-center p-4;
+}
+.modal-content {
+  @apply bg-white rounded-xl shadow-xl w-full max-w-lg p-6;
+}
+.modal-header {
+  @apply mb-4;
+}
+.modal-footer {
+  @apply mt-6 flex justify-end gap-3;
+}

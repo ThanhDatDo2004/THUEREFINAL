@@ -1,0 +1,38 @@
+[
+  {
+    "user_code": 1,
+    "level_code": 1,
+    "user_name": "Admin User",
+    "user_id": "admin",
+    "user_password": "hashedpassword",
+    "email": "admin@sportbooking.com",
+    "isActive": 1
+  },
+  {
+    "user_code": 2,
+    "level_code": 2,
+    "user_name": "SportCenter Owner",
+    "user_id": "shop1",
+    "user_password": "hashedpassword",
+    "email": "shop1@gmail.com",
+    "isActive": 1
+  },
+  {
+    "user_code": 3,
+    "level_code": 2,
+    "user_name": "Tennis Club Manager",
+    "user_id": "shop2",
+    "user_password": "hashedpassword",
+    "email": "shop2@gmail.com",
+    "isActive": 1
+  },
+  {
+    "user_code": 4,
+    "level_code": 3,
+    "user_name": "John Customer",
+    "user_id": "customer1",
+    "user_password": "hashedpassword",
+    "email": "customer@gmail.com",
+    "isActive": 1
+  }
+]

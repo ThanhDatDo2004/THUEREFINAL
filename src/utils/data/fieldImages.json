@@ -1,0 +1,37 @@
+[
+  {
+    "image_code": 1,
+    "field_code": 1,
+    "image_url": "https://images.pexels.com/photos/274506/pexels-photo-274506.jpeg",
+    "sort_order": 1,
+    "is_primary": 1
+  },
+  {
+    "image_code": 5,
+    "field_code": 1,
+    "image_url": "https://images.pexels.com/photos/114296/pexels-photo-114296.jpeg",
+    "sort_order": 2,
+    "is_primary": 0
+  },
+  {
+    "image_code": 2,
+    "field_code": 2,
+    "image_url": "https://images.pexels.com/photos/1263349/pexels-photo-1263349.jpeg",
+    "sort_order": 1,
+    "is_primary": 1
+  },
+  {
+    "image_code": 3,
+    "field_code": 3,
+    "image_url": "https://images.pexels.com/photos/209977/pexels-photo-209977.jpeg",
+    "sort_order": 1,
+    "is_primary": 1
+  },
+  {
+    "image_code": 4,
+    "field_code": 4,
+    "image_url": "https://images.pexels.com/photos/114296/pexels-photo-114296.jpeg",
+    "sort_order": 1,
+    "is_primary": 1
+  }
+]
