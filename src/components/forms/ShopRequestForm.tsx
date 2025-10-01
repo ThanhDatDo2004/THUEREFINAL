@@ -198,7 +198,6 @@ const ShopRequestForm: React.FC = () => {
               <textarea
                 rows={4}
                 {...register("message", {
-                  required: "Vui lòng nhập tin nhắn",
                   minLength: {
                     value: 20,
                     message: "Tin nhắn phải có ít nhất 20 ký tự",

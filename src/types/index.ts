@@ -1,7 +1,7 @@
 // Database Models Types
 export interface UsersLevel {
   level_code: number;
-  level_type: 'cus' | 'shop' | 'admin';
+  level_type: "cus" | "shop" | "admin";
 }
 
 export interface Users {
@@ -28,10 +28,16 @@ export interface Fields {
   field_code: number;
   shop_code: number;
   field_name: string;
-  sport_type: 'cầu lông' | 'bóng đá' | 'bóng chày' | 'bơi lội' | 'tennis' | 'bóng bàn';
+  sport_type:
+    | "cầu lông"
+    | "bóng đá"
+    | "bóng chày"
+    | "bơi lội"
+    | "tennis"
+    | "bóng bàn";
   price_per_hour: number;
   address: string;
-  status: 'trống' | 'đã đặt' | 'bảo trì';
+  status: "trống" | "đã đặt" | "bảo trì";
 }
 
 export interface FieldImages {
@@ -50,20 +56,20 @@ export interface Bookings {
   start_time: string;
   end_time: string;
   total_price: number;
-  payment_status: 'pending' | 'paid' | 'failed';
+  payment_status: "pending" | "paid" | "failed";
   code: string;
-  check_status: 'chưa xác nhận' | 'đúng giờ' | 'trễ' | 'mất cọc';
+  check_status: "chưa xác nhận" | "đúng giờ" | "trễ" | "mất cọc";
   created_at: string;
 }
 
 export interface Payments {
   payment_code: number;
   booking_code: number;
-  payment_method: 'banktransfer';
+  payment_method: "banktransfer";
   amount: number;
   transaction_code: string;
   payment_date: string;
-  status: 'success' | 'failed' | 'pending';
+  status: "success" | "failed" | "pending";
 }
 
 export interface Customers {
@@ -111,7 +117,7 @@ export interface ShopRequests {
   address: string;
   message: string;
   created_at: string;
-  status: 'pending' | 'reviewed' | 'approved' | 'rejected';
+  status: "pending" | "reviewed" | "approved" | "rejected";
 }
 
 // Extended types for UI
@@ -130,10 +136,9 @@ export interface BookingWithField extends Bookings {
 // Auth Context Types
 export interface AuthUser {
   user_code: number;
+  level_type: "cus" | "shop" | "admin";
   user_name: string;
   email: string;
-  level_type: 'cus' | 'shop' | 'admin';
-  shop?: Shops;
 }
 
 export interface AuthContextType {
@@ -149,7 +154,7 @@ export interface RegisterData {
   user_id: string;
   email: string;
   password: string;
-  level_type: 'cus' | 'shop';
+  level_type: "cus" | "shop";
 }
 
 export interface LoginData {

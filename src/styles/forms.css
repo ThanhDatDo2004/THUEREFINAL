@@ -20,5 +20,5 @@
   @apply absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5;
 }
 .search-input {
-  @apply input pl-10;
+  @apply input pl-10 pr-3 py-2;
 }

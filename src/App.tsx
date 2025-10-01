@@ -12,6 +12,8 @@ import RegisterPage from "./pages/auth/RegisterPage";
 import FieldsPage from "./pages/FieldsPage";
 import FieldDetailPage from "./pages/FieldDetailPage";
 import BookingPage from "./pages/BookingPage";
+import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
 
 // Shop
 import ShopLayout from "./pages/shop/ShopLayout";
@@ -106,13 +108,17 @@ function App() {
               </PrivateRoute>
             }
           >
-            {/* Cho phép cả /admin (index) và /admin/dashboard */}
             <Route index element={<AdminDashboard />} />
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="users" element={<AdminUsersPage />} />
             <Route path="shops" element={<AdminShopsPage />} />
             <Route path="requests" element={<AdminRequestsPage />} />
           </Route>
+
+          {/* Forgot / Reset password */}
+          <Route path="/forgot" element={<ForgotPasswordPage />} />
+          {/* Reset bằng QUERY ?token=... để khớp link email và ResetPasswordPage */}
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
 
           {/* 404 Route */}
           <Route

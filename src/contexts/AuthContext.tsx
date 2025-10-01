@@ -1,105 +1,84 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { AuthContextType, AuthUser, LoginData, RegisterData } from "../types";
-import { getUserByEmail, getShopByUserCode } from "../utils/fakeData";
+import { AuthContextType, AuthUser, RegisterData } from "../types";
+import { loginApi, registerApi } from "../models/auth.api";
+import { mapApiUserToAuthUser } from "../utils/mapUser";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth must be used within an AuthProvider");
+  return ctx;
 };
 
-interface AuthProviderProps {
-  children: React.ReactNode;
+// Ưu tiên message từ backend (axios error)
+function pickErrorMessage(err: any, fallback = "Đã có lỗi xảy ra") {
+  return (
+    err?.response?.data?.error?.message ||
+    err?.response?.data?.message ||
+    err?.message ||
+    fallback
+  );
 }
 
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); // chỉ dùng để hydrate ban đầu
 
   useEffect(() => {
-    // Check for stored user session
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
+    const raw = localStorage.getItem("user");
+    if (raw) {
+      try {
+        setUser(JSON.parse(raw));
+      } catch {
+        localStorage.removeItem("user");
+      }
     }
     setLoading(false);
   }, []);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
-    setLoading(true);
+  const login = async (emailOrPhone: string, password: string): Promise<boolean> => {
+    try {
+      const identifier = String(emailOrPhone ?? "").trim();
+      const pwd = String(password ?? "");
+      if (!identifier) throw new Error("Vui lòng nhập email hoặc số điện thoại");
+      if (!pwd) throw new Error("Vui lòng nhập mật khẩu");
 
-    // Simulate API call delay
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+      // sẽ ném Error nếu 401/4xx/5xx
+      const res = await loginApi({ login: identifier, password: pwd });
 
-    const mockUser = getUserByEmail(email);
-
-    if (mockUser && mockUser.isActive === 1) {
-      // In real app, password would be verified against hash
-      const levelType =
-        mockUser.level_code === 1
-          ? "admin"
-          : mockUser.level_code === 2
-          ? "shop"
-          : "cus";
-
-      const shop =
-        levelType === "shop"
-          ? getShopByUserCode(mockUser.user_code)
-          : undefined;
-
-      const authUser: AuthUser = {
-        user_code: mockUser.user_code,
-        user_name: mockUser.user_name,
-        email: mockUser.email,
-        level_type: levelType,
-        shop,
-      };
-
+      localStorage.setItem("access_token", res.data.token);
+      const authUser = mapApiUserToAuthUser(res.data);
       setUser(authUser);
       localStorage.setItem("user", JSON.stringify(authUser));
-      setLoading(false);
       return true;
+    } catch (err: any) {
+      // NÉM LẠI để UI hiển thị
+      throw new Error(pickErrorMessage(err, "Tên đăng nhập hoặc mật khẩu không đúng"));
     }
-
-    setLoading(false);
-    return false;
   };
 
   const register = async (userData: RegisterData): Promise<boolean> => {
-    setLoading(true);
-
-    // Simulate API call delay
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    // Check if email already exists
-    const existingUser = getUserByEmail(userData.email);
-    if (existingUser) {
-      setLoading(false);
-      return false;
+    try {
+      // sẽ ném Error nếu 4xx/5xx
+      await registerApi({
+        user_name: userData.user_name,
+        email: userData.email,
+        password: userData.password,
+      });
+      return true;
+    } catch (err: any) {
+      // NÉM LẠI để UI hiển thị
+      throw new Error(pickErrorMessage(err, "Đăng ký thất bại"));
     }
-
-    // In real app, this would create new user in database
-    // For demo, just return success
-    setLoading(false);
-    return true;
   };
 
   const logout = () => {
     setUser(null);
     localStorage.removeItem("user");
+    localStorage.removeItem("access_token");
   };
 
-  const value: AuthContextType = {
-    user,
-    login,
-    register,
-    logout,
-    loading,
-  };
-
+  const value: AuthContextType = { user, login, register, logout, loading };
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

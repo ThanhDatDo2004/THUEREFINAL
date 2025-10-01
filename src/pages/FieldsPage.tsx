@@ -71,7 +71,7 @@ const FieldsPage: React.FC = () => {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Tìm kiếm theo tên sân, địa điểm..."
+              placeholder="    Tìm kiếm theo tên sân, địa điểm..."
               className="search-input"
             />
           </div>

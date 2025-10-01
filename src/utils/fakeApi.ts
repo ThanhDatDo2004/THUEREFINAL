@@ -372,3 +372,86 @@ export async function createShopField(
  * Expose utilities
  * ----------------------------- */
 export const utils = { normLoc, overlap, toMin };
+/* ============================ Forgot Password (mock) ============================ */
+/** Lưu token reset trong RAM (mất khi F5) */
+type ResetRecord = {
+  token: string;
+  user_code: number;
+  email: string;
+  expires_at: number; // ms
+};
+const RESET_TOKENS: ResetRecord[] = [];
+
+function randomToken() {
+  return Math.random().toString(36).slice(2) + Date.now().toString(36);
+}
+
+/** Yêu cầu gửi email đặt lại mật khẩu (mock). Luôn trả OK để tránh lộ email. */
+export async function requestPasswordReset(email: string): Promise<{
+  ok: boolean;
+  message: string;
+  /** DEV: token để bạn test nhanh, đừng show ở production */
+  devToken?: string;
+}> {
+  const user = USERS.find(
+    (u) => u.email?.toLowerCase() === email.toLowerCase()
+  );
+  if (user) {
+    const token = randomToken();
+    const expires_at = Date.now() + 15 * 60 * 1000; // 15 phút
+    RESET_TOKENS.push({
+      token,
+      user_code: user.user_code,
+      email: user.email,
+      expires_at,
+    });
+    return {
+      ok: true,
+      message: "Nếu email tồn tại, chúng tôi đã gửi liên kết đặt lại.",
+      devToken: token,
+    };
+  }
+  return {
+    ok: true,
+    message: "Nếu email tồn tại, chúng tôi đã gửi liên kết đặt lại.",
+  };
+}
+
+/** Kiểm tra token còn hiệu lực không (mock) */
+export async function verifyResetToken(token: string): Promise<boolean> {
+  return RESET_TOKENS.some(
+    (r) => r.token === token && r.expires_at > Date.now()
+  );
+}
+
+/** Đặt lại mật khẩu (mock) */
+export async function resetPasswordWithToken(
+  token: string,
+  newPassword: string
+): Promise<{ ok: boolean; message: string }> {
+  const idx = RESET_TOKENS.findIndex(
+    (r) => r.token === token && r.expires_at > Date.now()
+  );
+  if (idx === -1)
+    return { ok: false, message: "Liên kết không hợp lệ hoặc đã hết hạn." };
+
+  const rec = RESET_TOKENS[idx];
+  const uIdx = USERS.findIndex((u) => u.user_code === rec.user_code);
+  if (uIdx >= 0) {
+    // Lưu tạm vào RAM (nếu users.json không có trường password thì thêm động)
+    (USERS[uIdx] as any).password = newPassword;
+  }
+  RESET_TOKENS.splice(idx, 1);
+  return { ok: true, message: "Đổi mật khẩu thành công." };
+}
+
+/** (tuỳ chọn) hàm đăng nhập kiểm tra theo password đã set ở trên */
+export async function authenticateUser(
+  email: string,
+  password: string
+): Promise<boolean> {
+  const u = USERS.find((x) => x.email?.toLowerCase() === email.toLowerCase());
+  if (!u) return false;
+  const pwd = (u as any).password ?? "password"; // nếu chưa đổi, dùng 'password' như demo
+  return pwd === password;
+}
