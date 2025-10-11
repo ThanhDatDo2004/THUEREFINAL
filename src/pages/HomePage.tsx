@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import FieldCard from "../components/fields/FieldCard";
 import ShopRequestForm from "../components/forms/ShopRequestForm";
-import { fetchFields } from "../models/field.api";
+import { fetchFields } from "../models/fields.api";
 import type { FieldWithImages, FieldsQuery } from "../types";
 
 const HomePage: React.FC = () => {
@@ -21,6 +21,7 @@ const HomePage: React.FC = () => {
   const [featuredError, setFeaturedError] = useState("");
 
   useEffect(() => {
+    let ignore = false;
     (async () => {
       setLoadingFeatured(true);
       setFeaturedError("");
@@ -32,16 +33,21 @@ const HomePage: React.FC = () => {
       };
       try {
         const { items } = await fetchFields(q);
-        setFeatured(items);
+        if (!ignore) setFeatured(items);
       } catch (err: any) {
-        setFeaturedError(
-          err?.message || "Không thể tải danh sách sân nổi bật."
-        );
-        setFeatured([]);
+        if (!ignore) {
+          setFeaturedError(
+            err?.message || "Không thể tải danh sách sân nổi bật."
+          );
+          setFeatured([]);
+        }
       } finally {
-        setLoadingFeatured(false);
+        if (!ignore) setLoadingFeatured(false);
       }
     })();
+    return () => {
+      ignore = true;
+    };
   }, []);
 
   const stats = [

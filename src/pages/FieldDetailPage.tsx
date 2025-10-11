@@ -10,7 +10,7 @@ import {
   ChevronRight,
   AlertCircle,
 } from "lucide-react";
-import { fetchFieldById } from "../models/field.api";
+import { fetchFieldById } from "../models/fields.api";
 import type { FieldWithImages } from "../types";
 
 type AnyImage = {
@@ -285,7 +285,11 @@ const FieldDetailPage: React.FC = () => {
                 </span>
               </div>
 
-              <Link to={`/booking/${field.field_code}`} className="btn-primary">
+              <Link
+                to={`/booking/${field.field_code}`}
+                state={{ field }}
+                className="btn-primary"
+              >
                 Đặt sân
               </Link>
             </div>

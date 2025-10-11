@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Search, Filter, MapPin, DollarSign, AlertCircle } from "lucide-react";
 import FieldCard from "../components/fields/FieldCard";
-import { fetchFields } from "../models/field.api";
+import { fetchFields } from "../models/fields.api";
 import type { FieldWithImages, FieldsQuery } from "../types";
 
 const FieldsPage: React.FC = () => {

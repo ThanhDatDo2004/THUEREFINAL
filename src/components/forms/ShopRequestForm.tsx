@@ -8,7 +8,9 @@ import {
   Phone,
   MapPin,
   MessageSquare,
+  AlertCircle,
 } from "lucide-react";
+import { submitShopRequest } from "../../models/shop.api";
 
 interface ShopRequestFormData {
   full_name: string;
@@ -21,6 +23,7 @@ interface ShopRequestFormData {
 const ShopRequestForm: React.FC = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   const {
     register,
@@ -31,19 +34,22 @@ const ShopRequestForm: React.FC = () => {
 
   const onSubmit = async (data: ShopRequestFormData) => {
     setIsSubmitting(true);
+    setSubmitError("");
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
-    console.log("Shop request submitted:", data);
-    setIsSubmitted(true);
-    reset();
-    setIsSubmitting(false);
-
-    // Hide success message after 3 seconds
-    setTimeout(() => {
-      setIsSubmitted(false);
-    }, 3000);
+    try {
+      await submitShopRequest(data);
+      setIsSubmitted(true);
+      reset();
+      setTimeout(() => {
+        setIsSubmitted(false);
+      }, 3000);
+    } catch (error: any) {
+      setSubmitError(
+        error?.message || "Không thể gửi yêu cầu. Vui lòng thử lại sau."
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -84,6 +90,16 @@ const ShopRequestForm: React.FC = () => {
                   Yêu cầu đã được gửi thành công! Chúng tôi sẽ liên hệ với bạn
                   trong vòng 24h.
                 </p>
+              </div>
+            </div>
+          )}
+
+          {!!submitError && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 text-red-700 flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 mt-0.5 shrink-0" />
+              <div>
+                <p className="font-medium">Không thể gửi yêu cầu</p>
+                <p className="text-sm">{submitError}</p>
               </div>
             </div>
           )}
