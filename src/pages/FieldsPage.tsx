@@ -1,8 +1,8 @@
-// Refactored: use utils/fakeApi (JSON) + external CSS
 import React, { useEffect, useState } from "react";
-import { Search, Filter, MapPin, DollarSign } from "lucide-react";
+import { Search, Filter, MapPin, DollarSign, AlertCircle } from "lucide-react";
 import FieldCard from "../components/fields/FieldCard";
-import { getFields, type FieldsQuery } from "../utils/fakeApi";
+import { fetchFields } from "../models/field.api";
+import type { FieldWithImages, FieldsQuery } from "../types";
 
 const FieldsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -11,7 +11,7 @@ const FieldsPage: React.FC = () => {
   const [priceRange, setPriceRange] = useState({ min: 0, max: 500000 });
   const [showFilters, setShowFilters] = useState(false);
 
-  const [fields, setFields] = useState<any[]>([]);
+  const [fields, setFields] = useState<FieldWithImages[]>([]);
   const [total, setTotal] = useState(0);
   const [facets, setFacets] = useState<{
     sportTypes: string[];
@@ -21,11 +21,13 @@ const FieldsPage: React.FC = () => {
     locations: [],
   });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     let ignore = false;
     (async () => {
       setLoading(true);
+      setError("");
       const q: FieldsQuery = {
         search: searchQuery || undefined,
         sportType: selectedSportType || undefined,
@@ -35,13 +37,24 @@ const FieldsPage: React.FC = () => {
         page: 1,
         pageSize: 12,
       };
-      const { items, total, facets } = await getFields(q);
-      if (!ignore) {
-        setFields(items);
-        setTotal(total);
-        setFacets(facets);
+      try {
+        const { items, total, facets } = await fetchFields(q);
+        if (!ignore) {
+          setFields(items);
+          setTotal(total);
+          setFacets(facets);
+        }
+      } catch (err: any) {
+        if (!ignore) {
+          setError(
+            err?.message || "Không thể tải danh sách sân. Vui lòng thử lại."
+          );
+          setFields([]);
+          setTotal(0);
+        }
+      } finally {
+        if (!ignore) setLoading(false);
       }
-      setLoading(false);
     })();
     return () => {
       ignore = true;
@@ -168,16 +181,47 @@ const FieldsPage: React.FC = () => {
         </div>
 
         {/* Results */}
-        <div className="results-bar">
-          <h2 className="results-title">Kết quả ({total} sân)</h2>
-          <div className="price-info">
-            Giá: {formatPrice(priceRange.min)}đ - {formatPrice(priceRange.max)}đ
+        {!error && (
+          <div className="results-bar">
+            <h2 className="results-title">Kết quả ({total} sân)</h2>
+            <div className="price-info">
+              Giá: {formatPrice(priceRange.min)}đ - {formatPrice(priceRange.max)}đ
+            </div>
           </div>
-        </div>
+        )}
+
+        {!!error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded flex items-center gap-2 mb-6">
+            <AlertCircle className="w-5 h-5 shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
 
         {/* Fields Grid */}
         {loading ? (
           <div className="center muted">Đang tải...</div>
+        ) : error ? (
+          <div className="empty">
+            <div className="empty-icon-wrap">
+              <AlertCircle className="empty-icon text-red-500" />
+            </div>
+            <h3 className="text-xl font-medium text-gray-900 mb-2">
+              Không thể tải dữ liệu
+            </h3>
+            <p className="muted mb-4">{error}</p>
+            <button
+              onClick={() => {
+                setError("");
+                setSearchQuery("");
+                setSelectedSportType("");
+                setSelectedLocation("");
+                setPriceRange({ min: 0, max: 500000 });
+              }}
+              className="btn-primary"
+            >
+              Thử lại
+            </button>
+          </div>
         ) : fields.length > 0 ? (
           <div className="grid-cards">
             {fields.map((field) => (

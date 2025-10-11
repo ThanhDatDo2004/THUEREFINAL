@@ -8,8 +8,9 @@ import {
   DollarSign,
   ChevronLeft,
   ChevronRight,
+  AlertCircle,
 } from "lucide-react";
-import { getFieldById } from "../utils/fakeApi";
+import { fetchFieldById } from "../models/field.api";
 import type { FieldWithImages } from "../types";
 
 type AnyImage = {
@@ -26,19 +27,38 @@ const FieldDetailPage: React.FC = () => {
   const [field, setField] = useState<FieldWithImages | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [error, setError] = useState("");
+
+  const fetchFieldData = useCallback(async () => {
+    if (!id || !Number.isFinite(Number(id))) {
+      throw new Error("Mã sân không hợp lệ.");
+    }
+    return fetchFieldById(Number(id));
+  }, [id]);
 
   useEffect(() => {
     let alive = true;
     (async () => {
       setLoading(true);
-      const data = id ? await getFieldById(Number(id)) : undefined;
-      if (alive) setField(data ?? null);
-      setLoading(false);
+      setError("");
+      try {
+        const data = await fetchFieldData();
+        if (alive) setField(data ?? null);
+      } catch (err: any) {
+        if (alive) {
+          setError(
+            err?.message || "Không thể tải thông tin sân. Vui lòng thử lại."
+          );
+          setField(null);
+        }
+      } finally {
+        if (alive) setLoading(false);
+      }
     })();
     return () => {
       alive = false;
     };
-  }, [id]);
+  }, [fetchFieldData]);
 
   const statusClass = (s?: string) => {
     if (s === "trống") return "status-chip status-trong";
@@ -115,6 +135,49 @@ const FieldDetailPage: React.FC = () => {
         <div className="field-container">
           <div className="detail-section center">
             <div className="spinner" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="field-page">
+        <div className="field-container">
+          <Link to="/fields" className="btn-link inline-flex items-center mb-4">
+            <ChevronLeft className="w-4 h-4 mr-1" /> Quay lại danh sách sân
+          </Link>
+          <div className="detail-section flex flex-col items-center text-center gap-3">
+            <AlertCircle className="w-10 h-10 text-red-500" />
+            <h2 className="text-xl font-semibold text-gray-900">
+              Không thể tải dữ liệu
+            </h2>
+            <p className="text-gray-600">{error}</p>
+            <button
+              type="button"
+              onClick={() => {
+                setError("");
+                setLoading(true);
+                void (async () => {
+                  try {
+                    const data = await fetchFieldData();
+                    setField(data ?? null);
+                  } catch (err: any) {
+                    setError(
+                      err?.message ||
+                        "Không thể tải thông tin sân. Vui lòng thử lại."
+                    );
+                    setField(null);
+                  } finally {
+                    setLoading(false);
+                  }
+                })();
+              }}
+              className="btn-primary"
+            >
+              Thử lại
+            </button>
           </div>
         </div>
       </div>

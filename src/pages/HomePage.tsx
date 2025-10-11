@@ -12,21 +12,35 @@ import {
 } from "lucide-react";
 import FieldCard from "../components/fields/FieldCard";
 import ShopRequestForm from "../components/forms/ShopRequestForm";
-import { getFields, type FieldsQuery } from "../utils/fakeApi";
+import { fetchFields } from "../models/field.api";
+import type { FieldWithImages, FieldsQuery } from "../types";
 
 const HomePage: React.FC = () => {
-  const [featured, setFeatured] = useState<any[]>([]);
+  const [featured, setFeatured] = useState<FieldWithImages[]>([]);
+  const [loadingFeatured, setLoadingFeatured] = useState(false);
+  const [featuredError, setFeaturedError] = useState("");
 
   useEffect(() => {
     (async () => {
+      setLoadingFeatured(true);
+      setFeaturedError("");
       const q: FieldsQuery = {
         page: 1,
         pageSize: 6,
         sortBy: "rating",
         sortDir: "desc",
       };
-      const { items } = await getFields(q);
-      setFeatured(items);
+      try {
+        const { items } = await fetchFields(q);
+        setFeatured(items);
+      } catch (err: any) {
+        setFeaturedError(
+          err?.message || "Không thể tải danh sách sân nổi bật."
+        );
+        setFeatured([]);
+      } finally {
+        setLoadingFeatured(false);
+      }
     })();
   }, []);
 
@@ -98,9 +112,23 @@ const HomePage: React.FC = () => {
           </Link>
         </div>
         <div className="featured-grid">
-          {featured.map((field) => (
-            <FieldCard key={field.field_code} field={field} />
-          ))}
+          {loadingFeatured ? (
+            <div className="col-span-full text-center text-gray-500">
+              Đang tải sân nổi bật...
+            </div>
+          ) : featuredError ? (
+            <div className="col-span-full text-center text-red-600">
+              {featuredError}
+            </div>
+          ) : featured.length > 0 ? (
+            featured.map((field) => (
+              <FieldCard key={field.field_code} field={field} />
+            ))
+          ) : (
+            <div className="col-span-full text-center text-gray-500">
+              Chưa có sân nổi bật để hiển thị.
+            </div>
+          )}
         </div>
       </section>
 

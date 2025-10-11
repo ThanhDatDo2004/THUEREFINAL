@@ -14,7 +14,7 @@ import {
   CheckCircle,
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
-import { getFieldById } from "../utils/fakeApi";
+import { fetchFieldById } from "../models/field.api";
 import type { FieldWithImages } from "../types";
 
 interface BookingFormData {
@@ -48,15 +48,27 @@ const BookingPage: React.FC = () => {
     fieldFromState ?? null
   );
   const [loadingField, setLoadingField] = useState(!fieldFromState && !!id);
+  const [fieldError, setFieldError] = useState("");
 
   useEffect(() => {
     let alive = true;
     (async () => {
       if (!fieldFromState && id) {
         setLoadingField(true);
-        const fetched = await getFieldById(Number(id));
-        if (alive) setField(fetched ?? null);
-        setLoadingField(false);
+        setFieldError("");
+        try {
+          const fetched = await fetchFieldById(Number(id));
+          if (alive) setField(fetched ?? null);
+        } catch (err: any) {
+          if (alive) {
+            setFieldError(
+              err?.message || "Không thể tải thông tin sân. Vui lòng thử lại."
+            );
+            setField(null);
+          }
+        } finally {
+          if (alive) setLoadingField(false);
+        }
       }
     })();
     return () => {
@@ -218,6 +230,71 @@ const BookingPage: React.FC = () => {
                 giờ đặt. Mang theo mã đặt sân và giấy tờ tùy thân để xác nhận.
               </p>
             </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isSuccess && !loadingField && fieldError) {
+    return (
+      <div className="page">
+        <div className="container">
+          <div className="section text-center space-y-4">
+            <h2 className="text-2xl font-semibold text-gray-900">
+              Không thể tải thông tin sân
+            </h2>
+            <p className="text-gray-600">{fieldError}</p>
+            <button
+              type="button"
+              className="btn-primary"
+              onClick={() => {
+                if (!id) return;
+                setFieldError("");
+                setLoadingField(true);
+                void (async () => {
+                  try {
+                    const fetched = await fetchFieldById(Number(id));
+                    setField(fetched ?? null);
+                    setFieldError("");
+                  } catch (err: any) {
+                    setFieldError(
+                      err?.message ||
+                        "Không thể tải thông tin sân. Vui lòng thử lại."
+                    );
+                    setField(null);
+                  } finally {
+                    setLoadingField(false);
+                  }
+                })();
+              }}
+            >
+              Thử lại
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isSuccess && !loadingField && !field) {
+    return (
+      <div className="page">
+        <div className="container">
+          <div className="section text-center space-y-4">
+            <h2 className="text-2xl font-semibold text-gray-900">
+              Không tìm thấy sân
+            </h2>
+            <p className="text-gray-600">
+              Vui lòng quay lại trang chi tiết sân để chọn lại.
+            </p>
+            <button
+              type="button"
+              className="btn-primary"
+              onClick={() => navigate(`/fields/${id ?? ""}`)}
+            >
+              Quay lại trang sân
+            </button>
           </div>
         </div>
       </div>

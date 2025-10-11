@@ -44,6 +44,8 @@ export interface FieldImages {
   image_code: number;
   field_code: number;
   image_url: string;
+  sort_order?: number;
+  is_primary?: number | boolean;
 }
 
 export interface Bookings {
@@ -127,6 +129,21 @@ export interface FieldWithImages extends Fields {
   reviews: Reviews[];
   averageRating: number;
 }
+
+export type FieldsQuery = {
+  search?: string;
+  sportType?: string;
+  location?: string;
+  priceMin?: number;
+  priceMax?: number;
+  date?: string;
+  startTime?: string;
+  endTime?: string;
+  sortBy?: "price" | "rating" | "name";
+  sortDir?: "asc" | "desc";
+  page?: number;
+  pageSize?: number;
+};
 
 export interface BookingWithField extends Bookings {
   field: Fields;
