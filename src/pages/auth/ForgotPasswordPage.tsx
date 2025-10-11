@@ -12,51 +12,32 @@ const ForgotPasswordPage: React.FC = () => {
     handleSubmit,
     formState: { errors },
     setError,
-    watch,
+    clearErrors,
   } = useForm<Form>({ mode: "onChange" });
-  const [checking, setChecking] = useState(false);
-  const [canSend, setCanSend] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [serverMsg, setServerMsg] = useState("");
 
-  const email = watch("email");
-
-  const onCheck = async () => {
+  const onSubmit = handleSubmit(async ({ email }) => {
     setServerMsg("");
-    setCanSend(false);
-    if (!email) {
-      setError("email", { type: "manual", message: "Vui lòng nhập email" });
-      return;
-    }
-    try {
-      setChecking(true);
-      const res = await checkEmailExists(email.trim());
-      if (!res?.success) throw new Error(res?.message || "Kiểm tra thất bại");
-      if (!res.exists) {
-        setError("email", { type: "manual", message: "Email không tồn tại" });
-        setCanSend(false);
-      } else {
-        setCanSend(true);
-        setServerMsg("Email hợp lệ. Bạn có thể gửi liên kết đặt lại.");
-      }
-    } catch (e: any) {
-      setError("email", {
-        type: "manual",
-        message: e?.response?.data?.message || e?.message || "Lỗi kiểm tra",
-      });
-    } finally {
-      setChecking(false);
-    }
-  };
-
-  const onSend = async () => {
-    setServerMsg("");
-    if (!canSend) return;
+    clearErrors("email");
+    const trimmedEmail = email.trim();
     try {
       setSubmitting(true);
-      const res = await forgotPassword(email.trim());
-      if (!res?.success)
-        throw new Error(res?.message || "Không gửi được email");
+      const checkResult = await checkEmailExists(trimmedEmail);
+      if (!checkResult?.success)
+        throw new Error(checkResult?.message || "Kiểm tra thất bại");
+      if (!checkResult.exists) {
+        setError("email", {
+          type: "manual",
+          message: "Email không tồn tại",
+        });
+        return;
+      }
+      const sendResult = await forgotPassword(trimmedEmail);
+      if (!sendResult?.success)
+        throw new Error(
+          sendResult?.message || "Không gửi được email"
+        );
       setServerMsg(
         "Đã gửi liên kết đặt lại mật khẩu. Vui lòng kiểm tra hộp thư."
       );
@@ -68,7 +49,7 @@ const ForgotPasswordPage: React.FC = () => {
     } finally {
       setSubmitting(false);
     }
-  };
+  });
 
   return (
     <div className="page bg-gradient-to-br from-emerald-50 to-blue-50 flex items-center justify-center py-12 px-4">
@@ -84,7 +65,7 @@ const ForgotPasswordPage: React.FC = () => {
             </p>
           </div>
 
-          <form onSubmit={(e) => e.preventDefault()} className="space-y-5">
+          <form onSubmit={onSubmit} className="space-y-5">
             <div>
               <label className="label">
                 <Mail className="w-4 h-4 inline mr-2" />
@@ -114,31 +95,14 @@ const ForgotPasswordPage: React.FC = () => {
               )}
             </div>
 
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={onCheck}
-                disabled={checking}
-                className="px-4 py-2 rounded-lg bg-gray-800 text-white disabled:opacity-60"
-              >
-                {checking ? "Đang kiểm tra..." : "Kiểm tra email"}
-              </button>
-              <button
-                type="button"
-                onClick={onSend}
-                disabled={!canSend || submitting}
-                className={`px-4 py-2 rounded-lg ${
-                  canSend
-                    ? "bg-emerald-600 text-white"
-                    : "bg-gray-200 text-gray-500"
-                }`}
-                title={
-                  canSend ? "Gửi liên kết đặt lại" : "Hãy kiểm tra email trước"
-                }
-              >
-                {submitting ? "Đang gửi..." : "Gửi liên kết"}
-              </button>
-            </div>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="px-4 py-2 rounded-lg bg-emerald-600 text-white disabled:opacity-60"
+              title="Gửi liên kết đặt lại"
+            >
+              {submitting ? "Đang xử lý..." : "Gửi liên kết"}
+            </button>
           </form>
 
           <div className="text-center">
