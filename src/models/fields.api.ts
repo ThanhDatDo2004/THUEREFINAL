@@ -12,7 +12,7 @@ export interface FieldsListResult {
   };
 }
 
-type ApiSuccess<T> = {
+export type ApiSuccess<T> = {
   success: true;
   statusCode: number;
   message: string;
@@ -20,7 +20,7 @@ type ApiSuccess<T> = {
   error: null;
 };
 
-type ApiError = {
+export type ApiError = {
   success: false;
   statusCode: number;
   message: string;
@@ -56,6 +56,31 @@ const buildQuery = (params: FieldsQuery = {}) => {
   return query;
 };
 
+type ErrorWithResponse = {
+  response?: {
+    status?: number;
+    data?: {
+      error?: { message?: string | null } | null;
+      message?: string | null;
+    };
+  };
+  message?: string;
+};
+
+const extractErrorMessage = (error: unknown, fallback: string) => {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+  if (typeof error === "object" && error !== null) {
+    const typed = error as ErrorWithResponse;
+    const apiMessage =
+      typed.response?.data?.error?.message || typed.response?.data?.message;
+    if (apiMessage) return apiMessage;
+    if (typed.message) return typed.message;
+  }
+  return fallback;
+};
+
 export async function fetchFields(
   params: FieldsQuery = {}
 ): Promise<FieldsListResult> {
@@ -65,12 +90,11 @@ export async function fetchFields(
       { params: buildQuery(params) }
     );
     return ensureSuccess(data, "Không thể tải danh sách sân");
-  } catch (error: any) {
-    const message =
-      error?.response?.data?.error?.message ||
-      error?.response?.data?.message ||
-      error?.message ||
-      "Không thể tải danh sách sân";
+  } catch (error: unknown) {
+    const message = extractErrorMessage(
+      error,
+      "Không thể tải danh sách sân"
+    );
     throw new Error(message);
   }
 }
@@ -83,18 +107,29 @@ export async function fetchFieldById(
       ApiSuccess<FieldWithImages> | ApiError
     >(`/fields/${fieldId}`);
     return ensureSuccess(data, "Không thể tải thông tin sân");
-  } catch (error: any) {
-    if (error?.response?.status === 404) {
+  } catch (error: unknown) {
+    const typed = error as ErrorWithResponse;
+    if (typed.response?.status === 404) {
       return null;
     }
-    const message =
-      error?.response?.data?.error?.message ||
-      error?.response?.data?.message ||
-      error?.message ||
-      "Không thể tải thông tin sân";
+    const message = extractErrorMessage(
+      error,
+      "Không thể tải thông tin sân"
+    );
     throw new Error(message);
   }
 }
+
+export type FieldSlotStatus =
+  | "available"
+  | "held"
+  | "booked"
+  | "blocked"
+  | "on_hold"
+  | "confirmed"
+  | "reserved"
+  | "disabled"
+  | string;
 
 export interface FieldSlot {
   slot_id: number;
@@ -102,9 +137,11 @@ export interface FieldSlot {
   play_date: string;
   start_time: string;
   end_time: string;
-  status: "available" | "held" | "booked" | "blocked";
+  status: FieldSlotStatus;
   hold_expires_at: string | null;
-  is_available: boolean;
+  is_available?: boolean;
+  availability_state?: string | null;
+  availability_status?: string | null;
 }
 
 export interface FieldAvailabilityResponse {
@@ -124,12 +161,11 @@ export async function fetchFieldAvailability(
       params: date ? { date } : undefined,
     });
     return ensureSuccess(data, "Không thể tải lịch sân");
-  } catch (error: any) {
-    const message =
-      error?.response?.data?.error?.message ||
-      error?.response?.data?.message ||
-      error?.message ||
-      "Không thể tải lịch sân";
+  } catch (error: unknown) {
+    const message = extractErrorMessage(
+      error,
+      "Không thể tải lịch sân"
+    );
     throw new Error(message);
   }
 }

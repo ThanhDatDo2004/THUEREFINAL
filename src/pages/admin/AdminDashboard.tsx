@@ -1,11 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
-  getAllUsers,
-  getAllShops,
-  getAllBookings,
-  getAllRevenue,
-  getShopRequests,
-} from "../../utils/fakeApi";
+  fetchAdminUsers,
+  fetchAdminShops,
+  fetchAdminBookings,
+  fetchAdminRevenue,
+  fetchAdminShopRequests,
+} from "../../models/admin.api";
 import type {
   Users,
   Shops,
@@ -18,6 +18,9 @@ import {
   Store,
   CalendarRange,
   Wallet2,
+  CheckCircle2,
+  AlertTriangle,
+  Activity,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -57,20 +60,37 @@ const AdminDashboard: React.FC = () => {
   const year = now.getFullYear();
 
   useEffect(() => {
+    let ignore = false;
     (async () => {
-      const [u, s, b, r, req] = await Promise.all([
-        getAllUsers(),
-        getAllShops(),
-        getAllBookings(),
-        getAllRevenue(),
-        getShopRequests(),
-      ]);
-      setUsers(u);
-      setShops(s);
-      setBookings(b);
-      setRevenue(r.filter((x) => x.Year === year));
-      setRequests(req);
+      try {
+        const [u, s, b, r, req] = await Promise.all([
+          fetchAdminUsers(),
+          fetchAdminShops(),
+          fetchAdminBookings(),
+          fetchAdminRevenue(year),
+          fetchAdminShopRequests(),
+        ]);
+        if (!ignore) {
+          setUsers(u);
+          setShops(s);
+          setBookings(b);
+          setRevenue(r);
+          setRequests(req);
+        }
+      } catch (error) {
+        console.error(error);
+        if (!ignore) {
+          setUsers([]);
+          setShops([]);
+          setBookings([]);
+          setRevenue([]);
+          setRequests([]);
+        }
+      }
     })();
+    return () => {
+      ignore = true;
+    };
   }, [year]);
 
   const kpis = useMemo(() => {
@@ -78,8 +98,25 @@ const AdminDashboard: React.FC = () => {
     const totalShops = shops.length;
     const totalBookings = bookings.length;
     const totalIncome = revenue.reduce((sum, r) => sum + r.total_income, 0);
-    return { totalUsers, totalShops, totalBookings, totalIncome };
-  }, [users, shops, bookings, revenue]);
+    const pendingRequests = requests.filter(
+      (r) => r.status === "pending" || !r.status
+    ).length;
+    const approvalRate = requests.length
+      ? Math.round(
+          (requests.filter((r) => r.status === "approved").length /
+            requests.length) *
+            100
+        )
+      : 0;
+    return {
+      totalUsers,
+      totalShops,
+      totalBookings,
+      totalIncome,
+      pendingRequests,
+      approvalRate,
+    };
+  }, [users, shops, bookings, revenue, requests]);
 
   const bookingsByMonth = useMemo(() => {
     const arr = Array.from({ length: 12 }, (_, i) => ({
@@ -113,8 +150,36 @@ const AdminDashboard: React.FC = () => {
       .slice(0, 5);
   }, [requests]);
 
+  const requestStatusData = useMemo(() => {
+    const grouped = requests.reduce<Record<string, number>>((acc, req) => {
+      const key = req.status ?? "pending";
+      acc[key] = (acc[key] ?? 0) + 1;
+      return acc;
+    }, {});
+    const statuses = ["pending", "reviewed", "approved", "rejected"];
+    return statuses.map((status) => ({
+      status,
+      value: grouped[status] ?? 0,
+    }));
+  }, [requests]);
+
+  const topCustomers = useMemo(() => {
+    const map = new Map<string, { count: number; revenue: number }>();
+    bookings.forEach((booking) => {
+      const key = booking.customer_name || "Khách lẻ";
+      const prev = map.get(key) ?? { count: 0, revenue: 0 };
+      prev.count += 1;
+      prev.revenue += booking.total_price;
+      map.set(key, prev);
+    });
+    return Array.from(map.entries())
+      .map(([name, info]) => ({ name, ...info }))
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 5);
+  }, [bookings]);
+
   return (
-    <div>
+    <div className="space-y-6">
       <div className="shop-header">
         <div>
           <h1 className="shop-title">Admin Dashboard</h1>
@@ -123,7 +188,7 @@ const AdminDashboard: React.FC = () => {
       </div>
 
       {/* KPIs */}
-      <div className="stats-grid">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
         <div className="stat-card">
           <div className="stat-icon">
             <UsersIcon size={18} />
@@ -152,10 +217,28 @@ const AdminDashboard: React.FC = () => {
           <div className="stat-value">{kpis.totalIncome.toLocaleString()}₫</div>
           <div className="stat-label">Tổng doanh thu (shops)</div>
         </div>
+        <div className="stat-card">
+          <div className="stat-icon">
+            <AlertTriangle size={18} />
+          </div>
+          <div className="stat-value text-amber-600">
+            {kpis.pendingRequests}
+          </div>
+          <div className="stat-label">Yêu cầu chờ duyệt</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-icon">
+            <CheckCircle2 size={18} />
+          </div>
+          <div className="stat-value text-emerald-600">
+            {kpis.approvalRate}%
+          </div>
+          <div className="stat-label">Tỉ lệ duyệt yêu cầu</div>
+        </div>
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="section">
           <h3 className="text-lg font-semibold mb-3">Đơn đặt theo tháng</h3>
           <div className="h-64">
@@ -173,6 +256,23 @@ const AdminDashboard: React.FC = () => {
             </ResponsiveContainer>
           </div>
         </div>
+        <div className="section">
+          <h3 className="text-lg font-semibold mb-3">Trạng thái yêu cầu mở shop</h3>
+          <div className="h-64">
+            <ResponsiveContainer>
+              <BarChart data={requestStatusData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="status" />
+                <YAxis allowDecimals={false} />
+                <Tooltip />
+                <Bar dataKey="value" fill="#10b981" name="Số lượng" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="section">
           <h3 className="text-lg font-semibold mb-3">Doanh thu theo tháng</h3>
           <div className="h-64">
@@ -192,10 +292,44 @@ const AdminDashboard: React.FC = () => {
             </ResponsiveContainer>
           </div>
         </div>
+        <div className="section">
+          <h3 className="text-lg font-semibold mb-3">Khách hàng nổi bật</h3>
+          <div className="overflow-x-auto">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th className="th">Khách hàng</th>
+                  <th className="th">Số đơn</th>
+                  <th className="th">Doanh thu</th>
+                </tr>
+              </thead>
+              <tbody>
+                {topCustomers.map((customer) => (
+                  <tr key={customer.name}>
+                    <td className="td font-semibold text-gray-900">
+                      {customer.name}
+                    </td>
+                    <td className="td">{customer.count}</td>
+                    <td className="td">
+                      {customer.revenue.toLocaleString("vi-VN")}₫
+                    </td>
+                  </tr>
+                ))}
+                {!topCustomers.length && (
+                  <tr>
+                    <td className="td text-center text-gray-500" colSpan={3}>
+                      Chưa có dữ liệu đặt sân.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
       {/* Requests table */}
-      <div className="section mt-6">
+      <div className="section">
         <div className="results-bar">
           <h3 className="text-lg font-semibold">Shop requests mới</h3>
         </div>
@@ -228,6 +362,48 @@ const AdminDashboard: React.FC = () => {
           </table>
         </div>
       </div>
+
+      <div className="section">
+        <div className="results-bar">
+          <h3 className="text-lg font-semibold">Trung tâm hành động</h3>
+        </div>
+        <div className="grid gap-4 md:grid-cols-3">
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+            <div className="flex items-center gap-2 text-amber-700 font-semibold">
+              <AlertTriangle className="h-4 w-4" />
+              Yêu cầu còn chờ
+            </div>
+            <p className="mt-2">
+              Có {kpis.pendingRequests} yêu cầu mở shop cần được duyệt. Kiểm tra tại mục
+              <strong> Shop Requests</strong>.
+            </p>
+          </div>
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+            <div className="flex items-center gap-2 text-emerald-700 font-semibold">
+              <CheckCircle2 className="h-4 w-4" />
+              Duy trì tăng trưởng
+            </div>
+            <p className="mt-2">
+              Tỉ lệ duyệt đạt {kpis.approvalRate}% trong năm nay. Tiếp tục hỗ trợ các shop hoàn thiện hồ sơ để tăng chuyển đổi.
+            </p>
+          </div>
+          <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800">
+            <div className="flex items-center gap-2 text-blue-700 font-semibold">
+              <Activity className="h-4 w-4" />
+              Giám sát hoạt động
+            </div>
+            <p className="mt-2">
+              Truy cập mục <strong>Activity Log</strong> để xem timeline hoạt động mới nhất từ người dùng và shop.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {(!users.length || !shops.length) && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+          Chưa có đầy đủ dữ liệu? Hãy kiểm tra backend hoặc seed dữ liệu để dashboard hiển thị đầy đủ hơn.
+        </div>
+      )}
     </div>
   );
 };

@@ -12,6 +12,12 @@ import {
 } from "lucide-react";
 import { fetchFieldById } from "../models/fields.api";
 import type { FieldWithImages } from "../types";
+import {
+  getFieldStatusClass,
+  getFieldStatusLabel,
+  getSportLabel,
+  resolveFieldPrice,
+} from "../utils/field-helpers";
 
 type AnyImage = {
   image_code?: number;
@@ -59,12 +65,6 @@ const FieldDetailPage: React.FC = () => {
       alive = false;
     };
   }, [fetchFieldData]);
-
-  const statusClass = (s?: string) => {
-    if (s === "trống") return "status-chip status-trong";
-    if (s === "bảo trì") return "status-chip status-bao-tri";
-    return "status-chip status-khac";
-  };
 
   const formatVND = (n: number) =>
     new Intl.NumberFormat("vi-VN", {
@@ -259,6 +259,9 @@ const FieldDetailPage: React.FC = () => {
             <div>
               <h1 className="field-title">{field.field_name}</h1>
               <p className="field-sub">Thuộc: {field.shop?.shop_name}</p>
+              <p className="text-sm text-gray-500">
+                Loại sân: {getSportLabel(field.sport_type)}
+              </p>
             </div>
             <div className="rating">
               <Star className="rating-icon" />
@@ -281,7 +284,7 @@ const FieldDetailPage: React.FC = () => {
               <div className="flex items-center gap-2 text-gray-700">
                 <DollarSign className="w-5 h-5" />
                 <span className="font-medium">
-                  {formatVND(field.price_per_hour)}/giờ
+                  {formatVND(resolveFieldPrice(field))}/giờ
                 </span>
               </div>
 
@@ -294,7 +297,9 @@ const FieldDetailPage: React.FC = () => {
               </Link>
             </div>
             <div>
-              <span className={statusClass(field.status)}>{field.status}</span>
+              <span className={getFieldStatusClass(field.status)}>
+                {getFieldStatusLabel(field.status)}
+              </span>
             </div>
           </div>
         </section>

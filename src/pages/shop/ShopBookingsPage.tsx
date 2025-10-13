@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import {
-  getShopByUserCode,
-  getShopFields,
-  getAllBookings,
-} from "../../utils/fakeApi";
+  fetchMyShop,
+  fetchShopFields,
+  fetchMyShopBookings,
+} from "../../models/shop.api";
 import type { Bookings, FieldWithImages, Shops } from "../../types";
 
 const ShopBookingsPage: React.FC = () => {
@@ -15,19 +15,37 @@ const ShopBookingsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let ignore = false;
     (async () => {
       if (!user?.user_code) return;
       setLoading(true);
-      const s = await getShopByUserCode(user.user_code);
-      if (!s) return setLoading(false);
-      setShop(s);
-      const f = await getShopFields(s.shop_code);
-      setFields(f);
-      const fieldSet = new Set(f.map((x) => x.field_code));
-      const allB = await getAllBookings();
-      setBookings(allB.filter((b) => fieldSet.has(b.field_code)));
-      setLoading(false);
+      try {
+        const s = await fetchMyShop();
+        if (!s) {
+          if (!ignore) setShop(null);
+          return;
+        }
+        if (!ignore) setShop(s);
+        const [f, bookingsResponse] = await Promise.all([
+          fetchShopFields(s.shop_code),
+          fetchMyShopBookings(),
+        ]);
+        if (ignore) return;
+        setFields(f);
+        setBookings(bookingsResponse);
+      } catch (error) {
+        console.error(error);
+        if (!ignore) {
+          setFields([]);
+          setBookings([]);
+        }
+      } finally {
+        if (!ignore) setLoading(false);
+      }
     })();
+    return () => {
+      ignore = true;
+    };
   }, [user?.user_code]);
 
   const fieldNameOf = (field_code: number) =>

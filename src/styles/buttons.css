@@ -2,7 +2,10 @@
   @apply inline-flex items-center justify-center rounded-lg px-4 py-2 font-medium transition-colors;
 }
 .btn-primary {
-  @apply btn bg-emerald-600 text-white hover:bg-emerald-700;
+  @apply btn bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed;
+}
+.btn-danger {
+  @apply btn bg-rose-600 text-white hover:bg-rose-700 disabled:opacity-60 disabled:cursor-not-allowed;
 }
 .btn-outline {
   @apply btn border border-gray-300 text-gray-700 hover:bg-gray-50;

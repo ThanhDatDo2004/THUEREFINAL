@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
-import { getShopByUserCode } from "../../utils/fakeApi";
+import { fetchMyShop } from "../../models/shop.api";
 import type { Shops } from "../../types";
 
 const ShopSettingsPage: React.FC = () => {
@@ -8,11 +8,19 @@ const ShopSettingsPage: React.FC = () => {
   const [shop, setShop] = useState<Shops | null>(null);
 
   useEffect(() => {
+    let ignore = false;
     (async () => {
       if (!user?.user_code) return;
-      const s = await getShopByUserCode(user.user_code);
-      setShop(s ?? null);
+      try {
+        const s = await fetchMyShop();
+        if (!ignore) setShop(s ?? null);
+      } catch (error) {
+        console.error(error);
+      }
     })();
+    return () => {
+      ignore = true;
+    };
   }, [user?.user_code]);
 
   return (

@@ -1,11 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import {
-  getShopByUserCode,
-  getShopFields,
-  getAllBookings,
-  getShopRevenueByShop,
-} from "../../utils/fakeApi";
+  fetchMyShop,
+  fetchShopFields,
+  fetchMyShopBookings,
+  fetchMyShopRevenue,
+} from "../../models/shop.api";
 import type {
   Bookings,
   FieldWithImages,
@@ -50,24 +50,36 @@ const ShopOverview: React.FC = () => {
   const currentMonth = now.getMonth() + 1; // 1..12
 
   useEffect(() => {
+    let ignore = false;
     (async () => {
       if (!user?.user_code) return;
-      const s = await getShopByUserCode(user.user_code);
-      if (!s) return;
-      setShop(s);
+      try {
+        const s = await fetchMyShop();
+        if (!s) return;
+        if (!ignore) setShop(s);
 
-      const [fs, allBookings, rev] = await Promise.all([
-        getShopFields(s.shop_code),
-        getAllBookings(),
-        getShopRevenueByShop(s.shop_code),
-      ]);
+        const [fs, bookingsResponse, rev] = await Promise.all([
+          fetchShopFields(s.shop_code),
+          fetchMyShopBookings(),
+          fetchMyShopRevenue({ year: currentYear }),
+        ]);
 
-      setFields(fs);
-      setBookings(
-        allBookings.filter((b) => fs.some((f) => f.field_code === b.field_code))
-      );
-      setRevenue(rev.filter((r) => r.Year === currentYear));
+        if (ignore) return;
+        setFields(fs);
+        setBookings(bookingsResponse);
+        setRevenue(rev);
+      } catch (error) {
+        console.error(error);
+        if (!ignore) {
+          setFields([]);
+          setBookings([]);
+          setRevenue([]);
+        }
+      }
     })();
+    return () => {
+      ignore = true;
+    };
   }, [user?.user_code, currentYear]);
 
   const monthRevenue = useMemo(() => {

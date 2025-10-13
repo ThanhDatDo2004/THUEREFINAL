@@ -5,6 +5,9 @@ import {
   Users,
   Store,
   FileClock,
+  BarChart3,
+  CreditCard,
+  Activity,
   Settings,
   ChevronLeft,
   ChevronRight,
@@ -99,6 +102,36 @@ function AdminLayout() {
             >
               <FileClock className="h-4 w-4" />
               {!collapsed && <span>Shop Requests</span>}
+            </NavLink>
+
+            <NavLink
+              to="/admin/insights"
+              className={({ isActive }) =>
+                `${navItemBase} ${isActive ? navItemActive : navItemIdle}`
+              }
+            >
+              <BarChart3 className="h-4 w-4" />
+              {!collapsed && <span>Insights</span>}
+            </NavLink>
+
+            <NavLink
+              to="/admin/transactions"
+              className={({ isActive }) =>
+                `${navItemBase} ${isActive ? navItemActive : navItemIdle}`
+              }
+            >
+              <CreditCard className="h-4 w-4" />
+              {!collapsed && <span>Transactions</span>}
+            </NavLink>
+
+            <NavLink
+              to="/admin/activity"
+              className={({ isActive }) =>
+                `${navItemBase} ${isActive ? navItemActive : navItemIdle}`
+              }
+            >
+              <Activity className="h-4 w-4" />
+              {!collapsed && <span>Activity Log</span>}
             </NavLink>
 
             <div className="pt-2 mt-2 border-t border-gray-100" />

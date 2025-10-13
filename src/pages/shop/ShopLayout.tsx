@@ -12,7 +12,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
-import { getShopByUserCode } from "../../utils/fakeApi";
+import { fetchMyShop } from "../../models/shop.api";
 
 import type { Shops } from "../../types";
 
@@ -27,11 +27,19 @@ const ShopLayout: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
+    let ignore = false;
     (async () => {
       if (!user?.user_code) return;
-      const s = await getShopByUserCode(user.user_code);
-      setShop(s ?? null);
+      try {
+        const s = await fetchMyShop();
+        if (!ignore) setShop(s ?? null);
+      } catch (error) {
+        console.error(error);
+      }
     })();
+    return () => {
+      ignore = true;
+    };
   }, [user?.user_code]);
 
   const initial =

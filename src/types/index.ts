@@ -11,6 +11,7 @@ export interface Users {
   user_id: string;
   user_password: string;
   email: string;
+  phone_number?: string;
   isActive: 0 | 1;
 }
 
@@ -24,20 +25,39 @@ export interface Shops {
   isapproved: 0 | 1;
 }
 
+export type FieldSportType =
+  | "badminton"
+  | "football"
+  | "baseball"
+  | "swimming"
+  | "tennis"
+  | "table_tennis"
+  | "basketball"
+  | string;
+
+export type FieldStatus =
+  | "active"
+  | "maintenance"
+  | "inactive"
+  | "available"
+  | "unavailable"
+  | "booked"
+  | "draft"
+  | string;
+
 export interface Fields {
   field_code: number;
   shop_code: number;
   field_name: string;
-  sport_type:
-    | "cầu lông"
-    | "bóng đá"
-    | "bóng chày"
-    | "bơi lội"
-    | "tennis"
-    | "bóng bàn";
-  price_per_hour: number;
+  sport_type: FieldSportType;
+  /**
+   * Một số endpoint dùng price_per_hour, một số khác dùng default_price_per_hour.
+   * Giữ cả hai để tương thích ngược.
+   */
+  price_per_hour?: number;
+  default_price_per_hour?: number;
   address: string;
-  status: "trống" | "đã đặt" | "bảo trì";
+  status: FieldStatus;
 }
 
 export interface FieldImages {

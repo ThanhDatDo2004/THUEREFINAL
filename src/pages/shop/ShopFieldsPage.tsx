@@ -2,22 +2,40 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import {
-  getShopByUserCode,
-  getShopFields,
+  fetchMyShop,
+  fetchShopFields,
   updateShopField,
-  setFieldStatus,
-  createShopField, // <-- thêm
-} from "../../utils/fakeApi";
+  updateShopFieldStatus,
+  createShopField,
+} from "../../models/shop.api";
 import type { FieldWithImages, Shops, Fields } from "../../types";
 import { DollarSign, Pencil, Wrench, X, Plus } from "lucide-react";
+import {
+  getFieldStatusClass,
+  getFieldStatusLabel,
+  getSportLabel,
+  resolveFieldPrice,
+} from "../../utils/field-helpers";
 
 // ===== Kiểu union lấy trực tiếp từ types =====
 type FieldStatus = NonNullable<Fields["status"]>;
 type SportType = NonNullable<Fields["sport_type"]>;
 
 // ===== Options khớp đúng union hiện có =====
-const STATUS_OPTIONS = ["trống", "đã đặt", "bảo trì"] as const satisfies readonly FieldStatus[];
-const SPORT_OPTIONS  = ["bóng đá", "cầu lông", "tennis"] as const satisfies readonly SportType[];
+const STATUS_OPTIONS = [
+  { value: "active", label: getFieldStatusLabel("active") },
+  { value: "maintenance", label: getFieldStatusLabel("maintenance") },
+  { value: "inactive", label: getFieldStatusLabel("inactive") },
+] as const satisfies readonly { value: FieldStatus; label: string }[];
+
+const SPORT_OPTIONS = [
+  { value: "football", label: getSportLabel("football") },
+  { value: "badminton", label: getSportLabel("badminton") },
+  { value: "tennis", label: getSportLabel("tennis") },
+  { value: "basketball", label: getSportLabel("basketball") },
+  { value: "table_tennis", label: getSportLabel("table_tennis") },
+  { value: "swimming", label: getSportLabel("swimming") },
+] as const satisfies readonly { value: SportType; label: string }[];
 
 // ===== Form state (edit) =====
 type FormState = {
@@ -49,31 +67,42 @@ const ShopFieldsPage: React.FC = () => {
 
   // ===== Create modal =====
   const [creating, setCreating] = useState(false);
-  const [formNew, setFormNew] = useState<CreateFormState>({
-    field_name: "",
-    sport_type: SPORT_OPTIONS[0],
-    price_per_hour: 0,
-    address: "",
-    status: "trống",
-  });
+const [formNew, setFormNew] = useState<CreateFormState>({
+  field_name: "",
+  sport_type: SPORT_OPTIONS[0].value,
+  price_per_hour: 0,
+  address: "",
+  status: STATUS_OPTIONS[0].value,
+});
 
   useEffect(() => {
+    let ignore = false;
     (async () => {
       if (!user?.user_code) return;
       setLoading(true);
-      const s = await getShopByUserCode(user.user_code);
-      setShop(s ?? null);
-      if (s) {
-        const f = await getShopFields(s.shop_code);
-        setFields(f);
-        // gợi ý địa chỉ mặc định theo 1 sân có sẵn (nếu có)
-        const sample = f.find(Boolean);
-        if (sample && !formNew.address) {
-          setFormNew((p) => ({ ...p, address: sample.address }));
+      try {
+        const s = await fetchMyShop();
+        if (ignore) return;
+        setShop(s ?? null);
+        if (s) {
+          const f = await fetchShopFields(s.shop_code);
+          if (ignore) return;
+          setFields(f);
+          // gợi ý địa chỉ mặc định theo 1 sân có sẵn (nếu có)
+          const sample = f.find(Boolean);
+          if (sample && !formNew.address) {
+            setFormNew((p) => ({ ...p, address: sample.address }));
+          }
         }
+      } catch (error) {
+        console.error(error);
+      } finally {
+        if (!ignore) setLoading(false);
       }
-      setLoading(false);
     })();
+    return () => {
+      ignore = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.user_code]);
 
@@ -82,9 +111,11 @@ const ShopFieldsPage: React.FC = () => {
     setEditing(f);
     setForm({
       field_name: f.field_name,
-      sport_type: (f.sport_type as SportType) ?? SPORT_OPTIONS[0],
-      price_per_hour: f.price_per_hour,
-      status: (f.status as FieldStatus) ?? "trống",
+      sport_type:
+        (f.sport_type as SportType) ?? SPORT_OPTIONS[0].value,
+      price_per_hour: resolveFieldPrice(f),
+      status:
+        (f.status as FieldStatus) ?? STATUS_OPTIONS[0].value,
     });
   };
 
@@ -113,15 +144,26 @@ const ShopFieldsPage: React.FC = () => {
   };
 
   const onToggleMaintenance = async (f: FieldWithImages) => {
-    const next: FieldStatus = f.status === "bảo trì" ? "trống" : "bảo trì";
-    const updated = await setFieldStatus(f.field_code, next);
+    const raw = f.status ? f.status.toString().trim().toLowerCase() : "";
+    const isMaintenance = ["bảo trì", "maintenance", "on_maintenance"].includes(
+      raw
+    );
+    const next: FieldStatus = isMaintenance ? "active" : "maintenance";
+    const updated = await updateShopFieldStatus(f.field_code, next);
     if (updated) {
       setFields((prev) =>
-        prev.map((x) => (x.field_code === updated.field_code ? { ...x, status: next } : x))
+        prev.map((x) =>
+          x.field_code === updated.field_code ? { ...x, status: next } : x
+        )
       );
       if (editing && editing.field_code === f.field_code) {
         setForm((p) => (p ? { ...p, status: next } : p));
       }
+      setEditing((prev) =>
+        prev && prev.field_code === f.field_code
+          ? { ...prev, status: next }
+          : prev
+      );
     }
   };
 
@@ -133,10 +175,10 @@ const ShopFieldsPage: React.FC = () => {
     setSaving(false);
     setFormNew({
       field_name: "",
-      sport_type: SPORT_OPTIONS[0],
+      sport_type: SPORT_OPTIONS[0].value,
       price_per_hour: 0,
       address: shop ? (fields[0]?.address ?? "") : "",
-      status: "trống",
+      status: STATUS_OPTIONS[0].value,
     });
   };
 
@@ -177,62 +219,74 @@ const ShopFieldsPage: React.FC = () => {
         </div>
       ) : hasFields ? (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {fields.map((f) => (
-            <div key={f.field_code} className="card">
-              <div className="aspect-video rounded-lg overflow-hidden mb-3">
-                <img
-                  src={
-                    f.images?.[0]?.image_url ||
-                    "https://images.pexels.com/photos/274506/pexels-photo-274506.jpeg"
-                  }
-                  alt={f.field_name}
-                  className="w-full h-full object-cover"
-                />
-              </div>
+          {fields.map((f) => {
+            const statusLabel = getFieldStatusLabel(f.status);
+            const statusClassName = getFieldStatusClass(f.status);
+            const priceValue = resolveFieldPrice(f);
+            const statusRaw = f.status
+              ? f.status.toString().trim().toLowerCase()
+              : "";
+            const isMaintenance = ["maintenance", "bảo trì", "on_maintenance"].includes(
+              statusRaw
+            );
 
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h3 className="font-bold text-gray-900">{f.field_name}</h3>
-                  <div className="text-sm text-gray-500 capitalize">{f.sport_type}</div>
+            return (
+              <div key={f.field_code} className="card">
+                <div className="aspect-video rounded-lg overflow-hidden mb-3">
+                  <img
+                    src={
+                      f.images?.[0]?.image_url ||
+                      "https://images.pexels.com/photos/274506/pexels-photo-274506.jpeg"
+                    }
+                    alt={f.field_name}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
 
-                {/* Toggle bảo trì */}
-                <button
-                  onClick={() => onToggleMaintenance(f)}
-                  className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs border
-                    ${f.status === "bảo trì" ? "border-amber-400 text-amber-600 bg-amber-50" : "border-gray-200 text-gray-700 hover:bg-gray-50"}`}
-                  title={f.status === "bảo trì" ? "Bỏ bảo trì" : "Đặt bảo trì"}
-                >
-                  <Wrench className="w-3.5 h-3.5" />
-                  {f.status === "bảo trì" ? "Bỏ BT" : "Bảo trì"}
-                </button>
-              </div>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h3 className="font-bold text-gray-900">{f.field_name}</h3>
+                    <div className="text-sm text-gray-500">
+                      {getSportLabel(f.sport_type)}
+                    </div>
+                  </div>
 
-              <div className="mt-2 flex items-center gap-1 text-gray-700">
-                <DollarSign className="w-4 h-4" />
-                <span>{new Intl.NumberFormat("vi-VN").format(f.price_per_hour)}đ/giờ</span>
-              </div>
+                  {/* Toggle bảo trì */}
+                  <button
+                    onClick={() => onToggleMaintenance(f)}
+                    className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs border ${
+                      isMaintenance
+                        ? "border-amber-400 text-amber-600 bg-amber-50"
+                        : "border-gray-200 text-gray-700 hover:bg-gray-50"
+                    }`}
+                    title={isMaintenance ? "Bỏ bảo trì" : "Đặt bảo trì"}
+                  >
+                    <Wrench className="w-3.5 h-3.5" />
+                    {isMaintenance ? "Bỏ BT" : "Bảo trì"}
+                  </button>
+                </div>
 
-              <div className="mt-3 flex items-center justify-between">
-                <span
-                  className={`status-chip ${
-                    f.status === "trống"
-                      ? "status-trong"
-                      : f.status === "bảo trì"
-                      ? "status-bao-tri"
-                      : "status-khac"
-                  }`}
-                >
-                  {f.status}
-                </span>
+                <div className="mt-2 flex items-center gap-1 text-gray-700">
+                  <DollarSign className="w-4 h-4" />
+                  <span>
+                    {new Intl.NumberFormat("vi-VN").format(priceValue)}đ/giờ
+                  </span>
+                </div>
 
-                <button onClick={() => onOpenEdit(f)} className="btn-ghost flex items-center gap-1">
-                  <Pencil className="w-4 h-4" />
-                  Chỉnh sửa
-                </button>
+                <div className="mt-3 flex items-center justify-between">
+                  <span className={statusClassName}>{statusLabel}</span>
+
+                  <button
+                    onClick={() => onOpenEdit(f)}
+                    className="btn-ghost flex items-center gap-1"
+                  >
+                    <Pencil className="w-4 h-4" />
+                    Chỉnh sửa
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       ) : (
         <div className="card">Chưa có sân nào.</div>
@@ -273,8 +327,8 @@ const ShopFieldsPage: React.FC = () => {
                     onChange={(e) => setForm({ ...form, sport_type: e.target.value as SportType })}
                   >
                     {SPORT_OPTIONS.map((s) => (
-                      <option key={s} value={s}>
-                        {s}
+                      <option key={s.value} value={s.value}>
+                        {s.label}
                       </option>
                     ))}
                   </select>
@@ -300,8 +354,8 @@ const ShopFieldsPage: React.FC = () => {
                   onChange={(e) => setForm({ ...form, status: e.target.value as FieldStatus })}
                 >
                   {STATUS_OPTIONS.map((s) => (
-                    <option key={s} value={s}>
-                      {s}
+                    <option key={s.value} value={s.value}>
+                      {s.label}
                     </option>
                   ))}
                 </select>
@@ -312,12 +366,18 @@ const ShopFieldsPage: React.FC = () => {
               <button
                 onClick={() => onToggleMaintenance(editing)}
                 className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 border text-sm
-                  ${form.status === "bảo trì"
+                  ${["maintenance", "bảo trì", "on_maintenance"].includes(
+                    form.status ? form.status.toString().trim().toLowerCase() : ""
+                  )
                     ? "border-amber-400 text-amber-700 bg-amber-50"
                     : "border-gray-200 text-gray-700 hover:bg-gray-50"}`}
               >
                 <Wrench className="w-4 h-4" />
-                {form.status === "bảo trì" ? "Bỏ bảo trì" : "Đặt bảo trì"}
+                {["maintenance", "bảo trì", "on_maintenance"].includes(
+                  form.status ? form.status.toString().trim().toLowerCase() : ""
+                )
+                  ? "Bỏ bảo trì"
+                  : "Đặt bảo trì"}
               </button>
 
               <div className="flex items-center gap-2">
@@ -361,16 +421,16 @@ const ShopFieldsPage: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <label className="block">
                   <span className="text-sm text-gray-600">Loại môn *</span>
-                  <select
-                    className="input mt-1 w-full"
-                    value={formNew.sport_type}
-                    onChange={(e) =>
+                <select
+                  className="input mt-1 w-full"
+                  value={formNew.sport_type}
+                  onChange={(e) =>
                       setFormNew({ ...formNew, sport_type: e.target.value as SportType })
                     }
-                  >
+                >
                     {SPORT_OPTIONS.map((s) => (
-                      <option key={s} value={s}>
-                        {s}
+                      <option key={s.value} value={s.value}>
+                        {s.label}
                       </option>
                     ))}
                   </select>
@@ -411,8 +471,8 @@ const ShopFieldsPage: React.FC = () => {
                   }
                 >
                   {STATUS_OPTIONS.map((s) => (
-                    <option key={s} value={s}>
-                      {s}
+                    <option key={s.value} value={s.value}>
+                      {s.label}
                     </option>
                   ))}
                 </select>

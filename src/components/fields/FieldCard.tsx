@@ -1,13 +1,30 @@
 import React from "react";
 import { MapPin, Star, Clock, DollarSign } from "lucide-react";
-import { FieldWithImages } from "../../types";
+import type { FieldWithImages } from "../../types";
 import { Link } from "react-router-dom";
+import {
+  getFieldStatusClass,
+  getFieldStatusLabel,
+  getSportLabel,
+  resolveFieldPrice,
+} from "../../utils/field-helpers";
 
 interface FieldCardProps {
   field: FieldWithImages;
 }
 
 const FieldCard: React.FC<FieldCardProps> = ({ field }) => {
+  const sportLabel = getSportLabel(field.sport_type);
+  const statusLabel = getFieldStatusLabel(field.status);
+  const statusClassName = getFieldStatusClass(field.status);
+  const normalizedStatus = field.status
+    ? field.status.toString().trim().toLowerCase()
+    : "";
+  const isBookable = ["active", "available", "open", "trống"].includes(
+    normalizedStatus
+  );
+  const actionLabel = isBookable ? "Xem sân" : statusLabel;
+
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("vi-VN", {
       style: "currency",
@@ -17,6 +34,7 @@ const FieldCard: React.FC<FieldCardProps> = ({ field }) => {
   };
 
   const img = field.images?.[0]?.image_url;
+  const price = resolveFieldPrice(field);
 
   return (
     <div className="card field-card">
@@ -28,10 +46,12 @@ const FieldCard: React.FC<FieldCardProps> = ({ field }) => {
           <div className="img-fallback" />
         )}
         <div className="badge-bl">
-          <span className="badge">{field.status}</span>
+          <span className={statusClassName}>{statusLabel}</span>
         </div>
         <div className="badge-tr">
-          <span className="badge bg-white/90 backdrop-blur-sm text-gray-800">{field.sport_type}</span>
+          <span className="badge bg-white/90 backdrop-blur-sm text-gray-800">
+            {sportLabel}
+          </span>
         </div>
       </div>
 
@@ -58,12 +78,13 @@ const FieldCard: React.FC<FieldCardProps> = ({ field }) => {
         </div>
 
         <div className="field-footer">
-          <div className="price">{formatPrice(field.price_per_hour)}/giờ</div>
+          <div className="price">{formatPrice(price)}/giờ</div>
           <Link
             to={`/fields/${field.field_code}`}
-            className={"btn-primary"}
+            className="btn-primary"
+            aria-disabled={!isBookable}
           >
-            {field.status === "trống" ? "Xem sân" : field.status}
+            {actionLabel}
           </Link>
         </div>
       </div>

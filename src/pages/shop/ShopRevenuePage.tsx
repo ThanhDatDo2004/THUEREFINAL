@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
-import { getShopByUserCode, getShopRevenueByShop } from "../../utils/fakeApi";
+import { fetchMyShop, fetchMyShopRevenue } from "../../models/shop.api";
 import type { ShopRevenue, Shops } from "../../types";
 
 const ShopRevenuePage: React.FC = () => {
@@ -10,17 +10,30 @@ const ShopRevenuePage: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let ignore = false;
     (async () => {
       if (!user?.user_code) return;
       setLoading(true);
-      const s = await getShopByUserCode(user.user_code);
-      setShop(s ?? null);
-      if (s) {
-        const r = await getShopRevenueByShop(s.shop_code);
-        setRows(r);
+      try {
+        const s = await fetchMyShop();
+        if (ignore) return;
+        setShop(s ?? null);
+        if (s) {
+          const r = await fetchMyShopRevenue();
+          if (!ignore) setRows(r);
+        } else if (!ignore) {
+          setRows([]);
+        }
+      } catch (error) {
+        console.error(error);
+        if (!ignore) setRows([]);
+      } finally {
+        if (!ignore) setLoading(false);
       }
-      setLoading(false);
     })();
+    return () => {
+      ignore = true;
+    };
   }, [user?.user_code]);
 
   return (
