@@ -1,5 +1,40 @@
 import { api } from "./api";
-import type { FieldWithImages, FieldsQuery } from "../types";
+import type { FieldImages, FieldWithImages, FieldsQuery } from "../types";
+
+export interface FieldsFacetItem {
+  value: string;
+  label: string;
+  total: number;
+  count: number;
+}
+
+export interface FieldsSummary {
+  totals: {
+    fields: number;
+    available: number;
+    maintenance: number;
+    booked: number;
+  };
+  shops: {
+    approved: number;
+    pending: number;
+  };
+}
+
+export interface FieldsPaginationMeta {
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
+export interface FieldsListMeta {
+  pagination?: FieldsPaginationMeta;
+  filters?: Record<string, unknown>;
+  appliedFilters?: Record<string, unknown>;
+}
 
 export interface FieldsListResult {
   items: FieldWithImages[];
@@ -9,8 +44,24 @@ export interface FieldsListResult {
   facets: {
     sportTypes: string[];
     locations: string[];
+    statuses?: FieldsFacetItem[];
+    shopApprovals?: FieldsFacetItem[];
   };
+  summary?: FieldsSummary;
+  totalPages?: number;
+  hasNext?: boolean;
+  hasPrev?: boolean;
+  meta?: FieldsListMeta;
 }
+
+export type FieldsListResultNormalized = FieldsListResult & {
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+  meta: FieldsListMeta & {
+    pagination: FieldsPaginationMeta;
+  };
+};
 
 export type ApiSuccess<T> = {
   success: true;
@@ -81,15 +132,98 @@ const extractErrorMessage = (error: unknown, fallback: string) => {
   return fallback;
 };
 
+const toNumberOrUndefined = (value: unknown) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
+};
+
+const toBooleanOrUndefined = (value: unknown) =>
+  typeof value === "boolean" ? value : undefined;
+
+const DEFAULT_PAGE_SIZE = 12;
+
+export const normalizeFieldsListResult = (
+  input: FieldsListResult
+): FieldsListResultNormalized => {
+  const items = Array.isArray(input.items) ? input.items : [];
+  const metaPagination = input.meta?.pagination;
+
+  const totalCandidate =
+    toNumberOrUndefined(metaPagination?.total) ??
+    toNumberOrUndefined(input.total) ??
+    items.length;
+
+  const pageSizeCandidate =
+    toNumberOrUndefined(metaPagination?.pageSize) ??
+    toNumberOrUndefined(input.pageSize) ??
+    (items.length > 0 ? items.length : DEFAULT_PAGE_SIZE);
+
+  const pageCandidate =
+    toNumberOrUndefined(metaPagination?.page) ??
+    toNumberOrUndefined(input.page) ??
+    1;
+
+  const totalPagesCandidate =
+    toNumberOrUndefined(metaPagination?.totalPages) ??
+    toNumberOrUndefined(input.totalPages);
+
+  const total = Math.max(0, totalCandidate ?? 0);
+  const pageSize = Math.max(1, pageSizeCandidate ?? DEFAULT_PAGE_SIZE);
+  const page = Math.max(1, pageCandidate ?? 1);
+
+  const fallbackTotalPages = Math.max(1, Math.ceil(total / pageSize));
+  const totalPages = Math.max(1, totalPagesCandidate ?? fallbackTotalPages);
+
+  const hasNext =
+    toBooleanOrUndefined(metaPagination?.hasNext) ??
+    toBooleanOrUndefined(input.hasNext) ??
+    page < totalPages;
+
+  const hasPrev =
+    toBooleanOrUndefined(metaPagination?.hasPrev) ??
+    toBooleanOrUndefined(input.hasPrev) ??
+    page > 1;
+
+  const pagination: FieldsPaginationMeta = {
+    total,
+    page,
+    pageSize,
+    totalPages,
+    hasNext,
+    hasPrev,
+  };
+
+  return {
+    ...input,
+    items,
+    total,
+    page,
+    pageSize,
+    totalPages,
+    hasNext,
+    hasPrev,
+    meta: {
+      ...input.meta,
+      pagination,
+    },
+  };
+};
+
 export async function fetchFields(
   params: FieldsQuery = {}
-): Promise<FieldsListResult> {
+): Promise<FieldsListResultNormalized> {
   try {
-    const { data } = await api.get<ApiSuccess<FieldsListResult> | ApiError>(
+    const { data } = await api.get<
+      ApiSuccess<FieldsListResult> | ApiError
+    >(
       "/fields",
       { params: buildQuery(params) }
     );
-    return ensureSuccess(data, "Không thể tải danh sách sân");
+    const payload = ensureSuccess(
+      data,
+      "Không thể tải danh sách sân"
+    );
+    return normalizeFieldsListResult(payload);
   } catch (error: unknown) {
     const message = extractErrorMessage(
       error,
@@ -115,6 +249,27 @@ export async function fetchFieldById(
     const message = extractErrorMessage(
       error,
       "Không thể tải thông tin sân"
+    );
+    throw new Error(message);
+  }
+}
+
+export async function uploadFieldImage(
+  fieldId: number,
+  file: File
+): Promise<FieldImages> {
+  const formData = new FormData();
+  formData.append("image", file);
+
+  try {
+    const { data } = await api.post<
+      ApiSuccess<FieldImages> | ApiError
+    >(`/fields/${fieldId}/images`, formData);
+    return ensureSuccess(data, "Không thể tải ảnh sân");
+  } catch (error: unknown) {
+    const message = extractErrorMessage(
+      error,
+      "Không thể tải ảnh sân"
     );
     throw new Error(message);
   }

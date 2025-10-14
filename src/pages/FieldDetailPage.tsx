@@ -18,6 +18,7 @@ import {
   getSportLabel,
   resolveFieldPrice,
 } from "../utils/field-helpers";
+import resolveImageUrl from "../utils/image-helpers";
 
 type AnyImage = {
   image_code?: number;
@@ -25,6 +26,11 @@ type AnyImage = {
   image_url: string;
   sort_order?: number;
   is_primary?: number | boolean;
+  storage?: {
+    bucket?: string;
+    key?: string;
+    region?: string;
+  };
 };
 
 const FieldDetailPage: React.FC = () => {
@@ -93,7 +99,13 @@ const FieldDetailPage: React.FC = () => {
       if (sa !== sb) return sa - sb; // nhỏ trước
       return imageCode(a) - imageCode(b);
     });
-    return sorted;
+    return sorted.map((img) => {
+      const resolved = resolveImageUrl(img.image_url, img.storage);
+      return {
+        ...img,
+        image_url: resolved ?? img.image_url,
+      };
+    });
   }, [field]);
 
   // Khi thay field/images: đặt index về ảnh primary nếu có
@@ -197,7 +209,10 @@ const FieldDetailPage: React.FC = () => {
     );
   }
 
-  const activeSrc = images[currentIndex]?.image_url;
+  const activeImage = images[currentIndex];
+  const activeSrc =
+    resolveImageUrl(activeImage?.image_url, activeImage?.storage) ??
+    activeImage?.image_url;
 
   return (
     <div className="field-page">

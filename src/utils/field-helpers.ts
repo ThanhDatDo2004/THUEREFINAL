@@ -63,6 +63,69 @@ const normalizeKey = (value?: FieldStatus | string | null) =>
     .toLowerCase()
     .replace(/\s+/g, "_");
 
+const simplify = (value?: string | null) => {
+  if (!value) return "";
+  return value
+    .toString()
+    .trim()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+};
+
+const SPORT_ALIASES: Record<string, FieldSportType> = Object.entries(
+  SPORT_LABELS
+).reduce((acc, [slug, label]) => {
+  const canonical = slug as FieldSportType;
+  acc[simplify(slug)] = canonical;
+  acc[simplify(label)] = canonical;
+  return acc;
+}, {} as Record<string, FieldSportType>);
+
+const STATUS_ALIASES: Record<string, FieldStatus> = (() => {
+  const baseEntries = Object.entries(STATUS_LABELS).reduce<
+    Record<string, FieldStatus>
+  >((acc, [slug, label]) => {
+    const canonical = (slug as FieldStatus) || "active";
+    acc[simplify(slug)] = canonical;
+    acc[simplify(label)] = canonical;
+    return acc;
+  }, {});
+
+  const extra: Array<[string, FieldStatus]> = [
+    ["trong", "active"],
+    ["san_sang", "active"],
+    ["open", "active"],
+    ["available", "active"],
+    ["bao_tri", "maintenance"],
+    ["bao_tri_", "maintenance"],
+    ["on_maintenance", "maintenance"],
+    ["maintenance", "maintenance"],
+    ["held", "maintenance"],
+    ["on_hold", "maintenance"],
+    ["inactive", "inactive"],
+    ["da_dat", "inactive"],
+    ["dat", "inactive"],
+    ["booked", "inactive"],
+    ["reserved", "inactive"],
+    ["blocked", "inactive"],
+    ["disabled", "inactive"],
+    ["unavailable", "inactive"],
+    ["closed", "inactive"],
+    ["cancelled", "inactive"],
+    ["canceled", "inactive"],
+    ["completed", "inactive"],
+  ];
+
+  extra.forEach(([alias, canonical]) => {
+    baseEntries[alias] = canonical;
+  });
+
+  return baseEntries;
+})();
+
 export const getSportLabel = (sportType?: FieldSportType | string | null) => {
   if (!sportType) return "Không xác định";
   const normalized = normalizeKey(sportType);
@@ -110,4 +173,32 @@ export const resolveFieldPrice = (
     return fallback;
   }
   return 0;
+};
+
+export const normalizeSportTypeValue = (
+  sportType?: FieldSportType | string | null
+): FieldSportType | undefined => {
+  if (!sportType) return undefined;
+  const candidate = SPORT_ALIASES[simplify(sportType)];
+  if (candidate) {
+    return candidate;
+  }
+  if (typeof sportType === "string" && sportType.trim()) {
+    return sportType.trim() as FieldSportType;
+  }
+  return undefined;
+};
+
+export const normalizeFieldStatusValue = (
+  status?: FieldStatus | string | null
+): FieldStatus | undefined => {
+  if (!status) return undefined;
+  const simplified = simplify(status);
+  if (simplified && STATUS_ALIASES[simplified]) {
+    return STATUS_ALIASES[simplified];
+  }
+  if (typeof status === "string" && status.trim()) {
+    return status.trim() as FieldStatus;
+  }
+  return undefined;
 };

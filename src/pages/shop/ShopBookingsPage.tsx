@@ -26,12 +26,12 @@ const ShopBookingsPage: React.FC = () => {
           return;
         }
         if (!ignore) setShop(s);
-        const [f, bookingsResponse] = await Promise.all([
-          fetchShopFields(s.shop_code),
+        const [fieldsResponse, bookingsResponse] = await Promise.all([
+          fetchShopFields(s.shop_code, { page: 1, pageSize: 100 }),
           fetchMyShopBookings(),
         ]);
         if (ignore) return;
-        setFields(f);
+        setFields(fieldsResponse.items ?? []);
         setBookings(bookingsResponse);
       } catch (error) {
         console.error(error);

@@ -1,4 +1,9 @@
 import { api } from "./api";
+import {
+  normalizeFieldsListResult,
+  type FieldsListResult,
+  type FieldsListResultNormalized,
+} from "./fields.api";
 import type {
   Bookings,
   Customers,
@@ -168,21 +173,63 @@ export interface UpsertShopFieldPayload {
   status?: Fields["status"];
 }
 
+export interface ShopFieldsQuery {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  status?: string;
+}
+
+export interface CreateShopFieldPayload {
+  field_name: string;
+  sport_type: Fields["sport_type"];
+  price_per_hour: number;
+  address: string;
+  status?: Fields["status"];
+  images?: File[];
+}
+
+const buildShopFieldsQuery = (params: ShopFieldsQuery = {}) => {
+  const query: Record<string, unknown> = {};
+  if (typeof params.page === "number") query.page = params.page;
+  if (typeof params.pageSize === "number") query.pageSize = params.pageSize;
+  if (params.search) query.search = params.search;
+  if (params.status) query.status = params.status;
+  return query;
+};
+
 export async function fetchShopFields(
-  shopCode?: number
-): Promise<FieldWithImages[]> {
+  shopCode?: number,
+  params?: ShopFieldsQuery
+): Promise<FieldsListResultNormalized> {
   try {
     const path = shopCode
       ? `/shops/${shopCode}/fields`
       : "/shops/me/fields";
     const { data } = await api.get<
-      ApiSuccess<MaybeArrayResult<FieldWithImages[]>> | ApiError
-    >(path);
+      ApiSuccess<FieldsListResult | MaybeArrayResult<FieldWithImages[]>> | ApiError
+    >(path, {
+      params: buildShopFieldsQuery(params),
+    });
     const payload = ensureSuccess(
       data,
       "Không thể tải danh sách sân."
     );
-    return normalizeList(payload);
+    if (Array.isArray(payload)) {
+      const items = normalizeList(payload);
+      return normalizeFieldsListResult({
+        items,
+        total: items.length,
+        page: 1,
+        pageSize: items.length || 1,
+        facets: {
+          sportTypes: [],
+          locations: [],
+        },
+        summary: undefined,
+      });
+    }
+    return normalizeFieldsListResult(payload as FieldsListResult);
   } catch (error: unknown) {
     throw new Error(
       extractErrorMessage(error, "Không thể tải danh sách sân.")
@@ -192,16 +239,27 @@ export async function fetchShopFields(
 
 export async function createShopField(
   shopCode: number,
-  payload: Required<Pick<Fields, "field_name" | "sport_type">> &
-    Partial<UpsertShopFieldPayload> & { address: string }
+  payload: CreateShopFieldPayload
 ): Promise<FieldWithImages> {
   if (!Number.isFinite(shopCode)) {
     throw new Error("Thiếu mã shop để tạo sân mới.");
   }
   try {
+    const formData = new FormData();
+    formData.append("field_name", payload.field_name);
+    formData.append("sport_type", payload.sport_type);
+    formData.append("price_per_hour", String(payload.price_per_hour ?? 0));
+    formData.append("address", payload.address);
+    if (payload.status) {
+      formData.append("status", payload.status);
+    }
+    (payload.images ?? []).forEach((file) => {
+      formData.append("images", file);
+    });
+
     const { data } = await api.post<
       ApiSuccess<MaybeArrayResult<FieldWithImages>> | ApiError
-    >(`/shops/${shopCode}/fields`, payload);
+    >(`/shops/${shopCode}/fields`, formData);
     const payloadData = ensureSuccess(
       data,
       "Không thể tạo sân mới."

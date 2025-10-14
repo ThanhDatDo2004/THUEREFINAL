@@ -58,14 +58,14 @@ const ShopOverview: React.FC = () => {
         if (!s) return;
         if (!ignore) setShop(s);
 
-        const [fs, bookingsResponse, rev] = await Promise.all([
-          fetchShopFields(s.shop_code),
+        const [fieldsResponse, bookingsResponse, rev] = await Promise.all([
+          fetchShopFields(s.shop_code, { page: 1, pageSize: 100 }),
           fetchMyShopBookings(),
           fetchMyShopRevenue({ year: currentYear }),
         ]);
 
         if (ignore) return;
-        setFields(fs);
+        setFields(fieldsResponse.items ?? []);
         setBookings(bookingsResponse);
         setRevenue(rev);
       } catch (error) {

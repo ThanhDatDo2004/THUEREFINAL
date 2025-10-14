@@ -66,6 +66,11 @@ export interface FieldImages {
   image_url: string;
   sort_order?: number;
   is_primary?: number | boolean;
+  storage?: {
+    bucket: string;
+    key: string;
+    region?: string;
+  };
 }
 
 export interface Bookings {
@@ -163,6 +168,8 @@ export type FieldsQuery = {
   sortDir?: "asc" | "desc";
   page?: number;
   pageSize?: number;
+  status?: string;
+  shopStatus?: string;
 };
 
 export interface BookingWithField extends Bookings {

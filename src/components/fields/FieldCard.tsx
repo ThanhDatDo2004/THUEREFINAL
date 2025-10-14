@@ -8,6 +8,7 @@ import {
   getSportLabel,
   resolveFieldPrice,
 } from "../../utils/field-helpers";
+import resolveImageUrl from "../../utils/image-helpers";
 
 interface FieldCardProps {
   field: FieldWithImages;
@@ -33,7 +34,11 @@ const FieldCard: React.FC<FieldCardProps> = ({ field }) => {
     }).format(price);
   };
 
-  const img = field.images?.[0]?.image_url;
+  const primaryImage = field.images?.[0];
+  const img = resolveImageUrl(
+    primaryImage?.image_url,
+    primaryImage?.storage
+  );
   const price = resolveFieldPrice(field);
 
   return (

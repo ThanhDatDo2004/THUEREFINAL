@@ -29,6 +29,7 @@ import {
   getSportLabel,
   resolveFieldPrice,
 } from "../utils/field-helpers";
+import resolveImageUrl from "../utils/image-helpers";
 
 interface BookingFormData {
   customer_name: string;
@@ -503,8 +504,9 @@ const BookingPage: React.FC = () => {
     ? minutesToLabel(Math.round(effectiveBooking.duration * 60))
     : null;
 
+  const primaryImage = field?.images?.[0];
   const fieldCoverImage =
-    field?.images?.[0]?.image_url ||
+    resolveImageUrl(primaryImage?.image_url, primaryImage?.storage) ||
     "https://images.pexels.com/photos/274506/pexels-photo-274506.jpeg";
 
   const isFieldLoading = loadingField && !field;
