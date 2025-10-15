@@ -9,7 +9,8 @@ import {
 } from "lucide-react";
 import FieldCard from "../components/fields/FieldCard";
 import { fetchFields } from "../models/fields.api";
-import type { FieldWithImages, FieldsListResultNormalized, FieldsQuery } from "../types";
+import type { FieldWithImages, FieldsQuery } from "../types";
+import type { FieldsListResultNormalized } from "../models/fields.api";
 
 type PriceRange = { min: number; max: number };
 
@@ -18,7 +19,11 @@ const PAGE_SIZE_OPTIONS = [6, 9, 12];
 
 type WardOption = { code: string; name: string };
 type DistrictOption = { code: string; name: string; wards: WardOption[] };
-type ProvinceOption = { code: string; name: string; districts: DistrictOption[] };
+type ProvinceOption = {
+  code: string;
+  name: string;
+  districts: DistrictOption[];
+};
 
 type QuickFilter =
   | {
@@ -47,7 +52,9 @@ const FieldsPage: React.FC = () => {
   const [showFilterDrawer, setShowFilterDrawer] = useState(false);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(PAGE_SIZE_OPTIONS[2]);
-  const [activeQuickFilter, setActiveQuickFilter] = useState<string | null>(null);
+  const [activeQuickFilter, setActiveQuickFilter] = useState<string | null>(
+    null
+  );
 
   const [provinces, setProvinces] = useState<ProvinceOption[]>([]);
   const [locationsLoading, setLocationsLoading] = useState(false);
@@ -57,7 +64,9 @@ const FieldsPage: React.FC = () => {
   const [wardCode, setWardCode] = useState("");
 
   const [fields, setFields] = useState<FieldWithImages[]>([]);
-  const [queryMeta, setQueryMeta] = useState<FieldsListResultNormalized["meta"] | null>(null);
+  const [queryMeta, setQueryMeta] = useState<
+    FieldsListResultNormalized["meta"] | null
+  >(null);
   const [total, setTotal] = useState(0);
   const [facets, setFacets] = useState<{
     sportTypes: string[];
@@ -73,15 +82,29 @@ const FieldsPage: React.FC = () => {
       search: searchQuery || undefined,
       sportType: selectedSportType || undefined,
       location: selectedLocation || undefined,
-      priceMin: priceRange.min,
-      priceMax: priceRange.max,
+      priceMin:
+        priceRange.min !== DEFAULT_PRICE.min ? priceRange.min : undefined,
+      priceMax:
+        priceRange.max !== DEFAULT_PRICE.max ? priceRange.max : undefined,
       page,
       pageSize,
-      sortBy: "rating",
-      sortDir: "desc",
+      // Do not force sorting by rating; let backend default ordering apply
     };
     try {
+      // DEBUG: verify requested page/params
+      // eslint-disable-next-line no-console
+      console.log("[FieldsPage] Request params", q);
       const payload = await fetchFields(q);
+      // DEBUG: verify response pagination and items
+      // eslint-disable-next-line no-console
+      console.log(
+        "[FieldsPage] Response pagination",
+        payload?.meta?.pagination,
+        "firstCodes",
+        (payload?.items || []).slice(0, 3).map((x) => x.field_code),
+        "count",
+        payload?.items?.length
+      );
       setFields(payload.items);
       setTotal(payload.meta.pagination.total);
       setFacets({
@@ -90,14 +113,24 @@ const FieldsPage: React.FC = () => {
       });
       setQueryMeta(payload.meta);
     } catch (err: any) {
-      setError(err?.message || "Không thể tải danh sách sân. Vui lòng thử lại.");
+      setError(
+        err?.message || "Không thể tải danh sách sân. Vui lòng thử lại."
+      );
       setFields([]);
       setQueryMeta(null);
       setTotal(0);
     } finally {
       setLoading(false);
     }
-  }, [page, pageSize, priceRange.max, priceRange.min, searchQuery, selectedLocation, selectedSportType]);
+  }, [
+    page,
+    pageSize,
+    priceRange.max,
+    priceRange.min,
+    searchQuery,
+    selectedLocation,
+    selectedSportType,
+  ]);
 
   useEffect(() => {
     fetchData();
@@ -109,7 +142,9 @@ const FieldsPage: React.FC = () => {
       setLocationsLoading(true);
       setLocationsError("");
       try {
-        const response = await fetch("https://provinces.open-api.vn/api/?depth=3");
+        const response = await fetch(
+          "https://provinces.open-api.vn/api/?depth=3"
+        );
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}`);
         }
@@ -140,7 +175,9 @@ const FieldsPage: React.FC = () => {
       } catch (error) {
         console.error("Failed to load provinces", error);
         if (!cancelled) {
-          setLocationsError("Không thể tải danh sách tỉnh/thành, hãy tự nhập hoặc thử lại sau");
+          setLocationsError(
+            "Không thể tải danh sách tỉnh/thành, hãy tự nhập hoặc thử lại sau"
+          );
           setProvinces([]);
         }
       } finally {
@@ -272,7 +309,10 @@ const FieldsPage: React.FC = () => {
 
   const selectedDistrict = useMemo(() => {
     if (!districtCode) return null;
-    return availableDistricts.find((district) => district.code === districtCode) ?? null;
+    return (
+      availableDistricts.find((district) => district.code === districtCode) ??
+      null
+    );
   }, [availableDistricts, districtCode]);
 
   const availableWards = selectedDistrict?.wards ?? [];
@@ -310,7 +350,14 @@ const FieldsPage: React.FC = () => {
     setSelectedLocation(composed);
     setActiveQuickFilter(null);
     setPage(1);
-  }, [selectedDistrict, selectedProvince, selectedWard, provinceCode, districtCode, wardCode]);
+  }, [
+    selectedDistrict,
+    selectedProvince,
+    selectedWard,
+    provinceCode,
+    districtCode,
+    wardCode,
+  ]);
 
   return (
     <div className="page">
@@ -331,7 +378,9 @@ const FieldsPage: React.FC = () => {
 
           <div className="filters-body">
             <div className="filter-group">
-              <label className="filter-label">Tìm theo tên sân hoặc từ khóa</label>
+              <label className="filter-label">
+                Tìm theo tên sân hoặc từ khóa
+              </label>
               <div className="filter-search">
                 <Search className="filter-search-icon" />
                 <input
@@ -447,7 +496,9 @@ const FieldsPage: React.FC = () => {
                 <ChevronDown className="filter-select-icon" />
               </div>
               {locationsError && !provinces.length && (
-                <p className="filter-hint text-xs text-amber-600">{locationsError}</p>
+                <p className="filter-hint text-xs text-amber-600">
+                  {locationsError}
+                </p>
               )}
             </div>
 
@@ -513,7 +564,8 @@ const FieldsPage: React.FC = () => {
             <div>
               <h1 className="fields-title">Tìm sân thể thao</h1>
               <p className="fields-subtitle">
-                Lọc theo vị trí, loại hình, giá và đánh giá để đặt sân phù hợp nhất.
+                Lọc theo vị trí, loại hình, giá và đánh giá để đặt sân phù hợp
+                nhất.
               </p>
             </div>
             <button
@@ -614,7 +666,9 @@ const FieldsPage: React.FC = () => {
               </div>
               <button
                 className="pagination-button"
-                onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
+                onClick={() =>
+                  setPage((prev) => Math.min(totalPages, prev + 1))
+                }
                 disabled={currentPage >= totalPages}
               >
                 Sau

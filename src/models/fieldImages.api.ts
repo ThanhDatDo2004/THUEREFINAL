@@ -215,3 +215,4 @@ export function getFieldImageUrls(field: { images: FieldImages[] }): string[] {
     .sort((a, b) => (a.sort_order ?? 999) - (b.sort_order ?? 999))
     .map((img) => img.image_url);
 }
+

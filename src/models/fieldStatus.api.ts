@@ -81,3 +81,4 @@ export function isFieldInMaintenance(field: FieldWithImages): boolean {
 export function isFieldActive(field: FieldWithImages): boolean {
   return field.status === "active";
 }
+

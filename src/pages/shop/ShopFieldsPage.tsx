@@ -7,6 +7,7 @@ import {
   updateShopField,
   updateShopFieldStatus,
   createShopField,
+  deleteShopField,
 } from "../../models/shop.api";
 import {
   uploadFieldImage,
@@ -673,6 +674,36 @@ const ShopFieldsPage: React.FC = () => {
           ? { ...prev, status: next }
           : prev
       );
+    }
+  };
+
+  const onDeleteField = async () => {
+    if (!editing) return;
+
+    const confirmed = window.confirm(
+      `Bạn có chắc chắn muốn xoá sân "${editing.field_name}" không? Hành động này không thể hoàn tác.`
+    );
+
+    if (confirmed) {
+      try {
+        const result = await deleteShopField(editing.field_code);
+        if (!result || result.deleted !== true) {
+          throw new Error("Xoá sân không thành công.");
+        }
+        setFields((prev) =>
+          prev.filter((f) => f.field_code !== editing.field_code)
+        );
+        setListMeta((prev) => ({
+          ...prev,
+          total: Math.max(0, prev.total - 1),
+        }));
+        setSuccessMessage(`Đã xoá sân "${editing.field_name}" thành công.`);
+        onCloseEdit();
+      } catch (error: any) {
+        setEditSubmitError(
+          error?.message || "Không thể xoá sân. Vui lòng thử lại."
+        );
+      }
     }
   };
 
@@ -1378,7 +1409,8 @@ const ShopFieldsPage: React.FC = () => {
                     {editing.images.map((img, idx) => {
                       const src = resolveImageUrl(img.image_url, img.storage);
                       const isPrimary = Number(img.sort_order ?? 0) === 0;
-                      const imageId = img.image_id;
+                      const imageId =
+                        (img as any).image_code ?? (img as any).image_id;
                       const key = imageId ?? `${idx}-${src}`;
                       const isMarkedForDeletion = imageId
                         ? imagesToDelete.includes(imageId)
@@ -1470,25 +1502,11 @@ const ShopFieldsPage: React.FC = () => {
               <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
                 <button
                   type="button"
-                  onClick={() => onToggleMaintenance(editing)}
-                  className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 border text-sm ${
-                    ["maintenance", "bảo trì", "on_maintenance"].includes(
-                      form.status
-                        ? form.status.toString().trim().toLowerCase()
-                        : ""
-                    )
-                      ? "border-amber-400 text-amber-700 bg-amber-50"
-                      : "border-gray-200 text-gray-700 hover:bg-gray-50"
-                  }`}
+                  onClick={onDeleteField}
+                  className="btn-danger flex items-center gap-1"
                 >
-                  <Wrench className="w-4 h-4" />
-                  {["maintenance", "bảo trì", "on_maintenance"].includes(
-                    form.status
-                      ? form.status.toString().trim().toLowerCase()
-                      : ""
-                  )
-                    ? "Bỏ bảo trì"
-                    : "Đặt bảo trì"}
+                  <Trash2 className="w-4 h-4" />
+                  Xoá sân
                 </button>
 
                 <div className="flex items-center gap-2">

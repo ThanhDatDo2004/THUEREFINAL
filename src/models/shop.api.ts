@@ -37,13 +37,9 @@ type ApiError = {
   error?: { message?: string | null } | null;
 };
 
-type MaybeArrayResult<T> =
-  | T
-  | { data: T }
-  | { items: T }
-  | { rows: T };
+type MaybeArrayResult<T> = T | { data: T } | { items: T } | { rows: T };
 
-const ensureSuccess = <T,>(
+const ensureSuccess = <T>(
   payload: ApiSuccess<T> | ApiError,
   fallbackMessage: string
 ): T => {
@@ -123,17 +119,15 @@ export async function submitShopRequest(payload: ShopRequestPayload) {
     );
     return ensureSuccess(data, "Không thể gửi yêu cầu");
   } catch (error: unknown) {
-    throw new Error(
-      extractErrorMessage(error, "Không thể gửi yêu cầu")
-    );
+    throw new Error(extractErrorMessage(error, "Không thể gửi yêu cầu"));
   }
 }
 
 export async function fetchMyShop(): Promise<Shops | null> {
   try {
-    const { data } = await api.get<ApiSuccess<MaybeArrayResult<Shops>> | ApiError>(
-      "/shops/me"
-    );
+    const { data } = await api.get<
+      ApiSuccess<MaybeArrayResult<Shops>> | ApiError
+    >("/shops/me");
     const payload = ensureSuccess(
       data,
       "Không thể tải thông tin shop của bạn."
@@ -146,16 +140,40 @@ export async function fetchMyShop(): Promise<Shops | null> {
   }
 }
 
+export interface UpdateMyShopPayload {
+  shop_name: string;
+  address: string;
+  bank_account_number?: string;
+  bank_name?: string;
+  bank_account_holder?: string;
+}
+
+export async function updateMyShop(
+  payload: UpdateMyShopPayload
+): Promise<Shops> {
+  try {
+    const { data } = await api.put<
+      ApiSuccess<MaybeArrayResult<Shops>> | ApiError
+    >("/shops/me", payload);
+    const payloadData = ensureSuccess(
+      data,
+      "Không thể cập nhật thông tin shop."
+    );
+    return normalizeSingle(payloadData);
+  } catch (error: unknown) {
+    throw new Error(
+      extractErrorMessage(error, "Không thể cập nhật thông tin shop.")
+    );
+  }
+}
+
 export async function fetchShopByCode(shopCode: number): Promise<Shops | null> {
   if (!Number.isFinite(shopCode)) return null;
   try {
     const { data } = await api.get<
       ApiSuccess<MaybeArrayResult<Shops>> | ApiError
     >(`/shops/${shopCode}`);
-    const payload = ensureSuccess(
-      data,
-      "Không thể tải thông tin shop."
-    );
+    const payload = ensureSuccess(data, "Không thể tải thông tin shop.");
     return normalizeSingle(payload) ?? null;
   } catch (error: unknown) {
     throw new Error(
@@ -171,6 +189,8 @@ export interface UpsertShopFieldPayload {
   default_price_per_hour?: number;
   address?: string;
   status?: Fields["status"];
+  // Frontend passes list of image IDs to delete; backend may choose to honor it
+  deleted_images?: number[];
 }
 
 export interface ShopFieldsQuery {
@@ -203,18 +223,14 @@ export async function fetchShopFields(
   params?: ShopFieldsQuery
 ): Promise<FieldsListResultNormalized> {
   try {
-    const path = shopCode
-      ? `/shops/${shopCode}/fields`
-      : "/shops/me/fields";
+    const path = shopCode ? `/shops/${shopCode}/fields` : "/shops/me/fields";
     const { data } = await api.get<
-      ApiSuccess<FieldsListResult | MaybeArrayResult<FieldWithImages[]>> | ApiError
+      | ApiSuccess<FieldsListResult | MaybeArrayResult<FieldWithImages[]>>
+      | ApiError
     >(path, {
       params: buildShopFieldsQuery(params),
     });
-    const payload = ensureSuccess(
-      data,
-      "Không thể tải danh sách sân."
-    );
+    const payload = ensureSuccess(data, "Không thể tải danh sách sân.");
     if (Array.isArray(payload)) {
       const items = normalizeList(payload);
       return normalizeFieldsListResult({
@@ -231,9 +247,7 @@ export async function fetchShopFields(
     }
     return normalizeFieldsListResult(payload as FieldsListResult);
   } catch (error: unknown) {
-    throw new Error(
-      extractErrorMessage(error, "Không thể tải danh sách sân.")
-    );
+    throw new Error(extractErrorMessage(error, "Không thể tải danh sách sân."));
   }
 }
 
@@ -260,19 +274,14 @@ export async function createShopField(
     const { data } = await api.post<
       ApiSuccess<MaybeArrayResult<FieldWithImages>> | ApiError
     >(`/shops/${shopCode}/fields`, formData);
-    const payloadData = ensureSuccess(
-      data,
-      "Không thể tạo sân mới."
-    );
+    const payloadData = ensureSuccess(data, "Không thể tạo sân mới.");
     const normalized = normalizeSingle(payloadData);
     if (!normalized) {
       throw new Error("Không nhận được dữ liệu sân sau khi tạo.");
     }
     return normalized;
   } catch (error: unknown) {
-    throw new Error(
-      extractErrorMessage(error, "Không thể tạo sân mới.")
-    );
+    throw new Error(extractErrorMessage(error, "Không thể tạo sân mới."));
   }
 }
 
@@ -318,6 +327,20 @@ export async function updateShopFieldStatus(
   }
 }
 
+export async function deleteShopField(
+  fieldCode: number
+): Promise<{ deleted: boolean } | null> {
+  if (!Number.isFinite(fieldCode)) return null;
+  try {
+    const { data } = await api.delete<
+      ApiSuccess<{ deleted: boolean }> | ApiError
+    >(`/shops/me/fields/${fieldCode}`);
+    return ensureSuccess(data, "Không thể xoá sân.");
+  } catch (error: unknown) {
+    throw new Error(extractErrorMessage(error, "Không thể xoá sân."));
+  }
+}
+
 export async function fetchMyShopBookings(): Promise<Bookings[]> {
   try {
     const { data } = await api.get<
@@ -330,10 +353,7 @@ export async function fetchMyShopBookings(): Promise<Bookings[]> {
     return normalizeList(payload);
   } catch (error: unknown) {
     throw new Error(
-      extractErrorMessage(
-        error,
-        "Không thể tải danh sách đơn đặt của shop."
-      )
+      extractErrorMessage(error, "Không thể tải danh sách đơn đặt của shop.")
     );
   }
 }
@@ -343,10 +363,7 @@ export async function fetchMyShopCustomers(): Promise<Customers[]> {
     const { data } = await api.get<
       ApiSuccess<MaybeArrayResult<Customers[]>> | ApiError
     >("/shops/me/customers");
-    const payload = ensureSuccess(
-      data,
-      "Không thể tải danh sách khách hàng."
-    );
+    const payload = ensureSuccess(data, "Không thể tải danh sách khách hàng.");
     return normalizeList(payload);
   } catch (error: unknown) {
     throw new Error(
@@ -355,9 +372,10 @@ export async function fetchMyShopCustomers(): Promise<Customers[]> {
   }
 }
 
-export async function fetchMyShopRevenue(
-  params?: { year?: number; month?: number }
-): Promise<ShopRevenue[]> {
+export async function fetchMyShopRevenue(params?: {
+  year?: number;
+  month?: number;
+}): Promise<ShopRevenue[]> {
   try {
     const { data } = await api.get<
       ApiSuccess<MaybeArrayResult<ShopRevenue[]>> | ApiError
@@ -371,10 +389,7 @@ export async function fetchMyShopRevenue(
     return normalizeList(payload);
   } catch (error: unknown) {
     throw new Error(
-      extractErrorMessage(
-        error,
-        "Không thể tải dữ liệu doanh thu của shop."
-      )
+      extractErrorMessage(error, "Không thể tải dữ liệu doanh thu của shop.")
     );
   }
 }
