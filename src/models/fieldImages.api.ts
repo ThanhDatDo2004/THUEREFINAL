@@ -1,67 +1,10 @@
 import { api } from "./api";
-import type { FieldImages, ApiSuccess, ApiError } from "../types";
-
-// --- Constants ---
-
-const VALID_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
-const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
-
-// --- Helper Functions ---
-
-/**
- * Ensures a successful API response, returning data or throwing an error.
- * @template T The expected data type.
- * @param {ApiSuccess<T> | ApiError} payload The API response.
- * @param {string} fallbackMessage The message to use if the API provides none.
- * @returns {T} The data from the successful response.
- * @throws {Error} If the API response indicates an error.
- */
-const ensureSuccess = <T>(
-  payload: ApiSuccess<T> | ApiError,
-  fallbackMessage: string
-): T => {
-  if (payload?.success && payload.data !== undefined) {
-    return payload.data;
-  }
-  const message =
-    payload?.error?.message || payload?.message || fallbackMessage;
-  throw new Error(message);
-};
-
-type ErrorWithResponse = {
-  response?: {
-    data?: {
-      error?: { message?: string | null };
-      message?: string | null;
-    };
-  };
-  message?: string;
-};
-
-/**
- * Extracts a user-friendly error message from a variety of error types.
- * @param {unknown} error The error object.
- * @param {string} fallback A fallback message.
- * @returns {string} The extracted or fallback error message.
- */
-const extractErrorMessage = (error: unknown, fallback: string): string => {
-  if (error instanceof Error) {
-    return error.message;
-  }
-  if (typeof error === "object" && error !== null) {
-    const typedError = error as ErrorWithResponse;
-    const apiMessage =
-      typedError.response?.data?.error?.message ||
-      typedError.response?.data?.message;
-    if (apiMessage) {
-      return apiMessage;
-    }
-    if (typedError.message) {
-      return typedError.message;
-    }
-  }
-  return fallback;
-};
+import type { FieldImages } from "../types";
+import type {
+  IApiSuccessResponse,
+  IApiErrorResponse,
+} from "../interfaces/common";
+import { ensureSuccess, extractErrorMessage } from "./api.helpers";
 
 // --- API Functions ---
 
@@ -78,11 +21,14 @@ export async function deleteFieldImage(
 ): Promise<{ deleted: boolean }> {
   try {
     const { data } = await api.delete<
-      ApiSuccess<{ deleted: boolean }> | ApiError
+      IApiSuccessResponse<{ deleted: boolean }> | IApiErrorResponse
     >(`/shops/me/fields/${fieldId}/images/${imageId}`);
     return ensureSuccess(data, "Không thể xóa ảnh. Vui lòng thử lại.");
   } catch (error: unknown) {
-    const message = extractErrorMessage(error, "Lỗi không xác định khi xóa ảnh");
+    const message = extractErrorMessage(
+      error,
+      "Lỗi không xác định khi xóa ảnh"
+    );
     throw new Error(message);
   }
 }
@@ -102,11 +48,11 @@ export async function uploadFieldImage(
   formData.append("image", file);
 
   try {
-    const { data } = await api.post<ApiSuccess<FieldImages> | ApiError>(
-      `/fields/${fieldId}/images`,
-      formData,
-      { headers: { "Content-Type": "multipart/form-data" } }
-    );
+    const { data } = await api.post<
+      IApiSuccessResponse<FieldImages> | IApiErrorResponse
+    >(`/fields/${fieldId}/images`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
     return ensureSuccess(data, "Không thể tải ảnh lên. Vui lòng thử lại.");
   } catch (error: unknown) {
     const message = extractErrorMessage(
@@ -155,6 +101,16 @@ export async function deleteMultipleFieldImages(
   }
 }
 
+// --- Constants ---
+
+const VALID_IMAGE_TYPES = [
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
+];
+const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
+
 // --- Validation and Utility Functions ---
 
 /**
@@ -175,9 +131,10 @@ export function formatFileSize(bytes: number): string {
  * @param {File} file The file to validate.
  * @returns {{ isValid: boolean; reason?: "type" | "size" }} The validation result.
  */
-export function isValidImageFile(
-  file: File
-): { isValid: boolean; reason?: "type" | "size" } {
+export function isValidImageFile(file: File): {
+  isValid: boolean;
+  reason?: "type" | "size";
+} {
   if (!VALID_IMAGE_TYPES.includes(file.type)) {
     return { isValid: false, reason: "type" };
   }

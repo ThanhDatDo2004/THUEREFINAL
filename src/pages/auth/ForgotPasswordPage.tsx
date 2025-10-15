@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { Mail, Send, ArrowLeft, Check } from "lucide-react";
-import { checkEmailExists, forgotPassword } from "../../models/auth.api";
+import { forgotPassword } from "../../models/auth.api";
 
 type Form = { email: string };
 
@@ -11,40 +11,31 @@ const ForgotPasswordPage: React.FC = () => {
     register,
     handleSubmit,
     formState: { errors },
-    setError,
-    clearErrors,
   } = useForm<Form>({ mode: "onChange" });
   const [submitting, setSubmitting] = useState(false);
-  const [serverMsg, setServerMsg] = useState("");
+  const [feedback, setFeedback] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
 
   const onSubmit = handleSubmit(async ({ email }) => {
-    setServerMsg("");
-    clearErrors("email");
+    setFeedback(null);
+    setSubmitting(true);
     const trimmedEmail = email.trim();
+
     try {
-      setSubmitting(true);
-      const checkResult = await checkEmailExists(trimmedEmail);
-      if (!checkResult?.success)
-        throw new Error(checkResult?.message || "Kiểm tra thất bại");
-      if (!checkResult.exists) {
-        setError("email", {
-          type: "manual",
-          message: "Email không tồn tại",
-        });
-        return;
-      }
-      const sendResult = await forgotPassword(trimmedEmail);
-      if (!sendResult?.success)
-        throw new Error(
-          sendResult?.message || "Không gửi được email"
-        );
-      setServerMsg(
-        "Đã gửi liên kết đặt lại mật khẩu. Vui lòng kiểm tra hộp thư."
-      );
+      // Giả định forgotPassword đã được cập nhật ở backend để xử lý cả việc kiểm tra email
+      await forgotPassword(trimmedEmail);
+      setFeedback({
+        type: "success",
+        message:
+          "Nếu email của bạn tồn tại trong hệ thống, một liên kết đặt lại mật khẩu đã được gửi. Vui lòng kiểm tra hộp thư.",
+      });
     } catch (e: any) {
-      setError("email", {
-        type: "manual",
-        message: e?.response?.data?.message || e?.message || "Gửi thất bại",
+      // Hiển thị một thông báo lỗi chung chung để tăng cường bảo mật
+      setFeedback({
+        type: "error",
+        message: "Đã có lỗi xảy ra. Vui lòng thử lại sau.",
       });
     } finally {
       setSubmitting(false);
@@ -88,10 +79,17 @@ const ForgotPasswordPage: React.FC = () => {
                   {errors.email.message}
                 </p>
               )}
-              {!!serverMsg && (
-                <p className="text-emerald-700 text-sm mt-2 inline-flex items-center gap-1">
-                  <Check className="w-4 h-4" /> {serverMsg}
-                </p>
+              {feedback && (
+                <div
+                  className={`text-sm mt-2 inline-flex items-center gap-1 ${
+                    feedback.type === "success"
+                      ? "text-emerald-700"
+                      : "text-red-500"
+                  }`}
+                >
+                  {feedback.type === "success" && <Check className="w-4 h-4" />}
+                  {feedback.message}
+                </div>
               )}
             </div>
 
@@ -99,7 +97,7 @@ const ForgotPasswordPage: React.FC = () => {
               type="submit"
               disabled={submitting}
               className="px-4 py-2 rounded-lg bg-emerald-600 text-white disabled:opacity-60"
-              title="Gửi liên kết đặt lại"
+              title={submitting ? "Đang xử lý" : "Gửi liên kết đặt lại"}
             >
               {submitting ? "Đang xử lý..." : "Gửi liên kết"}
             </button>

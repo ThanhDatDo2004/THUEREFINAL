@@ -1,13 +1,16 @@
 import { api } from "./api";
 import type {
+  IApiSuccessResponse,
+  IApiErrorResponse,
+} from "../interfaces/common";
+import type {
   FieldWithImages,
   FieldsQuery,
   FieldsListResult,
   FieldsListResultNormalized,
-  ApiSuccess,
-  ApiError,
   FieldImages,
 } from "../types";
+import { ensureSuccess, extractErrorMessage } from "./api.helpers";
 
 // Types for shop field management
 export interface CreateFieldData {
@@ -24,66 +27,12 @@ export interface UpdateFieldData {
   address?: string;
   price_per_hour?: number;
   status?: "active" | "maintenance" | "inactive";
+  deleted_images?: number[];
 }
 
 export interface UpdateFieldStatusData {
   status: "active" | "maintenance" | "inactive";
 }
-
-// Helper functions from existing fields.api.ts
-const ensureSuccess = <T>(
-  payload: ApiSuccess<T> | ApiError,
-  fallbackMessage: string
-): T => {
-  if (payload?.success && payload.data !== undefined) {
-    return payload.data;
-  }
-  const message =
-    payload?.error?.message || payload?.message || fallbackMessage;
-  throw new Error(message);
-};
-
-const buildQuery = (params: FieldsQuery = {}) => {
-  const query: Record<string, unknown> = {};
-
-  if (params.search) query.search = params.search;
-  if (params.sportType) query.sportType = params.sportType;
-  if (params.location) query.location = params.location;
-  if (typeof params.priceMin === "number") query.priceMin = params.priceMin;
-  if (typeof params.priceMax === "number") query.priceMax = params.priceMax;
-  if (typeof params.page === "number") query.page = params.page;
-  if (typeof params.pageSize === "number") query.pageSize = params.pageSize;
-  if (params.sortBy) query.sortBy = params.sortBy;
-  if (params.sortDir) query.sortDir = params.sortDir;
-  if (params.status) query.status = params.status;
-
-  return query;
-};
-
-type ErrorWithResponse = {
-  response?: {
-    status?: number;
-    data?: {
-      error?: { message?: string | null } | null;
-      message?: string | null;
-    };
-  };
-  message?: string;
-};
-
-const extractErrorMessage = (error: unknown, fallback: string) => {
-  if (error instanceof Error && error.message) {
-    return error.message;
-  }
-  if (typeof error === "object" && error !== null) {
-    const typed = error as ErrorWithResponse;
-    const apiMessage =
-      typed.response?.data?.error?.message || typed.response?.data?.message;
-    if (apiMessage) return apiMessage;
-    if (typed.message) return typed.message;
-  }
-  return fallback;
-};
 
 /**
  * Shop Fields Management API
@@ -101,18 +50,20 @@ export async function fetchMyFields(
   params: FieldsQuery = {}
 ): Promise<FieldsListResultNormalized> {
   try {
-    const { data } = await api.get<ApiSuccess<FieldsListResult> | ApiError>(
-      "/shops/me/fields",
-      {
-        params: buildQuery(params),
-      }
-    );
+    const { data } = await api.get<
+      IApiSuccessResponse<FieldsListResult> | IApiErrorResponse
+    >("/shops/me/fields", {
+      params: buildQuery(params),
+    });
 
     const payload = ensureSuccess(data, "Không thể tải danh sách sân của bạn");
 
     // Normalize the result similar to fetchFields
     return {
-      ...payload,
+      fields: payload.fields,
+      total: payload.total,
+      page: payload.page,
+      pageSize: payload.pageSize,
       totalPages:
         payload.totalPages ||
         Math.ceil(payload.total / (payload.pageSize || 12)),
@@ -170,15 +121,13 @@ export async function createMyField(
       });
     }
 
-    const { data } = await api.post<ApiSuccess<FieldWithImages> | ApiError>(
-      "/shops/me/fields",
-      formData,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      }
-    );
+    const { data } = await api.post<
+      IApiSuccessResponse<FieldWithImages> | IApiErrorResponse
+    >("/shops/me/fields", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
 
     return ensureSuccess(data, "Không thể tạo sân mới");
   } catch (error: unknown) {
@@ -196,10 +145,9 @@ export async function updateMyField(
   fieldData: UpdateFieldData
 ): Promise<FieldWithImages> {
   try {
-    const { data } = await api.put<ApiSuccess<FieldWithImages> | ApiError>(
-      `/shops/me/fields/${fieldId}`,
-      fieldData
-    );
+    const { data } = await api.put<
+      IApiSuccessResponse<FieldWithImages> | IApiErrorResponse
+    >(`/shops/me/fields/${fieldId}`, fieldData);
 
     return ensureSuccess(data, "Không thể cập nhật sân");
   } catch (error: unknown) {
@@ -218,9 +166,9 @@ export async function fetchMyFieldById(
   if (!fieldId) return null;
 
   try {
-    const { data } = await api.get<ApiSuccess<FieldWithImages> | ApiError>(
-      `/fields/${fieldId}`
-    );
+    const { data } = await api.get<
+      IApiSuccessResponse<FieldWithImages> | IApiErrorResponse
+    >(`/fields/${fieldId}`);
 
     return ensureSuccess(data, "Không thể tải thông tin sân");
   } catch (error: unknown) {

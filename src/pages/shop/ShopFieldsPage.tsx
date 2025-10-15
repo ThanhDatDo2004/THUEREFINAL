@@ -22,6 +22,7 @@ import {
   UploadCloud,
   Trash2,
   Loader2,
+  RefreshCcw,
 } from "lucide-react";
 import {
   getFieldStatusClass,
@@ -192,6 +193,7 @@ const ShopFieldsPage: React.FC = () => {
   const [editFormErrors, setEditFormErrors] = useState<
     Partial<Record<keyof FormState, string>>
   >({});
+  const [imagesToDelete, setImagesToDelete] = useState<number[]>([]);
   const [editImageUploading, setEditImageUploading] = useState(false);
   const [editImageError, setEditImageError] = useState("");
   const [editSubmitError, setEditSubmitError] = useState("");
@@ -207,11 +209,13 @@ const ShopFieldsPage: React.FC = () => {
     wardCode: "",
     street: "",
   });
-  const [newImages, setNewImages] = useState<Array<{ file: File; url: string }>>([]);
+  const [newImages, setNewImages] = useState<
+    Array<{ file: File; url: string }>
+  >([]);
   const [createError, setCreateError] = useState("");
-  const [formErrors, setFormErrors] = useState<Partial<Record<keyof CreateFormState, string>>>(
-    {}
-  );
+  const [formErrors, setFormErrors] = useState<
+    Partial<Record<keyof CreateFormState, string>>
+  >({});
   const [successMessage, setSuccessMessage] = useState("");
   const [provinces, setProvinces] = useState<ProvinceOption[]>([]);
   const [locationsLoading, setLocationsLoading] = useState(false);
@@ -298,7 +302,9 @@ const ShopFieldsPage: React.FC = () => {
       setLocationsLoading(true);
       setLocationsError("");
       try {
-        const response = await fetch("https://provinces.open-api.vn/api/?depth=3");
+        const response = await fetch(
+          "https://provinces.open-api.vn/api/?depth=3"
+        );
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}`);
         }
@@ -318,10 +324,11 @@ const ShopFieldsPage: React.FC = () => {
             districts: province.districts.map((district) => ({
               code: String(district.code),
               name: district.name,
-              wards: district.wards?.map((ward) => ({
-                code: String(ward.code),
-                name: ward.name,
-              })) ?? [],
+              wards:
+                district.wards?.map((ward) => ({
+                  code: String(ward.code),
+                  name: ward.name,
+                })) ?? [],
             })),
           }));
           setProvinces(mapped.length ? mapped : DEFAULT_PROVINCES);
@@ -366,10 +373,7 @@ const ShopFieldsPage: React.FC = () => {
           setFields(items);
           const pagination = response.meta?.pagination;
           setListMeta({
-            total:
-              pagination?.total ??
-              response.total ??
-              items.length,
+            total: pagination?.total ?? response.total ?? items.length,
             page: pagination?.page ?? response.page ?? 1,
             pageSize:
               pagination?.pageSize ??
@@ -431,9 +435,9 @@ const ShopFieldsPage: React.FC = () => {
       setNewImages((prev) => {
         const next = [...prev, ...mapped];
         if (next.length > MAX_UPLOAD_IMAGES) {
-          next.slice(MAX_UPLOAD_IMAGES).forEach((entry) =>
-            URL.revokeObjectURL(entry.url)
-          );
+          next
+            .slice(MAX_UPLOAD_IMAGES)
+            .forEach((entry) => URL.revokeObjectURL(entry.url));
           return next.slice(0, MAX_UPLOAD_IMAGES);
         }
         return next;
@@ -543,7 +547,7 @@ const ShopFieldsPage: React.FC = () => {
     setForm({
       field_name: f.field_name,
       sport_type:
-        (normalizeSportTypeValue(f.sport_type) as SportType) ??
+        (normalizeSportTypeValue(f.sport_type) as unknown as SportType) ??
         SPORT_OPTIONS[0].value,
       price_per_hour: resolveFieldPrice(f),
       status:
@@ -557,6 +561,7 @@ const ShopFieldsPage: React.FC = () => {
     setEditFormErrors({});
     setEditImageError("");
     setEditSubmitError("");
+    setImagesToDelete([]);
   };
 
   const onCloseEdit = () => {
@@ -567,6 +572,7 @@ const ShopFieldsPage: React.FC = () => {
     setEditImageError("");
     setEditImageUploading(false);
     setEditSubmitError("");
+    setImagesToDelete([]);
   };
 
   const onSave = async () => {
@@ -597,16 +603,25 @@ const ShopFieldsPage: React.FC = () => {
         price_per_hour: Number(form.price_per_hour) || 0,
         address: composedAddress,
         status: form.status,
+        deleted_images: imagesToDelete,
       });
       if (updated) {
         setFields((prev) =>
-          prev.map((x) => (x.field_code === updated.field_code ? { ...x, ...updated } : x))
+          prev.map((x) =>
+            x.field_code === updated.field_code ? { ...x, ...updated } : x
+          )
         );
         setEditing((prev) =>
-          prev && prev.field_code === updated.field_code ? { ...prev, ...updated } : updated ?? prev
+          prev && prev.field_code === updated.field_code
+            ? { ...prev, ...updated }
+            : updated ?? prev
         );
-        setSuccessMessage(`Đã cập nhật sân "${updated.field_name}" thành công.`);
-        const derived = deriveLocationFromAddress(updated?.address ?? composedAddress);
+        setSuccessMessage(
+          `Đã cập nhật sân "${updated.field_name}" thành công.`
+        );
+        const derived = deriveLocationFromAddress(
+          updated?.address ?? composedAddress
+        );
         setForm((prev) =>
           prev
             ? {
@@ -629,6 +644,14 @@ const ShopFieldsPage: React.FC = () => {
     }
   };
 
+  const toggleImageForDeletion = (imageId: number) => {
+    setImagesToDelete((prev) => {
+      if (prev.includes(imageId)) {
+        return prev.filter((id) => id !== imageId);
+      }
+      return [...prev, imageId];
+    });
+  };
   const onToggleMaintenance = async (f: FieldWithImages) => {
     const raw = f.status ? f.status.toString().trim().toLowerCase() : "";
     const isMaintenance = ["bảo trì", "maintenance", "on_maintenance"].includes(
@@ -723,10 +746,7 @@ const ShopFieldsPage: React.FC = () => {
         setFields(items);
         const pagination = refreshed.meta?.pagination;
         setListMeta({
-          total:
-            pagination?.total ??
-            refreshed.total ??
-            items.length,
+          total: pagination?.total ?? refreshed.total ?? items.length,
           page: pagination?.page ?? refreshed.page ?? 1,
           pageSize:
             pagination?.pageSize ??
@@ -762,7 +782,8 @@ const ShopFieldsPage: React.FC = () => {
   const availableDistricts = selectedProvince?.districts ?? [];
 
   const selectedDistrict = useMemo(
-    () => availableDistricts.find((d) => d.code === formNew.districtCode) ?? null,
+    () =>
+      availableDistricts.find((d) => d.code === formNew.districtCode) ?? null,
     [availableDistricts, formNew.districtCode]
   );
 
@@ -791,9 +812,7 @@ const ShopFieldsPage: React.FC = () => {
 
   const editSelectedWard = useMemo(() => {
     if (!form) return null;
-    return (
-      editAvailableWards.find((w) => w.code === form.wardCode) ?? null
-    );
+    return editAvailableWards.find((w) => w.code === form.wardCode) ?? null;
   }, [editAvailableWards, form?.wardCode]);
 
   useEffect(() => {
@@ -813,14 +832,25 @@ const ShopFieldsPage: React.FC = () => {
       return;
     }
 
-    if (!availableDistricts.some((district) => district.code === formNew.districtCode)) {
+    if (
+      !availableDistricts.some(
+        (district) => district.code === formNew.districtCode
+      )
+    ) {
       setFormNew((prev) => ({
         ...prev,
         districtCode: "",
         wardCode: "",
       }));
     }
-  }, [provinces.length, selectedProvince, availableDistricts, formNew.districtCode, formNew.provinceCode, formNew.wardCode]);
+  }, [
+    provinces.length,
+    selectedProvince,
+    availableDistricts,
+    formNew.districtCode,
+    formNew.provinceCode,
+    formNew.wardCode,
+  ]);
 
   useEffect(() => {
     if (!provinces.length) {
@@ -904,9 +934,7 @@ const ShopFieldsPage: React.FC = () => {
       return;
     }
 
-    if (
-      !editAvailableWards.some((ward) => ward.code === form.wardCode)
-    ) {
+    if (!editAvailableWards.some((ward) => ward.code === form.wardCode)) {
       setForm((prev) =>
         prev
           ? {
@@ -990,15 +1018,14 @@ const ShopFieldsPage: React.FC = () => {
             const statusRaw = f.status
               ? f.status.toString().trim().toLowerCase()
               : "";
-            const isMaintenance = ["maintenance", "bảo trì", "on_maintenance"].includes(
-              statusRaw
-            );
+            const isMaintenance = [
+              "maintenance",
+              "bảo trì",
+              "on_maintenance",
+            ].includes(statusRaw);
             const primaryImage = f.images?.[0];
             const coverImage =
-              resolveImageUrl(
-                primaryImage?.image_url,
-                primaryImage?.storage
-              ) ||
+              resolveImageUrl(primaryImage?.image_url, primaryImage?.storage) ||
               "https://images.pexels.com/photos/274506/pexels-photo-274506.jpeg";
 
             return (
@@ -1066,7 +1093,9 @@ const ShopFieldsPage: React.FC = () => {
           <div className="absolute inset-0 bg-black/40" onClick={onCloseEdit} />
           <div className="relative z-10 mt-12 w-full max-w-lg rounded-2xl bg-white shadow-xl border border-gray-200 p-5 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-lg font-semibold">Chỉnh sửa sân #{editing.field_code}</h3>
+              <h3 className="text-lg font-semibold">
+                Chỉnh sửa sân #{editing.field_code}
+              </h3>
               <button
                 onClick={onCloseEdit}
                 className="h-8 w-8 inline-flex items-center justify-center rounded-lg hover:bg-gray-100"
@@ -1235,10 +1264,15 @@ const ShopFieldsPage: React.FC = () => {
                         wardCode: undefined,
                       }));
                     }}
-                    disabled={!editSelectedProvince || editAvailableDistricts.length === 0}
+                    disabled={
+                      !editSelectedProvince ||
+                      editAvailableDistricts.length === 0
+                    }
                   >
                     <option value="" disabled>
-                      {!editSelectedProvince ? "Chọn tỉnh trước" : "Chọn quận / huyện"}
+                      {!editSelectedProvince
+                        ? "Chọn tỉnh trước"
+                        : "Chọn quận / huyện"}
                     </option>
                     {editAvailableDistricts.map((district) => (
                       <option key={district.code} value={district.code}>
@@ -1268,10 +1302,14 @@ const ShopFieldsPage: React.FC = () => {
                         wardCode: undefined,
                       }));
                     }}
-                    disabled={!editSelectedDistrict || editAvailableWards.length === 0}
+                    disabled={
+                      !editSelectedDistrict || editAvailableWards.length === 0
+                    }
                   >
                     <option value="" disabled>
-                      {!editSelectedDistrict ? "Chọn quận/huyện trước" : "Chọn phường / xã"}
+                      {!editSelectedDistrict
+                        ? "Chọn quận/huyện trước"
+                        : "Chọn phường / xã"}
                     </option>
                     {editAvailableWards.map((ward) => (
                       <option key={ward.code} value={ward.code}>
@@ -1288,7 +1326,9 @@ const ShopFieldsPage: React.FC = () => {
               </div>
 
               <label className="block">
-                <span className="text-sm text-gray-600">Số nhà, tên đường *</span>
+                <span className="text-sm text-gray-600">
+                  Số nhà, tên đường *
+                </span>
                 <input
                   className="input mt-1 w-full"
                   value={form.street}
@@ -1338,20 +1378,53 @@ const ShopFieldsPage: React.FC = () => {
                     {editing.images.map((img, idx) => {
                       const src = resolveImageUrl(img.image_url, img.storage);
                       const isPrimary = Number(img.sort_order ?? 0) === 0;
-                      const key = img.image_code ?? `${idx}-${src}`;
+                      const imageId = img.image_id;
+                      const key = imageId ?? `${idx}-${src}`;
+                      const isMarkedForDeletion = imageId
+                        ? imagesToDelete.includes(imageId)
+                        : false;
+
                       return (
                         <div
                           key={key}
-                          className="relative h-24 w-full overflow-hidden rounded-xl border border-gray-200"
+                          className={`relative h-24 w-full overflow-hidden rounded-xl border ${
+                            isMarkedForDeletion
+                              ? "border-red-300"
+                              : "border-gray-200"
+                          }`}
                         >
                           {src ? (
                             <img
                               src={src}
                               alt={`Ảnh sân hiện có ${idx + 1}`}
-                              className="h-full w-full object-cover"
+                              className={`h-full w-full object-cover transition-opacity ${
+                                isMarkedForDeletion ? "opacity-40" : ""
+                              }`}
                             />
                           ) : (
                             <div className="h-full w-full bg-gray-100" />
+                          )}
+                          {imageId && (
+                            <button
+                              type="button"
+                              onClick={() => toggleImageForDeletion(imageId)}
+                              className={`absolute top-1 right-1 z-10 flex h-7 w-7 items-center justify-center rounded-full shadow-md transition-colors ${
+                                isMarkedForDeletion
+                                  ? "bg-red-500 text-white"
+                                  : "bg-white/80 text-gray-700 hover:bg-white"
+                              }`}
+                              title={
+                                isMarkedForDeletion
+                                  ? "Hoàn tác xóa"
+                                  : "Xóa ảnh này"
+                              }
+                            >
+                              {isMarkedForDeletion ? (
+                                <RefreshCcw className="h-4 w-4" />
+                              ) : (
+                                <Trash2 className="h-4 w-4" />
+                              )}
+                            </button>
                           )}
                           {isPrimary && (
                             <span className="absolute left-1 bottom-1 rounded-full bg-emerald-500 px-2 py-0.5 text-xs font-semibold text-white shadow">
@@ -1400,7 +1473,9 @@ const ShopFieldsPage: React.FC = () => {
                   onClick={() => onToggleMaintenance(editing)}
                   className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 border text-sm ${
                     ["maintenance", "bảo trì", "on_maintenance"].includes(
-                      form.status ? form.status.toString().trim().toLowerCase() : ""
+                      form.status
+                        ? form.status.toString().trim().toLowerCase()
+                        : ""
                     )
                       ? "border-amber-400 text-amber-700 bg-amber-50"
                       : "border-gray-200 text-gray-700 hover:bg-gray-50"
@@ -1408,14 +1483,20 @@ const ShopFieldsPage: React.FC = () => {
                 >
                   <Wrench className="w-4 h-4" />
                   {["maintenance", "bảo trì", "on_maintenance"].includes(
-                    form.status ? form.status.toString().trim().toLowerCase() : ""
+                    form.status
+                      ? form.status.toString().trim().toLowerCase()
+                      : ""
                   )
                     ? "Bỏ bảo trì"
                     : "Đặt bảo trì"}
                 </button>
 
                 <div className="flex items-center gap-2">
-                  <button type="button" onClick={onCloseEdit} className="btn-ghost">
+                  <button
+                    type="button"
+                    onClick={onCloseEdit}
+                    className="btn-ghost"
+                  >
                     Hủy
                   </button>
                   <button
@@ -1462,12 +1543,17 @@ const ShopFieldsPage: React.FC = () => {
                   value={formNew.field_name}
                   onChange={(e) => {
                     setFormNew({ ...formNew, field_name: e.target.value });
-                    setFormErrors((prev) => ({ ...prev, field_name: undefined }));
+                    setFormErrors((prev) => ({
+                      ...prev,
+                      field_name: undefined,
+                    }));
                   }}
                   placeholder="VD: Sân bóng đá số 3"
                 />
                 {formErrors.field_name && (
-                  <p className="mt-1 text-sm text-red-600">{formErrors.field_name}</p>
+                  <p className="mt-1 text-sm text-red-600">
+                    {formErrors.field_name}
+                  </p>
                 )}
               </label>
 
@@ -1478,8 +1564,14 @@ const ShopFieldsPage: React.FC = () => {
                     className="input mt-1 w-full"
                     value={formNew.sport_type}
                     onChange={(e) => {
-                      setFormNew({ ...formNew, sport_type: e.target.value as SportType });
-                      setFormErrors((prev) => ({ ...prev, sport_type: undefined }));
+                      setFormNew({
+                        ...formNew,
+                        sport_type: e.target.value as SportType,
+                      });
+                      setFormErrors((prev) => ({
+                        ...prev,
+                        sport_type: undefined,
+                      }));
                     }}
                   >
                     {SPORT_OPTIONS.map((s) => (
@@ -1489,7 +1581,9 @@ const ShopFieldsPage: React.FC = () => {
                     ))}
                   </select>
                   {formErrors.sport_type && (
-                    <p className="mt-1 text-sm text-red-600">{formErrors.sport_type}</p>
+                    <p className="mt-1 text-sm text-red-600">
+                      {formErrors.sport_type}
+                    </p>
                   )}
                 </label>
 
@@ -1559,7 +1653,9 @@ const ShopFieldsPage: React.FC = () => {
                     ))}
                   </select>
                   {formErrors.provinceCode && (
-                    <p className="mt-1 text-sm text-red-600">{formErrors.provinceCode}</p>
+                    <p className="mt-1 text-sm text-red-600">
+                      {formErrors.provinceCode}
+                    </p>
                   )}
                 </label>
 
@@ -1581,10 +1677,14 @@ const ShopFieldsPage: React.FC = () => {
                         wardCode: undefined,
                       }));
                     }}
-                    disabled={!selectedProvince || availableDistricts.length === 0}
+                    disabled={
+                      !selectedProvince || availableDistricts.length === 0
+                    }
                   >
                     <option value="" disabled>
-                      {!selectedProvince ? "Chọn tỉnh trước" : "Chọn quận / huyện"}
+                      {!selectedProvince
+                        ? "Chọn tỉnh trước"
+                        : "Chọn quận / huyện"}
                     </option>
                     {availableDistricts.map((district) => (
                       <option key={district.code} value={district.code}>
@@ -1593,7 +1693,9 @@ const ShopFieldsPage: React.FC = () => {
                     ))}
                   </select>
                   {formErrors.districtCode && (
-                    <p className="mt-1 text-sm text-red-600">{formErrors.districtCode}</p>
+                    <p className="mt-1 text-sm text-red-600">
+                      {formErrors.districtCode}
+                    </p>
                   )}
                 </label>
 
@@ -1615,7 +1717,9 @@ const ShopFieldsPage: React.FC = () => {
                     disabled={!selectedDistrict || availableWards.length === 0}
                   >
                     <option value="" disabled>
-                      {!selectedDistrict ? "Chọn quận/huyện trước" : "Chọn phường / xã"}
+                      {!selectedDistrict
+                        ? "Chọn quận/huyện trước"
+                        : "Chọn phường / xã"}
                     </option>
                     {availableWards.map((ward) => (
                       <option key={ward.code} value={ward.code}>
@@ -1624,13 +1728,17 @@ const ShopFieldsPage: React.FC = () => {
                     ))}
                   </select>
                   {formErrors.wardCode && (
-                    <p className="mt-1 text-sm text-red-600">{formErrors.wardCode}</p>
+                    <p className="mt-1 text-sm text-red-600">
+                      {formErrors.wardCode}
+                    </p>
                   )}
                 </label>
               </div>
 
               <label className="block">
-                <span className="text-sm text-gray-600">Số nhà, tên đường *</span>
+                <span className="text-sm text-gray-600">
+                  Số nhà, tên đường *
+                </span>
                 <input
                   className="input mt-1 w-full"
                   value={formNew.street}
@@ -1641,7 +1749,9 @@ const ShopFieldsPage: React.FC = () => {
                   placeholder="VD: 123 Nguyễn Trãi"
                 />
                 {formErrors.street && (
-                  <p className="mt-1 text-sm text-red-600">{formErrors.street}</p>
+                  <p className="mt-1 text-sm text-red-600">
+                    {formErrors.street}
+                  </p>
                 )}
               </label>
 
@@ -1663,8 +1773,8 @@ const ShopFieldsPage: React.FC = () => {
                   <>
                     <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-3">
                       <p className="col-span-3 text-xs text-gray-500">
-                        Đã chọn {newImages.length}/{MAX_UPLOAD_IMAGES} ảnh. Ảnh đầu tiên sẽ
-                        được ưu tiên hiển thị trên danh sách.
+                        Đã chọn {newImages.length}/{MAX_UPLOAD_IMAGES} ảnh. Ảnh
+                        đầu tiên sẽ được ưu tiên hiển thị trên danh sách.
                       </p>
                       {newImages.map((img, idx) => (
                         <div
@@ -1705,7 +1815,11 @@ const ShopFieldsPage: React.FC = () => {
               )}
 
               <div className="mt-5 flex items-center justify-end gap-2">
-                <button type="button" onClick={closeCreate} className="btn-ghost">
+                <button
+                  type="button"
+                  onClick={closeCreate}
+                  className="btn-ghost"
+                >
                   Hủy
                 </button>
                 <button
