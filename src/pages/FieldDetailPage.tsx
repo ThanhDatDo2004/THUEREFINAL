@@ -17,6 +17,7 @@ import {
   getFieldStatusLabel,
   getSportLabel,
   resolveFieldPrice,
+  resolveFieldRating,
 } from "../utils/field-helpers";
 import resolveImageUrl from "../utils/image-helpers";
 
@@ -213,6 +214,7 @@ const FieldDetailPage: React.FC = () => {
   const activeSrc =
     resolveImageUrl(activeImage?.image_url, activeImage?.storage) ??
     activeImage?.image_url;
+  const rating = resolveFieldRating(field);
 
   return (
     <div className="field-page">
@@ -281,7 +283,7 @@ const FieldDetailPage: React.FC = () => {
             <div className="rating">
               <Star className="rating-icon" />
               <span className="rating-text">
-                {field.averageRating?.toFixed(1) ?? "0.0"}
+                {rating > 0 ? rating.toFixed(1) : "0.0"}
               </span>
             </div>
           </div>

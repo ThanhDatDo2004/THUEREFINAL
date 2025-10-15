@@ -776,7 +776,7 @@ const ShopFieldsPage: React.FC = () => {
   const editSelectedProvince = useMemo(() => {
     if (!form) return null;
     return provinces.find((p) => p.code === form.provinceCode) ?? null;
-  }, [form, provinces]);
+  }, [form?.provinceCode, provinces]);
 
   const editAvailableDistricts = editSelectedProvince?.districts ?? [];
 
@@ -785,7 +785,7 @@ const ShopFieldsPage: React.FC = () => {
     return (
       editAvailableDistricts.find((d) => d.code === form.districtCode) ?? null
     );
-  }, [editAvailableDistricts, form]);
+  }, [editAvailableDistricts, form?.districtCode]);
 
   const editAvailableWards = editSelectedDistrict?.wards ?? [];
 
@@ -794,7 +794,7 @@ const ShopFieldsPage: React.FC = () => {
     return (
       editAvailableWards.find((w) => w.code === form.wardCode) ?? null
     );
-  }, [editAvailableWards, form]);
+  }, [editAvailableWards, form?.wardCode]);
 
   useEffect(() => {
     if (!provinces.length) {
@@ -882,7 +882,8 @@ const ShopFieldsPage: React.FC = () => {
   }, [
     editAvailableDistricts,
     editSelectedProvince,
-    form,
+    form?.provinceCode,
+    form?.districtCode,
     provinces.length,
   ]);
 
@@ -918,7 +919,7 @@ const ShopFieldsPage: React.FC = () => {
   }, [
     editAvailableWards,
     editSelectedDistrict,
-    form,
+    form?.wardCode,
     provinces.length,
   ]);
 
@@ -946,7 +947,7 @@ const ShopFieldsPage: React.FC = () => {
           : prev
       );
     }
-  }, [deriveLocationFromAddress, editing, form, provinces.length]);
+  }, [deriveLocationFromAddress, editing, provinces.length]);
 
   return (
     <>

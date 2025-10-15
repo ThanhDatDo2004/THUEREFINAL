@@ -284,7 +284,7 @@ export async function updateShopField(
   try {
     const { data } = await api.put<
       ApiSuccess<MaybeArrayResult<FieldWithImages>> | ApiError
-    >(`/fields/${fieldCode}`, payload);
+    >(`/shops/me/fields/${fieldCode}`, payload);
     const payloadData = ensureSuccess(
       data,
       "Không thể cập nhật thông tin sân."
@@ -305,7 +305,7 @@ export async function updateShopFieldStatus(
   try {
     const { data } = await api.patch<
       ApiSuccess<MaybeArrayResult<FieldWithImages>> | ApiError
-    >(`/fields/${fieldCode}/status`, { status });
+    >(`/shops/me/fields/${fieldCode}/status`, { status });
     const payloadData = ensureSuccess(
       data,
       "Không thể cập nhật trạng thái sân."

@@ -34,7 +34,6 @@ export interface IApiSuccessResponse<T = any> {
 export interface IApiErrorResponse {
   success: false;
   statusCode: number;
-  message: string;
   data: null;
   error: IError;
 }

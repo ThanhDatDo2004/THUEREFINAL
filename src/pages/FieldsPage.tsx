@@ -1,257 +1,627 @@
-import React, { useEffect, useState } from "react";
-import { Search, Filter, MapPin, DollarSign, AlertCircle } from "lucide-react";
+import React, { useEffect, useMemo, useState } from "react";
+import {
+  AlertCircle,
+  ChevronDown,
+  MapPin,
+  RefreshCcw,
+  Search,
+  SlidersHorizontal,
+} from "lucide-react";
 import FieldCard from "../components/fields/FieldCard";
 import { fetchFields } from "../models/fields.api";
-import type { FieldWithImages, FieldsQuery } from "../types";
+import type { FieldWithImages, FieldsListResultNormalized, FieldsQuery } from "../types";
+
+type PriceRange = { min: number; max: number };
+
+const DEFAULT_PRICE: PriceRange = { min: 0, max: 500_000 };
+const PAGE_SIZE_OPTIONS = [6, 9, 12];
+
+type WardOption = { code: string; name: string };
+type DistrictOption = { code: string; name: string; wards: WardOption[] };
+type ProvinceOption = { code: string; name: string; districts: DistrictOption[] };
+
+type QuickFilter =
+  | {
+      id: string;
+      label: string;
+      type: "price";
+      payload: PriceRange;
+    }
+  | {
+      id: string;
+      label: string;
+      type: "sport" | "location";
+      payload: string;
+    }
+  | {
+      id: string;
+      label: string;
+      type: "reset";
+    };
 
 const FieldsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSportType, setSelectedSportType] = useState("");
   const [selectedLocation, setSelectedLocation] = useState("");
-  const [priceRange, setPriceRange] = useState({ min: 0, max: 500000 });
-  const [showFilters, setShowFilters] = useState(false);
+  const [priceRange, setPriceRange] = useState<PriceRange>(DEFAULT_PRICE);
+  const [showFilterDrawer, setShowFilterDrawer] = useState(false);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(PAGE_SIZE_OPTIONS[2]);
+  const [activeQuickFilter, setActiveQuickFilter] = useState<string | null>(null);
+
+  const [provinces, setProvinces] = useState<ProvinceOption[]>([]);
+  const [locationsLoading, setLocationsLoading] = useState(false);
+  const [locationsError, setLocationsError] = useState("");
+  const [provinceCode, setProvinceCode] = useState("");
+  const [districtCode, setDistrictCode] = useState("");
+  const [wardCode, setWardCode] = useState("");
 
   const [fields, setFields] = useState<FieldWithImages[]>([]);
+  const [queryMeta, setQueryMeta] = useState<FieldsListResultNormalized["meta"] | null>(null);
   const [total, setTotal] = useState(0);
   const [facets, setFacets] = useState<{
     sportTypes: string[];
     locations: string[];
-  }>({
-    sportTypes: [],
-    locations: [],
-  });
+  }>({ sportTypes: [], locations: [] });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const fetchData = React.useCallback(async () => {
+    setLoading(true);
+    setError("");
+    const q: FieldsQuery = {
+      search: searchQuery || undefined,
+      sportType: selectedSportType || undefined,
+      location: selectedLocation || undefined,
+      priceMin: priceRange.min,
+      priceMax: priceRange.max,
+      page,
+      pageSize,
+      sortBy: "rating",
+      sortDir: "desc",
+    };
+    try {
+      const payload = await fetchFields(q);
+      setFields(payload.items);
+      setTotal(payload.meta.pagination.total);
+      setFacets({
+        sportTypes: payload.facets.sportTypes ?? [],
+        locations: payload.facets.locations ?? [],
+      });
+      setQueryMeta(payload.meta);
+    } catch (err: any) {
+      setError(err?.message || "Không thể tải danh sách sân. Vui lòng thử lại.");
+      setFields([]);
+      setQueryMeta(null);
+      setTotal(0);
+    } finally {
+      setLoading(false);
+    }
+  }, [page, pageSize, priceRange.max, priceRange.min, searchQuery, selectedLocation, selectedSportType]);
+
   useEffect(() => {
-    let ignore = false;
-    (async () => {
-      setLoading(true);
-      setError("");
-      const q: FieldsQuery = {
-        search: searchQuery || undefined,
-        sportType: selectedSportType || undefined,
-        location: selectedLocation || undefined,
-        priceMin: priceRange.min,
-        priceMax: priceRange.max,
-        page: 1,
-        pageSize: 12,
-      };
+    fetchData();
+  }, [fetchData]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const loadLocations = async () => {
+      setLocationsLoading(true);
+      setLocationsError("");
       try {
-        const { items, total, facets } = await fetchFields(q);
-        if (!ignore) {
-          setFields(items);
-          setTotal(total);
-          setFacets(facets);
+        const response = await fetch("https://provinces.open-api.vn/api/?depth=3");
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
         }
-      } catch (err: any) {
-        if (!ignore) {
-          setError(
-            err?.message || "Không thể tải danh sách sân. Vui lòng thử lại."
-          );
-          setFields([]);
-          setTotal(0);
+        const data = (await response.json()) as Array<{
+          code: number | string;
+          name: string;
+          districts: Array<{
+            code: number | string;
+            name: string;
+            wards: Array<{ code: number | string; name: string }>;
+          }>;
+        }>;
+        if (!cancelled) {
+          const normalized: ProvinceOption[] = data.map((province) => ({
+            code: String(province.code),
+            name: province.name,
+            districts: province.districts.map((district) => ({
+              code: String(district.code),
+              name: district.name,
+              wards: district.wards.map((ward) => ({
+                code: String(ward.code),
+                name: ward.name,
+              })),
+            })),
+          }));
+          setProvinces(normalized);
+        }
+      } catch (error) {
+        console.error("Failed to load provinces", error);
+        if (!cancelled) {
+          setLocationsError("Không thể tải danh sách tỉnh/thành, hãy tự nhập hoặc thử lại sau");
+          setProvinces([]);
         }
       } finally {
-        if (!ignore) setLoading(false);
+        if (!cancelled) {
+          setLocationsLoading(false);
+        }
       }
-    })();
-    return () => {
-      ignore = true;
     };
-  }, [searchQuery, selectedSportType, selectedLocation, priceRange]);
 
-  const formatPrice = (price: number) =>
-    new Intl.NumberFormat("vi-VN").format(price);
+    loadLocations();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const totalPages = queryMeta?.pagination.totalPages ?? 1;
+  const currentPage = queryMeta?.pagination.page ?? page;
+
+  const handleResetFilters = () => {
+    setSearchQuery("");
+    setSelectedSportType("");
+    setSelectedLocation("");
+    setPriceRange(DEFAULT_PRICE);
+    setPage(1);
+    setActiveQuickFilter(null);
+    setProvinceCode("");
+    setDistrictCode("");
+    setWardCode("");
+  };
+
+  const facetSportTypeOptions = useMemo(() => {
+    return facets.sportTypes.map((item) => ({ label: item, value: item }));
+  }, [facets.sportTypes]);
+
+  const facetLocationOptions = useMemo(() => {
+    return facets.locations.map((item) => ({ label: item, value: item }));
+  }, [facets.locations]);
+
+  const quickFilters = useMemo<QuickFilter[]>(() => {
+    const filters: QuickFilter[] = [
+      {
+        id: "price-under-150",
+        label: "Giá dưới 150K",
+        type: "price",
+        payload: { min: 0, max: 150_000 },
+      },
+      {
+        id: "price-150-300",
+        label: "150K - 300K",
+        type: "price",
+        payload: { min: 150_000, max: 300_000 },
+      },
+      {
+        id: "price-over-300",
+        label: "Trên 300K",
+        type: "price",
+        payload: { min: 300_000, max: 1_000_000 },
+      },
+    ];
+
+    facets.sportTypes.slice(0, 2).forEach((sport, index) => {
+      filters.push({
+        id: `sport-${index}`,
+        label: `Sân ${sport}`,
+        type: "sport",
+        payload: sport,
+      });
+    });
+
+    facets.locations.slice(0, 2).forEach((location, index) => {
+      filters.push({
+        id: `location-${index}`,
+        label: location,
+        type: "location",
+        payload: location,
+      });
+    });
+
+    filters.push({ id: "reset", label: "Xóa gợi ý", type: "reset" });
+
+    return filters;
+  }, [facets.locations, facets.sportTypes]);
+
+  const isFiltering =
+    Boolean(searchQuery || selectedSportType || selectedLocation) ||
+    priceRange.min !== DEFAULT_PRICE.min ||
+    priceRange.max !== DEFAULT_PRICE.max;
+
+  const applyQuickFilter = (filter: QuickFilter) => {
+    setActiveQuickFilter(filter.id === "reset" ? null : filter.id);
+    if (filter.type === "price") {
+      setPriceRange(filter.payload);
+      setSelectedLocation("");
+      setSelectedSportType("");
+      setPage(1);
+      return;
+    }
+    if (filter.type === "sport") {
+      setSelectedSportType(filter.payload);
+      setSelectedLocation("");
+      setPriceRange(DEFAULT_PRICE);
+      setPage(1);
+      setProvinceCode("");
+      setDistrictCode("");
+      setWardCode("");
+      return;
+    }
+    if (filter.type === "location") {
+      setSelectedLocation(filter.payload);
+      setSelectedSportType("");
+      setPriceRange(DEFAULT_PRICE);
+      setPage(1);
+      setProvinceCode("");
+      setDistrictCode("");
+      setWardCode("");
+      return;
+    }
+    if (filter.type === "reset") {
+      handleResetFilters();
+    }
+  };
+
+  const selectedProvince = useMemo(() => {
+    if (!provinceCode) return null;
+    return provinces.find((province) => province.code === provinceCode) ?? null;
+  }, [provinceCode, provinces]);
+
+  const availableDistricts = selectedProvince?.districts ?? [];
+
+  const selectedDistrict = useMemo(() => {
+    if (!districtCode) return null;
+    return availableDistricts.find((district) => district.code === districtCode) ?? null;
+  }, [availableDistricts, districtCode]);
+
+  const availableWards = selectedDistrict?.wards ?? [];
+
+  const selectedWard = useMemo(() => {
+    if (!wardCode) return null;
+    return availableWards.find((ward) => ward.code === wardCode) ?? null;
+  }, [availableWards, wardCode]);
+
+  useEffect(() => {
+    if (!provinceCode) {
+      setDistrictCode("");
+      setWardCode("");
+    }
+  }, [provinceCode]);
+
+  useEffect(() => {
+    if (!districtCode) {
+      setWardCode("");
+    }
+  }, [districtCode]);
+
+  useEffect(() => {
+    if (!provinceCode && !districtCode && !wardCode) {
+      return;
+    }
+
+    const parts = [
+      selectedWard?.name,
+      selectedDistrict?.name,
+      selectedProvince?.name,
+    ].filter(Boolean);
+
+    const composed = parts.join(", ");
+    setSelectedLocation(composed);
+    setActiveQuickFilter(null);
+    setPage(1);
+  }, [selectedDistrict, selectedProvince, selectedWard, provinceCode, districtCode, wardCode]);
 
   return (
     <div className="page">
-      <div className="container">
-        {/* Header */}
-        <div className="header-center">
-          <h1 className="title-xl">Tìm sân thể thao</h1>
-          <p className="subtitle">
-            Khám phá và đặt sân thể thao phù hợp với nhu cầu của bạn
-          </p>
-        </div>
-
-        {/* Search + Filters */}
-        <div className="panel">
-          {/* Search Bar */}
-          <div className="search-wrap mb-4">
-            <Search className="search-icon" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="    Tìm kiếm theo tên sân, địa điểm..."
-              className="search-input"
-            />
-          </div>
-
-          {/* Filter Toggle */}
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className="filter-toggle"
-          >
-            <Filter className="w-5 h-5" />
-            <span>Bộ lọc {showFilters ? "▼" : "▶"}</span>
-          </button>
-
-          {/* Filters */}
-          {showFilters && (
-            <div className="filters-grid">
-              {/* Sport Type */}
-              <div>
-                <label className="label">Loại sân</label>
-                <select
-                  value={selectedSportType}
-                  onChange={(e) => setSelectedSportType(e.target.value)}
-                  className="select"
-                >
-                  <option value="">Tất cả</option>
-                  {facets.sportTypes.map((sport) => (
-                    <option key={sport} value={sport}>
-                      {sport}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Location */}
-              <div>
-                <label className="label">
-                  <MapPin className="inline mr-1 w-4 h-4" />
-                  Khu vực
-                </label>
-                <select
-                  value={selectedLocation}
-                  onChange={(e) => setSelectedLocation(e.target.value)}
-                  className="select"
-                >
-                  <option value="">Tất cả</option>
-                  {facets.locations.map((location) => (
-                    <option key={location} value={location}>
-                      {location}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Price Min */}
-              <div>
-                <label className="label">
-                  <DollarSign className="inline mr-1 w-4 h-4" />
-                  Giá tối thiểu (VND/giờ)
-                </label>
-                <input
-                  type="number"
-                  value={priceRange.min}
-                  onChange={(e) =>
-                    setPriceRange((prev) => ({
-                      ...prev,
-                      min: Number(e.target.value),
-                    }))
-                  }
-                  className="input"
-                  min={0}
-                  step={10000}
-                />
-              </div>
-
-              {/* Price Max */}
-              <div>
-                <label className="label">Giá tối đa (VND/giờ)</label>
-                <input
-                  type="number"
-                  value={priceRange.max}
-                  onChange={(e) =>
-                    setPriceRange((prev) => ({
-                      ...prev,
-                      max: Number(e.target.value),
-                    }))
-                  }
-                  className="input"
-                  min={0}
-                  step={10000}
-                />
-              </div>
+      <div className="fields-layout">
+        <aside className={`filters-panel ${showFilterDrawer ? "open" : ""}`}>
+          <div className="filters-header">
+            <div>
+              <span className="filters-eyebrow">Bộ lọc</span>
+              <h2 className="filters-title">Tìm nhanh sân phù hợp</h2>
             </div>
-          )}
-        </div>
-
-        {/* Results */}
-        {!error && (
-          <div className="results-bar">
-            <h2 className="results-title">Kết quả ({total} sân)</h2>
-            <div className="price-info">
-              Giá: {formatPrice(priceRange.min)}đ - {formatPrice(priceRange.max)}đ
-            </div>
-          </div>
-        )}
-
-        {!!error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded flex items-center gap-2 mb-6">
-            <AlertCircle className="w-5 h-5 shrink-0" />
-            <span>{error}</span>
-          </div>
-        )}
-
-        {/* Fields Grid */}
-        {loading ? (
-          <div className="center muted">Đang tải...</div>
-        ) : error ? (
-          <div className="empty">
-            <div className="empty-icon-wrap">
-              <AlertCircle className="empty-icon text-red-500" />
-            </div>
-            <h3 className="text-xl font-medium text-gray-900 mb-2">
-              Không thể tải dữ liệu
-            </h3>
-            <p className="muted mb-4">{error}</p>
             <button
-              onClick={() => {
-                setError("");
-                setSearchQuery("");
-                setSelectedSportType("");
-                setSelectedLocation("");
-                setPriceRange({ min: 0, max: 500000 });
-              }}
-              className="btn-primary"
+              className="filters-close"
+              onClick={() => setShowFilterDrawer(false)}
             >
-              Thử lại
+              Đóng
             </button>
           </div>
-        ) : fields.length > 0 ? (
-          <div className="grid-cards">
-            {fields.map((field) => (
-              <FieldCard key={field.field_code} field={field} />
-            ))}
-          </div>
-        ) : (
-          <div className="empty">
-            <div className="empty-icon-wrap">
-              <Search className="empty-icon" />
+
+          <div className="filters-body">
+            <div className="filter-group">
+              <label className="filter-label">Tìm theo tên sân hoặc từ khóa</label>
+              <div className="filter-search">
+                <Search className="filter-search-icon" />
+                <input
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setActiveQuickFilter(null);
+                  }}
+                  placeholder="Nhập tên sân, địa điểm, quận..."
+                />
+              </div>
             </div>
-            <h3 className="text-xl font-medium text-gray-900 mb-2">
-              Không tìm thấy sân phù hợp
-            </h3>
-            <p className="muted mb-4">
-              Hãy thử điều chỉnh bộ lọc để tìm được sân mong muốn
-            </p>
-            <button
-              onClick={() => {
-                setSearchQuery("");
-                setSelectedSportType("");
-                setSelectedLocation("");
-                setPriceRange({ min: 0, max: 500000 });
-              }}
-              className="btn-primary"
-            >
+
+            <div className="filter-group">
+              <label className="filter-label">Loại hình</label>
+              <div className="filter-select">
+                <select
+                  value={selectedSportType}
+                  onChange={(e) => {
+                    setSelectedSportType(e.target.value);
+                    setActiveQuickFilter(null);
+                    setPage(1);
+                  }}
+                >
+                  <option value="">Tất cả</option>
+                  {facetSportTypeOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="filter-select-icon" />
+              </div>
+            </div>
+
+            <div className="filter-group">
+              <label className="filter-label">Khu vực</label>
+              <div className="filter-select">
+                <select
+                  value={selectedLocation}
+                  onChange={(e) => {
+                    setSelectedLocation(e.target.value);
+                    setActiveQuickFilter(null);
+                    setPage(1);
+                  }}
+                >
+                  <option value="">Tất cả</option>
+                  {facetLocationOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                <MapPin className="filter-select-icon" />
+              </div>
+            </div>
+
+            <div className="filter-group">
+              <label className="filter-label">Khoảng giá (VND / giờ)</label>
+              <div className="filter-price">
+                <div>
+                  <span>Tối thiểu</span>
+                  <input
+                    type="number"
+                    min={0}
+                    step={10_000}
+                    value={priceRange.min}
+                    onChange={(e) => {
+                      const value = Number(e.target.value);
+                      setPriceRange((prev) => ({ ...prev, min: value }));
+                      setActiveQuickFilter(null);
+                      setPage(1);
+                    }}
+                  />
+                </div>
+                <div>
+                  <span>Tối đa</span>
+                  <input
+                    type="number"
+                    min={0}
+                    step={10_000}
+                    value={priceRange.max}
+                    onChange={(e) => {
+                      const value = Number(e.target.value);
+                      setPriceRange((prev) => ({ ...prev, max: value }));
+                      setActiveQuickFilter(null);
+                      setPage(1);
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="filter-group">
+              <label className="filter-label">Tỉnh / Thành</label>
+              <div className="filter-select">
+                <select
+                  value={provinceCode}
+                  onChange={(e) => {
+                    setProvinceCode(e.target.value);
+                    setActiveQuickFilter(null);
+                  }}
+                  disabled={locationsLoading || !provinces.length}
+                >
+                  <option value="">
+                    {locationsLoading ? "Đang tải..." : "Chọn tỉnh / thành"}
+                  </option>
+                  {provinces.map((province) => (
+                    <option key={province.code} value={province.code}>
+                      {province.name}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="filter-select-icon" />
+              </div>
+              {locationsError && !provinces.length && (
+                <p className="filter-hint text-xs text-amber-600">{locationsError}</p>
+              )}
+            </div>
+
+            <div className="filter-group">
+              <label className="filter-label">Quận / Huyện</label>
+              <div className="filter-select">
+                <select
+                  value={districtCode}
+                  onChange={(e) => {
+                    setDistrictCode(e.target.value);
+                    setActiveQuickFilter(null);
+                  }}
+                  disabled={!availableDistricts.length}
+                >
+                  <option value="">
+                    {provinceCode ? "Chọn quận / huyện" : "Chọn tỉnh trước"}
+                  </option>
+                  {availableDistricts.map((district) => (
+                    <option key={district.code} value={district.code}>
+                      {district.name}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="filter-select-icon" />
+              </div>
+            </div>
+
+            <div className="filter-group">
+              <label className="filter-label">Phường / Xã</label>
+              <div className="filter-select">
+                <select
+                  value={wardCode}
+                  onChange={(e) => {
+                    setWardCode(e.target.value);
+                    setActiveQuickFilter(null);
+                  }}
+                  disabled={!availableWards.length}
+                >
+                  <option value="">
+                    {districtCode ? "Chọn phường / xã" : "Chọn quận trước"}
+                  </option>
+                  {availableWards.map((ward) => (
+                    <option key={ward.code} value={ward.code}>
+                      {ward.name}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="filter-select-icon" />
+              </div>
+            </div>
+          </div>
+
+          <div className="filters-footer">
+            <button className="btn-reset" onClick={handleResetFilters}>
+              <RefreshCcw className="w-4 h-4" />
               Xóa bộ lọc
             </button>
           </div>
-        )}
+        </aside>
+
+        <main className="fields-content">
+          <header className="fields-header">
+            <div>
+              <h1 className="fields-title">Tìm sân thể thao</h1>
+              <p className="fields-subtitle">
+                Lọc theo vị trí, loại hình, giá và đánh giá để đặt sân phù hợp nhất.
+              </p>
+            </div>
+            <button
+              className="filters-toggle"
+              onClick={() => setShowFilterDrawer((prev) => !prev)}
+            >
+              <SlidersHorizontal className="w-4 h-4" />
+              Bộ lọc
+              {isFiltering && <span className="filters-dot" />}
+            </button>
+          </header>
+
+          {!!error && (
+            <div className="notice notice-error">
+              <AlertCircle className="w-5 h-5" />
+              {error}
+            </div>
+          )}
+
+          {!error && (
+            <div className="fields-topbar">
+              <div className="fields-summary">
+                <span className="fields-summary-count">{total}</span>
+                <span className="fields-summary-label">sân phù hợp</span>
+              </div>
+              <div className="fields-controls">
+                <label className="fields-page-size">
+                  <span>Hiển thị</span>
+                  <select
+                    value={pageSize}
+                    onChange={(e) => {
+                      setPageSize(Number(e.target.value));
+                      setActiveQuickFilter(null);
+                      setPage(1);
+                    }}
+                  >
+                    {PAGE_SIZE_OPTIONS.map((size) => (
+                      <option key={size} value={size}>
+                        {size} / trang
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+            </div>
+          )}
+
+          {!error && quickFilters.length > 0 && (
+            <div className="quick-filters">
+              <span className="quick-filters-label">Gợi ý nhanh:</span>
+              <div className="quick-filters-scroll">
+                {quickFilters.map((filter) => (
+                  <button
+                    key={filter.id}
+                    className={`quick-filter-chip ${
+                      activeQuickFilter === filter.id ? "active" : ""
+                    }`}
+                    onClick={() => applyQuickFilter(filter)}
+                    type="button"
+                  >
+                    {filter.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {loading ? (
+            <div className="fields-loading">Đang tải dữ liệu...</div>
+          ) : fields.length ? (
+            <div className="grid-cards">
+              {fields.map((field) => (
+                <FieldCard key={field.field_code} field={field} />
+              ))}
+            </div>
+          ) : !error ? (
+            <div className="empty-state">
+              <AlertCircle className="empty-state-icon" />
+              <h3>Không tìm thấy sân phù hợp</h3>
+              <p>Hãy điều chỉnh bộ lọc hoặc thử tìm kiếm với từ khóa khác.</p>
+              <button className="btn-primary" onClick={handleResetFilters}>
+                Đặt lại bộ lọc
+              </button>
+            </div>
+          ) : null}
+
+          {totalPages > 1 && !loading && (
+            <div className="pagination">
+              <button
+                className="pagination-button"
+                onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+                disabled={currentPage <= 1}
+              >
+                Trước
+              </button>
+              <div className="pagination-info">
+                Trang {currentPage} / {totalPages}
+              </div>
+              <button
+                className="pagination-button"
+                onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
+                disabled={currentPage >= totalPages}
+              >
+                Sau
+              </button>
+            </div>
+          )}
+        </main>
       </div>
     </div>
   );

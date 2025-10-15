@@ -175,6 +175,21 @@ export const resolveFieldPrice = (
   return 0;
 };
 
+export const resolveFieldRating = (
+  field: { avg_rating?: number; averageRating?: number } | null | undefined
+) => {
+  if (!field) return 0;
+  const direct = field.avg_rating;
+  if (typeof direct === "number" && !Number.isNaN(direct)) {
+    return direct;
+  }
+  const fallback = field.averageRating;
+  if (typeof fallback === "number" && !Number.isNaN(fallback)) {
+    return fallback;
+  }
+  return 0;
+};
+
 export const normalizeSportTypeValue = (
   sportType?: FieldSportType | string | null
 ): FieldSportType | undefined => {

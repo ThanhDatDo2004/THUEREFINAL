@@ -152,7 +152,8 @@ export interface FieldWithImages extends Fields {
   images: FieldImages[];
   shop: Shops;
   reviews: Reviews[];
-  averageRating: number;
+  avg_rating: number;
+  averageRating?: number;
 }
 
 export type FieldsQuery = {
@@ -204,4 +205,45 @@ export interface RegisterData {
 export interface LoginData {
   email: string;
   password: string;
+}
+
+// Shop Field Management Types
+export interface CreateFieldData {
+  field_name: string;
+  sport_type: string;
+  address: string;
+  price_per_hour: number;
+  status?: "active" | "maintenance" | "inactive";
+}
+
+export interface UpdateFieldData {
+  field_name?: string;
+  sport_type?: string;
+  address?: string;
+  price_per_hour?: number;
+  status?: "active" | "maintenance" | "inactive";
+}
+
+export interface UpdateFieldStatusData {
+  status: "active" | "maintenance" | "inactive";
+}
+
+// Enhanced AuthUser with shop_code
+export interface AuthUser {
+  user_code: number;
+  level_type: "cus" | "shop" | "admin";
+  user_name: string;
+  email: string;
+  shop_code?: number; // Added for shop owners
+}
+
+// Enhanced AuthContextType
+export interface AuthContextType {
+  user: AuthUser | null;
+  login: (email: string, password: string) => Promise<boolean>;
+  register: (userData: RegisterData) => Promise<boolean>;
+  logout: () => void;
+  loading: boolean;
+  isShopOwner: () => boolean; // Helper to check if user is shop owner
+  getShopCode: () => number | null; // Helper to get shop code
 }

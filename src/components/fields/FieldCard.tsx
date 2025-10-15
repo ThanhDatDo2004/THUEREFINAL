@@ -7,6 +7,7 @@ import {
   getFieldStatusLabel,
   getSportLabel,
   resolveFieldPrice,
+  resolveFieldRating,
 } from "../../utils/field-helpers";
 import resolveImageUrl from "../../utils/image-helpers";
 
@@ -35,14 +36,12 @@ const FieldCard: React.FC<FieldCardProps> = ({ field }) => {
   };
 
   const primaryImage = field.images?.[0];
-  const img = resolveImageUrl(
-    primaryImage?.image_url,
-    primaryImage?.storage
-  );
+  const img = resolveImageUrl(primaryImage?.image_url, primaryImage?.storage);
   const price = resolveFieldPrice(field);
+  const rating = resolveFieldRating(field);
 
   return (
-    <div className="card field-card">
+    <div className="card field-card flex flex-col">
       {/* Image */}
       <div className="img-wrap">
         {img ? (
@@ -61,32 +60,32 @@ const FieldCard: React.FC<FieldCardProps> = ({ field }) => {
       </div>
 
       {/* Content */}
-      <div className="card-body">
-        <div className="flex items-start justify-between mb-3">
+      <div className="card-body flex flex-col flex-grow p-4">
+        <div className="flex-grow">
           <h3 className="card-title">{field.field_name}</h3>
           <div className="rating">
             <Star className="rating-icon" />
             <span className="rating-text">
-              {field.averageRating?.toFixed(1) || "0.0"}
+              {rating > 0 ? rating.toFixed(1) : "0.0"}
             </span>
+          </div>
+
+          <div className="field-meta mt-2">
+            <MapPin className="w-4 h-4" />
+            <span>{field.address}</span>
+          </div>
+
+          <div className="field-meta">
+            <Clock className="w-4 h-4" />
+            <span>Giờ mở cửa: 6:00 - 22:00</span>
           </div>
         </div>
 
-        <div className="field-meta">
-          <MapPin className="w-4 h-4" />
-          <span>{field.address}</span>
-        </div>
-
-        <div className="field-meta">
-          <Clock className="w-4 h-4" />
-          <span>Giờ mở cửa: 6:00 - 22:00</span>
-        </div>
-
-        <div className="field-footer">
+        <div className="field-footer mt-4 flex items-center justify-between">
           <div className="price">{formatPrice(price)}/giờ</div>
           <Link
             to={`/fields/${field.field_code}`}
-            className="btn-primary"
+            className="btn btn-primary"
             aria-disabled={!isBookable}
           >
             {actionLabel}
