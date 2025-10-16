@@ -10,6 +10,7 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
+  Clock,
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { fetchMyShop } from "../../models/shop.api";
@@ -42,8 +43,7 @@ const ShopLayout: React.FC = () => {
     };
   }, [user?.user_code]);
 
-  const initial =
-    (shop?.shop_name?.trim()?.charAt(0) || "S").toUpperCase();
+  const initial = (shop?.shop_name?.trim()?.charAt(0) || "S").toUpperCase();
 
   return (
     <div className="container mx-auto px-4 py-6">
@@ -112,6 +112,16 @@ const ShopLayout: React.FC = () => {
             </NavLink>
 
             <NavLink
+              to="/shop/pricing"
+              className={({ isActive }) =>
+                `${navItemBase} ${isActive ? navItemActive : navItemIdle}`
+              }
+            >
+              <Clock className="h-4 w-4" />
+              {!collapsed && <span>Giá & Giờ hoạt động</span>}
+            </NavLink>
+
+            <NavLink
               to="/shop/bookings"
               className={({ isActive }) =>
                 `${navItemBase} ${isActive ? navItemActive : navItemIdle}`
@@ -156,7 +166,9 @@ const ShopLayout: React.FC = () => {
 
           {/* Footer */}
           <div className="px-4 pb-4 pt-2 text-xs text-gray-400">
-            {!collapsed && <span>© {new Date().getFullYear()} SportBooking</span>}
+            {!collapsed && (
+              <span>© {new Date().getFullYear()} SportBooking</span>
+            )}
           </div>
         </aside>
 

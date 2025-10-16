@@ -237,6 +237,48 @@ export interface AuthUser {
   shop_code?: number; // Added for shop owners
 }
 
+// Field Operating Hours Types (separated from pricing)
+export interface FieldOperatingHours {
+  pricing_id: number;
+  field_code: number;
+  day_of_week: number; // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+  start_time: string; // HH:mm format
+  end_time: string; // HH:mm format
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FieldOperatingHoursPayload {
+  field_code: number;
+  day_of_week: number;
+  start_time: string;
+  end_time: string;
+}
+
+// Keep FieldPricing for backward compatibility (used in fields management)
+export interface FieldPricing {
+  pricing_id: number;
+  field_code: number;
+  day_of_week: number; // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+  start_time: string; // HH:mm format
+  end_time: string; // HH:mm format
+  price_per_hour: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FieldPricingPayload {
+  field_code: number;
+  day_of_week: number;
+  start_time: string;
+  end_time: string;
+  price_per_hour: number;
+}
+
+export interface WeeklyPricing {
+  [dayOfWeek: number]: FieldPricing[]; // 0-6 for Sunday-Saturday
+}
+
 // Enhanced AuthContextType
 export interface AuthContextType {
   user: AuthUser | null;

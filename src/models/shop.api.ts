@@ -11,6 +11,9 @@ import type {
   Fields,
   ShopRevenue,
   Shops,
+  FieldPricing,
+  FieldOperatingHours,
+  FieldOperatingHoursPayload,
 } from "../types";
 
 export type ShopRequestPayload = {
@@ -391,5 +394,299 @@ export async function fetchMyShopRevenue(params?: {
     throw new Error(
       extractErrorMessage(error, "Không thể tải dữ liệu doanh thu của shop.")
     );
+  }
+}
+
+// Field Operating Hours API Functions (separated from pricing)
+// Backend response might have different field names, so we normalize them
+const normalizeOperatingHoursResponse = (data: any): FieldOperatingHours => {
+  return {
+    pricing_id: data.pricing_id || data.PricingID || data.id,
+    field_code: data.field_code || data.FieldCode || data.fieldId,
+    day_of_week: data.day_of_week || data.DayOfWeek || data.dayOfWeek,
+    start_time: data.start_time || data.StartTime || data.startTime,
+    end_time: data.end_time || data.EndTime || data.endTime,
+    created_at: data.created_at || data.CreateAt || data.createdAt,
+    updated_at: data.updated_at || data.UpdateAt || data.updatedAt,
+  };
+};
+
+// Keep old pricing functions for backward compatibility
+export interface FieldPricingPayload {
+  field_code: number;
+  day_of_week: number;
+  start_time: string;
+  end_time: string;
+  price_per_hour: number;
+}
+
+const normalizePricingResponse = (data: any): FieldPricing => {
+  return {
+    pricing_id: data.pricing_id || data.PricingID || data.id,
+    field_code: data.field_code || data.FieldCode || data.fieldId,
+    day_of_week: data.day_of_week || data.DayOfWeek || data.dayOfWeek,
+    start_time: data.start_time || data.StartTime || data.startTime,
+    end_time: data.end_time || data.EndTime || data.endTime,
+    price_per_hour:
+      data.price_per_hour || data.PricePerHour || data.pricePerHour,
+    created_at: data.created_at || data.CreateAt || data.createdAt,
+    updated_at: data.updated_at || data.UpdateAt || data.updatedAt,
+  };
+};
+
+// New Operating Hours API Functions
+export async function fetchFieldOperatingHours(
+  fieldCode: number
+): Promise<FieldOperatingHours[]> {
+  if (!Number.isFinite(fieldCode)) return [];
+  try {
+    console.log(`Fetching operating hours for field ${fieldCode}`);
+
+    const { data } = await api.get<
+      ApiSuccess<MaybeArrayResult<FieldOperatingHours[]>> | ApiError
+    >(`/shops/me/fields/${fieldCode}/pricing`);
+
+    console.log(`API response for field ${fieldCode}:`, data);
+
+    const payload = ensureSuccess(data, "Không thể tải dữ liệu giờ hoạt động.");
+    const rawList = normalizeList(payload);
+
+    console.log(`Normalized list for field ${fieldCode}:`, rawList);
+
+    // Normalize each item in the list to handle different backend response formats
+    const result = rawList.map((item: any) =>
+      normalizeOperatingHoursResponse(item)
+    );
+    console.log(`Final result for field ${fieldCode}:`, result);
+
+    return result;
+  } catch (error: unknown) {
+    console.error(
+      `Error fetching operating hours for field ${fieldCode}:`,
+      error
+    );
+    throw new Error(
+      extractErrorMessage(error, "Không thể tải dữ liệu giờ hoạt động.")
+    );
+  }
+}
+
+export async function createFieldOperatingHours(
+  payload: FieldOperatingHoursPayload
+): Promise<FieldOperatingHours> {
+  if (!Number.isFinite(payload.field_code)) {
+    throw new Error("Field code không hợp lệ.");
+  }
+  try {
+    const normalizedFieldCode = Number(payload.field_code);
+    const normalizedDay = Number(payload.day_of_week);
+    const start = (payload.start_time || "").trim();
+    const end = (payload.end_time || "").trim();
+    if (!Number.isFinite(normalizedFieldCode)) {
+      throw new Error("Field code không hợp lệ.");
+    }
+    if (
+      !Number.isInteger(normalizedDay) ||
+      normalizedDay < 0 ||
+      normalizedDay > 6
+    ) {
+      throw new Error("Thứ trong tuần không hợp lệ (0-6).");
+    }
+    if (!start || !end) {
+      throw new Error("Giờ bắt đầu/kết thúc không được để trống.");
+    }
+    if (!/^\d{2}:\d{2}$/.test(start) || !/^\d{2}:\d{2}$/.test(end)) {
+      throw new Error("Định dạng giờ không hợp lệ. Vui lòng dùng HH:MM.");
+    }
+
+    const normalizedPayload = {
+      field_code: normalizedFieldCode,
+      day_of_week: normalizedDay,
+      start_time: start,
+      end_time: end,
+    };
+
+    console.log(
+      "Attempting to create operating hours with payload:",
+      normalizedPayload
+    );
+
+    const { data } = await api.post<
+      ApiSuccess<MaybeArrayResult<FieldOperatingHours>> | ApiError
+    >(`/shops/me/fields/${normalizedFieldCode}/pricing`, normalizedPayload);
+
+    const payloadData = ensureSuccess(data, "Không thể tạo giờ hoạt động mới.");
+    const rawData = normalizeSingle(payloadData);
+    return normalizeOperatingHoursResponse(rawData);
+  } catch (error: unknown) {
+    console.error("Create operating hours error:", error);
+    throw new Error(
+      extractErrorMessage(error, "Không thể tạo giờ hoạt động mới.")
+    );
+  }
+}
+
+export async function updateFieldOperatingHours(
+  pricingId: number,
+  payload: Partial<FieldOperatingHoursPayload>
+): Promise<FieldOperatingHours> {
+  if (!Number.isFinite(pricingId)) {
+    throw new Error("Pricing ID không hợp lệ.");
+  }
+  try {
+    // Filter out undefined values and normalize numeric day_of_week
+    const filtered = Object.fromEntries(
+      Object.entries(payload).filter(([_, value]) => value !== undefined)
+    ) as Partial<FieldOperatingHoursPayload>;
+
+    const normalized: Record<string, unknown> = { ...filtered };
+    if (filtered.day_of_week !== undefined) {
+      const day = Number(filtered.day_of_week);
+      if (!Number.isInteger(day) || day < 0 || day > 6) {
+        throw new Error("Thứ trong tuần không hợp lệ (0-6).");
+      }
+      normalized.day_of_week = day;
+    }
+    if (filtered.start_time !== undefined) {
+      const start = String(filtered.start_time || "").trim();
+      if (!start) {
+        throw new Error("Giờ bắt đầu không được để trống.");
+      }
+      if (!/^\d{2}:\d{2}$/.test(start)) {
+        throw new Error("Định dạng giờ bắt đầu không hợp lệ (HH:MM).");
+      }
+      normalized.start_time = start;
+    }
+    if (filtered.end_time !== undefined) {
+      const end = String(filtered.end_time || "").trim();
+      if (!end) {
+        throw new Error("Giờ kết thúc không được để trống.");
+      }
+      if (!/^\d{2}:\d{2}$/.test(end)) {
+        throw new Error("Định dạng giờ kết thúc không hợp lệ (HH:MM).");
+      }
+      normalized.end_time = end;
+    }
+
+    const { data } = await api.put<
+      ApiSuccess<MaybeArrayResult<FieldOperatingHours>> | ApiError
+    >(`/shops/me/pricing/${pricingId}`, normalized);
+    const payloadData = ensureSuccess(
+      data,
+      "Không thể cập nhật giờ hoạt động."
+    );
+    const rawData = normalizeSingle(payloadData);
+
+    return normalizeOperatingHoursResponse(rawData);
+  } catch (error: unknown) {
+    throw new Error(
+      extractErrorMessage(error, "Không thể cập nhật giờ hoạt động.")
+    );
+  }
+}
+
+export async function deleteFieldOperatingHours(
+  pricingId: number
+): Promise<{ deleted: boolean }> {
+  if (!Number.isFinite(pricingId)) {
+    throw new Error("Pricing ID không hợp lệ.");
+  }
+  try {
+    const { data } = await api.delete<
+      ApiSuccess<{ deleted: boolean }> | ApiError
+    >(`/shops/me/pricing/${pricingId}`);
+    return ensureSuccess(data, "Không thể xóa giờ hoạt động.");
+  } catch (error: unknown) {
+    throw new Error(extractErrorMessage(error, "Không thể xóa giờ hoạt động."));
+  }
+}
+
+// Keep old pricing functions for backward compatibility (used in fields management)
+export async function fetchFieldPricing(
+  fieldCode: number
+): Promise<FieldPricing[]> {
+  if (!Number.isFinite(fieldCode)) return [];
+  try {
+    const { data } = await api.get<
+      ApiSuccess<MaybeArrayResult<FieldPricing[]>> | ApiError
+    >(`/shops/me/fields/${fieldCode}/pricing`);
+    const payload = ensureSuccess(data, "Không thể tải dữ liệu giá sân.");
+    const rawList = normalizeList(payload);
+
+    // Normalize each item in the list to handle different backend response formats
+    return rawList.map((item: any) => normalizePricingResponse(item));
+  } catch (error: unknown) {
+    throw new Error(
+      extractErrorMessage(error, "Không thể tải dữ liệu giá sân.")
+    );
+  }
+}
+
+export async function createFieldPricing(
+  payload: FieldPricingPayload
+): Promise<FieldPricing> {
+  if (!Number.isFinite(payload.field_code)) {
+    throw new Error("Field code không hợp lệ.");
+  }
+  try {
+    // Normalize payload to handle different backend expectations
+    const normalizedPayload = {
+      field_code: payload.field_code,
+      day_of_week: payload.day_of_week,
+      start_time: payload.start_time,
+      end_time: payload.end_time,
+      price_per_hour: payload.price_per_hour,
+    };
+
+    const { data } = await api.post<
+      ApiSuccess<MaybeArrayResult<FieldPricing>> | ApiError
+    >(`/shops/me/fields/${payload.field_code}/pricing`, normalizedPayload);
+    const payloadData = ensureSuccess(data, "Không thể tạo giá sân mới.");
+    const rawData = normalizeSingle(payloadData);
+
+    return normalizePricingResponse(rawData);
+  } catch (error: unknown) {
+    throw new Error(extractErrorMessage(error, "Không thể tạo giá sân mới."));
+  }
+}
+
+export async function updateFieldPricing(
+  pricingId: number,
+  payload: Partial<FieldPricingPayload>
+): Promise<FieldPricing> {
+  if (!Number.isFinite(pricingId)) {
+    throw new Error("Pricing ID không hợp lệ.");
+  }
+  try {
+    // Filter out undefined values and normalize payload
+    const normalizedPayload = Object.fromEntries(
+      Object.entries(payload).filter(([_, value]) => value !== undefined)
+    );
+
+    const { data } = await api.put<
+      ApiSuccess<MaybeArrayResult<FieldPricing>> | ApiError
+    >(`/shops/me/pricing/${pricingId}`, normalizedPayload);
+    const payloadData = ensureSuccess(data, "Không thể cập nhật giá sân.");
+    const rawData = normalizeSingle(payloadData);
+
+    return normalizePricingResponse(rawData);
+  } catch (error: unknown) {
+    throw new Error(extractErrorMessage(error, "Không thể cập nhật giá sân."));
+  }
+}
+
+export async function deleteFieldPricing(
+  pricingId: number
+): Promise<{ deleted: boolean }> {
+  if (!Number.isFinite(pricingId)) {
+    throw new Error("Pricing ID không hợp lệ.");
+  }
+  try {
+    const { data } = await api.delete<
+      ApiSuccess<{ deleted: boolean }> | ApiError
+    >(`/shops/me/pricing/${pricingId}`);
+    return ensureSuccess(data, "Không thể xóa giá sân.");
+  } catch (error: unknown) {
+    throw new Error(extractErrorMessage(error, "Không thể xóa giá sân."));
   }
 }

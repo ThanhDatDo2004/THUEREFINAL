@@ -19,6 +19,7 @@ import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
 import ShopLayout from "./pages/shop/ShopLayout";
 import ShopOverview from "./pages/shop/ShopOverview";
 import ShopFieldsPage from "./pages/shop/ShopFieldsPage";
+import ShopFieldPricingPage from "./pages/shop/ShopFieldPricingPage";
 import ShopBookingsPage from "./pages/shop/ShopBookingsPage";
 import ShopCustomersPage from "./pages/shop/ShopCustomersPage";
 import ShopRevenuePage from "./pages/shop/ShopRevenuePage";
@@ -95,6 +96,7 @@ function App() {
           >
             <Route index element={<ShopOverview />} />
             <Route path="fields" element={<ShopFieldsPage />} />
+            <Route path="pricing" element={<ShopFieldPricingPage />} />
             <Route path="bookings" element={<ShopBookingsPage />} />
             <Route path="customers" element={<ShopCustomersPage />} />
             <Route path="revenue" element={<ShopRevenuePage />} />
