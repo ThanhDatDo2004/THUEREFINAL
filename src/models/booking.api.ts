@@ -1,5 +1,6 @@
 import { api } from "./api";
 import type { ApiError, ApiSuccess } from "./fields.api";
+import type { IApiSuccessResponse } from "../interfaces/common";
 
 export interface ConfirmBookingSlotPayload {
   slot_id: number;
@@ -27,6 +28,76 @@ export interface ConfirmBookingResponse {
   payment_method: string;
   field_code: number;
   slots: ConfirmBookingSlotPayload[];
+}
+
+// New booking types for API v2
+export interface BookingSlot {
+  SlotID: number;
+  PlayDate: string;
+  StartTime: string;
+  EndTime: string;
+  Status: "booked" | "available" | "cancelled";
+}
+
+export interface BookingItem {
+  BookingCode: string;
+  FieldCode: number;
+  FieldName: string;
+  SportType: string;
+  ShopName: string;
+  PlayDate: string;
+  StartTime: string;
+  EndTime: string;
+  TotalPrice: number;
+  PlatformFee: number;
+  NetToShop: number;
+  BookingStatus: "pending" | "confirmed" | "cancelled" | "completed";
+  PaymentStatus: "pending" | "paid" | "failed" | "refunded";
+  CheckinCode: string;
+}
+
+export interface BookingListResponse {
+  data: BookingItem[];
+  pagination: {
+    limit: number;
+    offset: number;
+    total: number;
+  };
+}
+
+export interface BookingDetail {
+  BookingCode: string;
+  TotalPrice: number;
+  BookingStatus: "pending" | "confirmed" | "cancelled" | "completed";
+  PaymentStatus: "pending" | "paid" | "failed" | "refunded";
+  slots: BookingSlot[];
+  FieldName?: string;
+  ShopName?: string;
+  PlayDate?: string;
+}
+
+export interface CancelBookingRequest {
+  reason?: string;
+}
+
+export interface CancelBookingResponse {
+  bookingCode: string;
+  status: "cancelled";
+  refundAmount?: number;
+}
+
+export interface CheckinCodeResponse {
+  bookingCode: string;
+  checkinCode: string;
+}
+
+export interface VerifyCheckinRequest {
+  checkin_code: string;
+}
+
+export interface VerifyCheckinResponse {
+  bookingCode: string;
+  checkinTime: string;
 }
 
 type ApiConfirmBookingResponse =
@@ -68,5 +139,99 @@ export async function confirmFieldBooking(
     throw new Error(message);
   }
 }
+
+/**
+ * Get list of user bookings
+ */
+export const getMyBookingsApi = async (
+  status?: "pending" | "confirmed" | "cancelled" | "completed",
+  limit: number = 10,
+  offset: number = 0,
+  sort: string = "CreateAt",
+  order: "ASC" | "DESC" = "DESC"
+): Promise<IApiSuccessResponse<BookingListResponse>> => {
+  const params: any = { limit, offset, sort, order };
+  if (status) params.status = status;
+  const response = await api.get<IApiSuccessResponse<BookingListResponse>>(
+    "/bookings",
+    { params }
+  );
+  return response.data;
+};
+
+/**
+ * Get booking detail
+ */
+export const getBookingDetailApi = async (
+  bookingCode: string
+): Promise<IApiSuccessResponse<BookingDetail>> => {
+  const response = await api.get<IApiSuccessResponse<BookingDetail>>(
+    `/bookings/${bookingCode}`
+  );
+  return response.data;
+};
+
+/**
+ * Cancel booking
+ */
+export const cancelBookingApi = async (
+  bookingCode: string,
+  reason?: string
+): Promise<IApiSuccessResponse<CancelBookingResponse>> => {
+  const response = await api.patch<IApiSuccessResponse<CancelBookingResponse>>(
+    `/bookings/${bookingCode}/cancel`,
+    { reason }
+  );
+  return response.data;
+};
+
+/**
+ * Get checkin code for a booking
+ */
+export const getCheckinCodeApi = async (
+  bookingCode: string
+): Promise<IApiSuccessResponse<CheckinCodeResponse>> => {
+  const response = await api.get<IApiSuccessResponse<CheckinCodeResponse>>(
+    `/bookings/${bookingCode}/checkin-code`
+  );
+  return response.data;
+};
+
+/**
+ * Verify checkin code
+ */
+export const verifyCheckinApi = async (
+  bookingCode: string,
+  checkinCode: string
+): Promise<IApiSuccessResponse<VerifyCheckinResponse>> => {
+  const response = await api.post<IApiSuccessResponse<VerifyCheckinResponse>>(
+    `/bookings/${bookingCode}/verify-checkin`,
+    { checkin_code: checkinCode }
+  );
+  return response.data;
+};
+
+// Create booking (new API)
+export interface CreateBookingRequest {
+  fieldCode: number;
+  playDate: string;
+  startTime: string;
+  endTime: string;
+}
+
+export interface CreateBookingData {
+  bookingCode: string | number;
+  totalPrice: number;
+}
+
+export const createBookingApi = async (
+  payload: CreateBookingRequest
+): Promise<IApiSuccessResponse<CreateBookingData>> => {
+  const response = await api.post<IApiSuccessResponse<CreateBookingData>>(
+    `/bookings/create`,
+    payload
+  );
+  return response.data;
+};
 
 export default confirmFieldBooking;

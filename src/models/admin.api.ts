@@ -7,6 +7,7 @@ import type {
   ShopRevenue,
   ShopRequests,
 } from "../types";
+import type { IApiSuccessResponse } from "../interfaces/common";
 
 export type ApiSuccess<T> = {
   success: true;
@@ -280,3 +281,90 @@ export async function updateAdminShopRequestStatus(
     );
   }
 }
+
+export interface AdminPayoutRequest {
+  PayoutID: number;
+  ShopCode: number;
+  ShopName: string;
+  Amount: number;
+  Status: "requested" | "processing" | "paid" | "rejected";
+  BankName: string;
+  AccountNumber: string;
+  RequestedAt: string;
+}
+
+export interface AdminPayoutsResponse {
+  data: AdminPayoutRequest[];
+  pagination: {
+    limit: number;
+    offset: number;
+    total: number;
+  };
+}
+
+export interface ApprovePayoutRequest {
+  note?: string;
+}
+
+export interface ApprovePayoutResponse {
+  payoutID: number;
+  status: "paid";
+  approvedAt: string;
+}
+
+export interface RejectPayoutRequest {
+  reason: string; // required
+}
+
+export interface RejectPayoutResponse {
+  payoutID: number;
+  status: "rejected";
+  rejectionReason: string;
+}
+
+/**
+ * Get all payout requests (admin only)
+ */
+export const getAdminPayoutRequestsApi = async (
+  status?: "requested" | "processing" | "paid" | "rejected",
+  shopCode?: number,
+  limit: number = 10,
+  offset: number = 0
+): Promise<IApiSuccessResponse<AdminPayoutsResponse>> => {
+  const params: any = { limit, offset };
+  if (status) params.status = status;
+  if (shopCode) params.shop_code = shopCode;
+  const response = await api.get<IApiSuccessResponse<AdminPayoutsResponse>>(
+    "/admin/payout-requests",
+    { params }
+  );
+  return response.data;
+};
+
+/**
+ * Approve payout request (admin only)
+ */
+export const approvePayoutRequestApi = async (
+  payoutID: number,
+  data?: ApprovePayoutRequest
+): Promise<IApiSuccessResponse<ApprovePayoutResponse>> => {
+  const response = await api.patch<IApiSuccessResponse<ApprovePayoutResponse>>(
+    `/admin/payout-requests/${payoutID}/approve`,
+    data || {}
+  );
+  return response.data;
+};
+
+/**
+ * Reject payout request (admin only)
+ */
+export const rejectPayoutRequestApi = async (
+  payoutID: number,
+  data: RejectPayoutRequest
+): Promise<IApiSuccessResponse<RejectPayoutResponse>> => {
+  const response = await api.patch<IApiSuccessResponse<RejectPayoutResponse>>(
+    `/admin/payout-requests/${payoutID}/reject`,
+    data
+  );
+  return response.data;
+};

@@ -25,10 +25,7 @@ import {
   type ConfirmBookingResponse,
 } from "../models/booking.api";
 import type { FieldWithImages } from "../types";
-import {
-  getSportLabel,
-  resolveFieldPrice,
-} from "../utils/field-helpers";
+import { getSportLabel, resolveFieldPrice } from "../utils/field-helpers";
 import resolveImageUrl from "../utils/image-helpers";
 
 interface BookingFormData {
@@ -333,8 +330,7 @@ const BookingPage: React.FC = () => {
         if (index > startIndex) {
           const prev = sortedAvailable[index - 1];
           if (
-            timeToMinutes(current.start_time) !==
-            timeToMinutes(prev.end_time)
+            timeToMinutes(current.start_time) !== timeToMinutes(prev.end_time)
           ) {
             return [] as number[];
           }
@@ -480,6 +476,11 @@ const BookingPage: React.FC = () => {
 
       setConfirmation(response);
       setIsSuccess(true);
+
+      // After successful booking, redirect to payment page with the booking code
+      if (response?.booking_code) {
+        navigate(`/payment/${response.booking_code}/transfer`);
+      }
     } catch (error: unknown) {
       setIsSuccess(false);
       const message = getErrorMessage(
@@ -534,9 +535,7 @@ const BookingPage: React.FC = () => {
       if (status === "mock_success") {
         return "Thanh toán mô phỏng thành công";
       }
-      return status
-        .replace(/_/g, " ")
-        .replace(/^\w/, (c) => c.toUpperCase());
+      return status.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase());
     })();
 
     const transactionId =
@@ -818,7 +817,9 @@ const BookingPage: React.FC = () => {
                           <span className="mt-1 block font-semibold text-gray-900">
                             {(() => {
                               const hourly = resolveFieldPrice(field);
-                              return hourly > 0 ? formatPrice(hourly) : "Liên hệ";
+                              return hourly > 0
+                                ? formatPrice(hourly)
+                                : "Liên hệ";
                             })()}
                           </span>
                         </div>
@@ -981,16 +982,12 @@ const BookingPage: React.FC = () => {
                                     return [];
                                   }
                                   const slotMap = new Map(
-                                    slots.map((entry) => [
-                                      entry.slot_id,
-                                      entry,
-                                    ])
+                                    slots.map((entry) => [entry.slot_id, entry])
                                   );
                                   return next
                                     .map((id) => slotMap.get(id))
-                                    .filter(
-                                      (entry): entry is FieldSlot =>
-                                        Boolean(entry)
+                                    .filter((entry): entry is FieldSlot =>
+                                      Boolean(entry)
                                     )
                                     .sort((a, b) =>
                                       a.start_time.localeCompare(b.start_time)
@@ -1072,7 +1069,9 @@ const BookingPage: React.FC = () => {
                       <div className="text-sm text-emerald-700">
                         <span className="font-medium">Thời lượng:</span>{" "}
                         {durationLabel}
-                        <span className="ml-3 font-medium">Khung giờ:</span>{" "}
+                        <span className="ml-3 font-medium">
+                          Khung giờ:
+                        </span>{" "}
                         {effectiveBooking.slotCount}
                       </div>
                     </div>
@@ -1321,9 +1320,7 @@ const BookingPage: React.FC = () => {
                     <div className="flex items-center justify-between">
                       <span>Số khung giờ</span>
                       <span className="font-medium">
-                        {effectiveBooking
-                          ? effectiveBooking.slotCount
-                          : "-"}
+                        {effectiveBooking ? effectiveBooking.slotCount : "-"}
                       </span>
                     </div>
 

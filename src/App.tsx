@@ -35,6 +35,8 @@ import AdminInsightsPage from "./pages/admin/AdminInsightsPage";
 import AdminTransactionsPage from "./pages/admin/AdminTransactionsPage";
 import AdminActivityPage from "./pages/admin/AdminActivityPage";
 import AdminSettingsPage from "./pages/admin/AdminSettingsPage";
+import PaymentPage from "./pages/PaymentPage";
+import PaymentResult from "./pages/PaymentResult";
 
 function App() {
   return (
@@ -80,6 +82,26 @@ function App() {
                   <BookingPage />
                 </Layout>
               </PrivateRoute>
+            }
+          />
+
+          {/* Payment Transfer Instructions (SePay) */}
+          <Route
+            path="/payment/:bookingCode/transfer"
+            element={
+              <Layout showFooter={false}>
+                <PaymentPage />
+              </Layout>
+            }
+          />
+
+          {/* Payment Result Page */}
+          <Route
+            path="/payment/:bookingCode"
+            element={
+              <Layout showFooter={false}>
+                <PaymentResult />
+              </Layout>
             }
           />
 
