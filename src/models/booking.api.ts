@@ -45,22 +45,30 @@ export interface BookingSlot {
 export interface BookingItem {
   BookingCode: string;
   FieldCode: number;
-  FieldName: string;
-  SportType: string;
-  ShopName: string;
-  PlayDate: string;
-  StartTime: string;
-  EndTime: string;
+  FieldName?: string;
+  SportType?: string;
+  ShopName?: string;
+  PlayDate?: string;
+  StartTime?: string;
+  EndTime?: string;
   TotalPrice: number;
-  PlatformFee: number;
-  NetToShop: number;
+  PlatformFee?: number;
+  NetToShop?: number;
   BookingStatus: "pending" | "confirmed" | "cancelled" | "completed";
   PaymentStatus: "pending" | "paid" | "failed" | "refunded";
-  CheckinCode: string;
+  CheckinCode?: string;
   CustomerUserID?: number;
   CustomerName?: string;
   CustomerPhone?: string;
   CustomerEmail?: string;
+  slots?: Array<{
+    Slot_ID: number;
+    PlayDate: string;
+    StartTime: string;
+    EndTime: string;
+    PricePerSlot: number;
+    Status: string;
+  }>;
 }
 
 export interface BookingListResponse {

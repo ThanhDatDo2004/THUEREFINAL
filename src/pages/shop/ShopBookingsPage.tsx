@@ -275,10 +275,16 @@ const ShopBookingsPage: React.FC = () => {
                             <td className="px-6 py-4 text-sm text-gray-600">{b.CustomerPhone || '-'}</td>
                             <td className="px-6 py-4 text-sm font-mono text-gray-700">{b.CheckinCode || '-'}</td>
                             <td className="px-6 py-4 text-sm text-gray-700">
-                              <div>{new Date(b.PlayDate).toLocaleDateString('vi-VN')}</div>
-                              <div className="text-gray-500 text-xs">
-                                {b.StartTime?.substring(0, 5)} - {b.EndTime?.substring(0, 5)}
-                              </div>
+                              {b.slots && b.slots.length > 0 ? (
+                                <>
+                                  <div>{new Date(b.slots[0].PlayDate).toLocaleDateString('vi-VN')}</div>
+                                  <div className="text-gray-500 text-xs">
+                                    {b.slots[0].StartTime?.substring(0, 5)} - {b.slots[b.slots.length - 1].EndTime?.substring(0, 5)}
+                                  </div>
+                                </>
+                              ) : (
+                                <div>-</div>
+                              )}
                             </td>
                             <td className="px-6 py-4 text-right text-sm font-semibold text-gray-900">
                               {b.TotalPrice?.toLocaleString('vi-VN')}đ
