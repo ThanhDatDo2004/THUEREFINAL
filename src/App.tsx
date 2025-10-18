@@ -1,5 +1,4 @@
 // src/App.tsx
-import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 
@@ -12,6 +11,8 @@ import RegisterPage from "./pages/auth/RegisterPage";
 import FieldsPage from "./pages/FieldsPage";
 import FieldDetailPage from "./pages/FieldDetailPage";
 import BookingPage from "./pages/BookingPage";
+import BookingDetailPage from "./pages/BookingDetailPage";
+import CheckinCodePage from "./pages/CheckinCodePage";
 import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
 
@@ -80,6 +81,28 @@ function App() {
               <PrivateRoute>
                 <Layout showFooter={false}>
                   <BookingPage />
+                </Layout>
+              </PrivateRoute>
+            }
+          />
+
+          {/* Booking Detail Pages */}
+          <Route
+            path="/bookings/:bookingCode"
+            element={
+              <PrivateRoute>
+                <Layout showFooter={false}>
+                  <BookingDetailPage />
+                </Layout>
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/bookings/:bookingCode/checkin-code"
+            element={
+              <PrivateRoute>
+                <Layout showFooter={false}>
+                  <CheckinCodePage />
                 </Layout>
               </PrivateRoute>
             }

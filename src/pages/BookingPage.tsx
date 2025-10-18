@@ -149,6 +149,7 @@ const deriveSlotState = (slot: FieldSlot) => {
       "blocked",
       "on_hold",
       "held",
+      "hold",
       "confirmed",
       "reserved",
       "disabled",
@@ -157,7 +158,7 @@ const deriveSlotState = (slot: FieldSlot) => {
     updateAvailability(false);
   }
 
-  const isHeld = ["held", "on_hold", "holding"].includes(normalizedStatus);
+  const isHeld = ["held", "on_hold", "holding", "hold"].includes(normalizedStatus);
   const isBooked = ["booked", "confirmed", "reserved"].includes(
     normalizedStatus
   );
