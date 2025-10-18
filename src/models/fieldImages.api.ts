@@ -45,7 +45,7 @@ export async function uploadFieldImage(
   file: File
 ): Promise<FieldImages> {
   const formData = new FormData();
-  formData.append("image", file);
+  formData.append("images", file);
 
   try {
     const { data } = await api.post<

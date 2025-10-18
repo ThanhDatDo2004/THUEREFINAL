@@ -57,6 +57,10 @@ export interface BookingItem {
   BookingStatus: "pending" | "confirmed" | "cancelled" | "completed";
   PaymentStatus: "pending" | "paid" | "failed" | "refunded";
   CheckinCode: string;
+  CustomerUserID?: number;
+  CustomerName?: string;
+  CustomerPhone?: string;
+  CustomerEmail?: string;
 }
 
 export interface BookingListResponse {

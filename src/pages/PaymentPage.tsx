@@ -7,9 +7,13 @@ import {
   RefreshCw,
   Phone,
 } from "lucide-react";
-import { initiatePaymentApi } from "../models/payment.api";
+import {
+  initiatePaymentApi,
+  checkPaymentStatusApi,
+} from "../models/payment.api";
 import { usePaymentPolling } from "../hooks/usePaymentPolling";
 import { extractErrorMessage } from "../models/api.helpers";
+import { normalizePaymentStatus } from "../utils/payment-helpers";
 
 interface PaymentPageState {
   loading: boolean;
@@ -158,7 +162,6 @@ const PaymentPage: React.FC = () => {
     }
   }, [paymentPolling.error, state.pollInterval]);
 
-
   // ✅ Cooldown timer for check button
   useEffect(() => {
     if (state.checkCooldown <= 0) return;
@@ -170,6 +173,42 @@ const PaymentPage: React.FC = () => {
     }, 1000);
     return () => clearTimeout(timer);
   }, [state.checkCooldown]);
+
+  // ✅ Auto-polling every 2 seconds after user verifies
+  useEffect(() => {
+    if (!state.pollingEnabled || !bookingCode) return;
+
+    const pollInterval = setInterval(async () => {
+      try {
+        const response = await checkPaymentStatusApi(bookingCode);
+
+        if (response.success && response.data) {
+          const paymentStatus = normalizePaymentStatus(response.data.status);
+
+          if (paymentStatus === "paid") {
+            clearInterval(pollInterval);
+            setState((prev) => ({ ...prev, pollingEnabled: false }));
+            setTimeout(() => {
+              navigate(`/payment/${bookingCode}`);
+            }, 1000);
+          } else if (paymentStatus === "failed") {
+            clearInterval(pollInterval);
+            setState((prev) => ({
+              ...prev,
+              error: "Thanh toán thất bại. Vui lòng thử lại.",
+              pollingEnabled: false,
+            }));
+          }
+          // If still pending, continue polling
+        }
+      } catch (err: unknown) {
+        console.error("Polling error:", err);
+        // Continue polling on error
+      }
+    }, 2000);
+
+    return () => clearInterval(pollInterval);
+  }, [state.pollingEnabled, bookingCode, navigate]);
   const handleRetry = () => {
     setState((prev) => ({
       ...prev,
@@ -177,6 +216,55 @@ const PaymentPage: React.FC = () => {
       pollInterval: 4000,
       pollingEnabled: true,
     }));
+  };
+
+  const handleVerifyPayment = async () => {
+    if (!bookingCode) return;
+
+    try {
+      setState((prev) => ({
+        ...prev,
+        initiating: true,
+        error: null,
+      }));
+
+      const response = await checkPaymentStatusApi(bookingCode);
+
+      if (response.success && response.data) {
+        const paymentStatus = normalizePaymentStatus(response.data.status);
+
+        if (paymentStatus === "paid") {
+          setState((prev) => ({ ...prev, initiating: false }));
+          setTimeout(() => {
+            navigate(`/payment/${bookingCode}`);
+          }, 1000);
+        } else if (paymentStatus === "failed") {
+          setState((prev) => ({
+            ...prev,
+            error: "Thanh toán thất bại. Vui lòng thử lại.",
+            initiating: false,
+          }));
+        } else {
+          // Status is still pending - continue polling
+          setState((prev) => ({
+            ...prev,
+            pollingEnabled: true,
+            initiating: false,
+            checkCooldown: 5,
+          }));
+        }
+      }
+    } catch (err: unknown) {
+      const errorMsg = extractErrorMessage(
+        err,
+        "Không thể xác nhận thanh toán"
+      );
+      setState((prev) => ({
+        ...prev,
+        error: errorMsg,
+        initiating: false,
+      }));
+    }
   };
 
   const buildSePayQRUrl = () => {
@@ -260,8 +348,8 @@ const PaymentPage: React.FC = () => {
             <div className="space-y-4">
               <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
                 <p className="text-sm text-gray-700">
-                  Vui lòng chuyển khoản theo hướng dẫn bên dưới. Hệ thống sẽ
-                  tự động khớp khi nội dung chính xác.
+                  Vui lòng chuyển khoản theo hướng dẫn bên dưới. Hệ thống sẽ tự
+                  động khớp khi nội dung chính xác.
                 </p>
               </div>
               {(state.qrCode || true) && (
@@ -328,19 +416,20 @@ const PaymentPage: React.FC = () => {
           <div className="space-y-3">
             {paymentPolling.isPending && (
               <button
-                onClick={() => {
-                  setState((prev) => ({
-                    ...prev,
-                    pollingEnabled: true,
-                    checkCooldown: 5,
-                  }));
-                }}
-                disabled={state.checkCooldown > 0}
+                onClick={handleVerifyPayment}
+                disabled={state.checkCooldown > 0 || state.initiating}
                 className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white font-bold py-3 px-4 rounded-lg transition flex items-center justify-center"
               >
-                {state.checkCooldown > 0 
-                  ? `${state.checkCooldown}s`
-                  : "✓ Đã Thanh Toán / Kiểm Tra"}
+                {state.initiating ? (
+                  <>
+                    <Loader className="mr-2 h-4 w-4 animate-spin" />
+                    Đang xử lý...
+                  </>
+                ) : state.checkCooldown > 0 ? (
+                  `${state.checkCooldown}s`
+                ) : (
+                  "✓ Xác Nhận Đã Chuyển Tiền"
+                )}
               </button>
             )}
 

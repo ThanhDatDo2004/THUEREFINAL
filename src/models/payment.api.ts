@@ -1,5 +1,6 @@
 import api from "./api";
-import type { IApiSuccessResponse, IApiErrorResponse } from "../interfaces/common";
+import type { IApiSuccessResponse } from "../interfaces/common";
+import type { PaymentStatus } from "../utils/payment-helpers";
 
 export interface PaymentInitResponse {
   paymentID: number;
@@ -8,7 +9,7 @@ export interface PaymentInitResponse {
   amount: number;
   platformFee: number;
   netToShop: number;
-  paymentStatus: "pending" | "paid" | "failed" | "refunded";
+  paymentStatus: PaymentStatus;
   expiresIn: number;
   bookingId?: number;
 }
@@ -17,7 +18,7 @@ export interface PaymentStatusResponse {
   paymentID: number;
   bookingCode: string;
   amount: number;
-  status: "pending" | "paid" | "failed" | "refunded";
+  status: PaymentStatus | string;
   paidAt?: string;
 }
 

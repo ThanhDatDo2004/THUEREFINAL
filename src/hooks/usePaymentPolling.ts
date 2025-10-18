@@ -1,6 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { checkPaymentStatusApi } from "../models/payment.api";
 import { extractErrorMessage } from "../models/api.helpers";
+import {
+  normalizePaymentStatus,
+  type PaymentStatus,
+} from "../utils/payment-helpers";
 
 export interface UsePaymentPollingOptions {
   bookingCode: string;
@@ -19,7 +23,7 @@ export const usePaymentPolling = ({
   onError,
   timeout = 900000, // 15 minutes default
 }: UsePaymentPollingOptions) => {
-  const [status, setStatus] = useState<string>("pending");
+  const [status, setStatus] = useState<PaymentStatus>("pending");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -60,7 +64,7 @@ export const usePaymentPolling = ({
       const response = await checkPaymentStatusApi(bookingCode);
 
       if (response.success && response.data) {
-        const newStatus = response.data.status;
+        const newStatus = normalizePaymentStatus(response.data.status);
         setStatus(newStatus);
         setError(null);
 

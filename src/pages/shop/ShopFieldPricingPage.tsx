@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Plus, Edit, Trash2, Save, X, Clock } from "lucide-react";
+import { Plus, Edit, Trash2, Save, X, Clock, DollarSign, AlertCircle } from "lucide-react";
 import {
   fetchShopFields,
   fetchFieldOperatingHours,
@@ -25,8 +25,6 @@ const DAY_NAMES = [
   "Thứ bảy",
 ];
 
-// Removed mock data - now using real API calls
-
 interface OperatingHoursRowProps {
   operatingHours: FieldOperatingHours;
   onEdit: (operatingHours: FieldOperatingHours) => void;
@@ -39,35 +37,33 @@ const OperatingHoursRow: React.FC<OperatingHoursRowProps> = ({
   onDelete,
 }) => {
   return (
-    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
-      <div className="flex items-center gap-4">
-        <div className="w-20 text-sm font-medium text-gray-700">
+    <div className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:shadow-md transition-shadow hover:border-blue-200">
+      <div className="flex items-center gap-4 flex-1">
+        <div className="flex-shrink-0 w-24 font-semibold text-gray-900">
           {DAY_NAMES[operatingHours.day_of_week]}
         </div>
-        <div className="flex items-center gap-2">
-          <Clock className="h-4 w-4 text-gray-500" />
-          <span className="text-sm text-gray-600">
+        <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 rounded-lg">
+          <Clock className="h-4 w-4 text-blue-600" />
+          <span className="text-sm font-medium text-gray-800">
             {operatingHours.start_time} - {operatingHours.end_time}
           </span>
         </div>
       </div>
-      <div className="flex items-center gap-3">
-        <div className="flex gap-1">
-          <button
-            onClick={() => onEdit(operatingHours)}
-            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
-            title="Chỉnh sửa"
-          >
-            <Edit className="h-4 w-4" />
-          </button>
-          <button
-            onClick={() => onDelete(operatingHours.pricing_id)}
-            className="p-1.5 text-red-600 hover:bg-red-50 rounded-md transition-colors"
-            title="Xóa"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
-        </div>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => onEdit(operatingHours)}
+          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+          title="Chỉnh sửa"
+        >
+          <Edit className="h-4 w-4" />
+        </button>
+        <button
+          onClick={() => onDelete(operatingHours.pricing_id)}
+          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+          title="Xóa"
+        >
+          <Trash2 className="h-4 w-4" />
+        </button>
       </div>
     </div>
   );
@@ -115,7 +111,6 @@ const EditOperatingHoursModal: React.FC<EditOperatingHoursModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Normalize payload to prevent NaN and enforce snake_case keys
     const normalizedDay = Number(formData.day_of_week);
     const normalizedFieldCode = Number(fieldCode);
     const start = (formData.start_time || "").trim();
@@ -139,33 +134,32 @@ const EditOperatingHoursModal: React.FC<EditOperatingHoursModalProps> = ({
       start_time: start,
       end_time: end,
     };
-    console.log("Submitting operating hours payload:", normalizedPayload);
     onSave(normalizedPayload);
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4">
-        <div className="flex items-center justify-between p-6 border-b">
-          <h2 className="text-xl font-semibold text-gray-900">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+          <h2 className="text-xl font-bold text-gray-900">
             {operatingHours
               ? "Chỉnh sửa giờ hoạt động"
-              : "Thêm giờ hoạt động mới"}
+              : "Thêm giờ hoạt động"}
           </h2>
           <button
             onClick={onClose}
-            className="p-1 hover:bg-gray-100 rounded-md transition-colors"
+            className="p-1 hover:bg-white rounded-lg transition-colors"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-6 space-y-5">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Thứ trong tuần
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Ngày trong tuần
             </label>
             <select
               value={formData.day_of_week}
@@ -175,7 +169,7 @@ const EditOperatingHoursModal: React.FC<EditOperatingHoursModalProps> = ({
                   day_of_week: parseInt(e.target.value),
                 })
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
             >
               {DAY_NAMES.map((day, index) => (
@@ -188,7 +182,7 @@ const EditOperatingHoursModal: React.FC<EditOperatingHoursModalProps> = ({
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Giờ mở cửa
               </label>
               <input
@@ -197,12 +191,12 @@ const EditOperatingHoursModal: React.FC<EditOperatingHoursModalProps> = ({
                 onChange={(e) =>
                   setFormData({ ...formData, start_time: e.target.value })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Giờ đóng cửa
               </label>
               <input
@@ -211,25 +205,23 @@ const EditOperatingHoursModal: React.FC<EditOperatingHoursModalProps> = ({
                 onChange={(e) =>
                   setFormData({ ...formData, end_time: e.target.value })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
               />
             </div>
           </div>
 
-          {/* Removed price_per_hour field - pricing is managed separately */}
-
           <div className="flex gap-3 pt-4">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+              className="flex-1 px-4 py-2.5 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-medium"
             >
               Hủy
             </button>
             <button
               type="submit"
-              className="flex-1 px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-md transition-colors flex items-center justify-center gap-2"
+              className="flex-1 px-4 py-2.5 bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition-colors flex items-center justify-center gap-2 font-medium"
             >
               <Save className="h-4 w-4" />
               Lưu
@@ -264,68 +256,74 @@ const FieldOperatingHoursSection: React.FC<FieldOperatingHoursSectionProps> = ({
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
-    <div className="border border-gray-200 rounded-xl overflow-hidden">
+    <div className="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow">
       <div
-        className="flex items-center justify-between p-4 bg-white cursor-pointer hover:bg-gray-50 transition-colors"
+        className="flex items-center justify-between p-5 bg-gradient-to-r from-gray-50 to-white cursor-pointer hover:from-blue-50 hover:to-indigo-50 transition-colors border-b border-gray-100"
         onClick={() => setIsExpanded(!isExpanded)}
       >
-        <div className="flex items-center gap-3">
-          <div className="w-3 h-3 rounded-full bg-green-500"></div>
+        <div className="flex items-center gap-4 flex-1">
+          <div className="flex-shrink-0 w-3 h-3 rounded-full bg-green-500"></div>
           <div>
-            <h3 className="font-semibold text-gray-900">{field.field_name}</h3>
-            <p className="text-sm text-gray-500 capitalize">
+            <h3 className="font-bold text-gray-900 text-base">{field.field_name}</h3>
+            <p className="text-sm text-gray-500 mt-0.5">
               {field.sport_type} • {field.address}
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-gray-500">
-            {isLoading
-              ? "Đang tải..."
-              : `${fieldOperatingHours.length} khung giờ`}
-          </span>
+        <div className="flex items-center gap-4">
+          <div className="hidden sm:flex items-center gap-2 bg-blue-50 px-3 py-1.5 rounded-lg">
+            <Clock className="h-4 w-4 text-blue-600" />
+            <span className="text-sm font-medium text-gray-700">
+              {isLoading
+                ? "Đang tải..."
+                : `${fieldOperatingHours.length} khung giờ`}
+            </span>
+          </div>
           <button
             onClick={(e) => {
               e.stopPropagation();
               onAddOperatingHours(field.field_code);
             }}
-            className="p-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors flex-shrink-0"
             title="Thêm giờ hoạt động"
             disabled={isLoading}
           >
-            <Plus className="h-4 w-4" />
+            <Plus className="h-5 w-5" />
           </button>
         </div>
       </div>
 
       {isExpanded && (
-        <div className="border-t border-gray-200 p-4 space-y-3">
-          {isLoading ? (
-            <div className="text-center py-8 text-gray-500">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-3"></div>
-              <p>Đang tải khung giờ...</p>
-            </div>
-          ) : fieldOperatingHours.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <Clock className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-              <p>Chưa có giờ hoạt động nào được thiết lập</p>
-              <button
-                onClick={() => onAddOperatingHours(field.field_code)}
-                className="mt-3 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-              >
-                Thêm giờ hoạt động đầu tiên
-              </button>
-            </div>
-          ) : (
-            fieldOperatingHours.map((operatingHours) => (
-              <OperatingHoursRow
-                key={operatingHours.pricing_id}
-                operatingHours={operatingHours}
-                onEdit={onEditOperatingHours}
-                onDelete={onDeleteOperatingHours}
-              />
-            ))
-          )}
+        <div className="border-t border-gray-200 bg-white">
+          <div className="p-5 space-y-3">
+            {isLoading ? (
+              <div className="text-center py-12">
+                <div className="w-10 h-10 rounded-full border-4 border-gray-200 border-t-blue-600 animate-spin mx-auto mb-3"></div>
+                <p className="text-gray-500 text-sm">Đang tải khung giờ...</p>
+              </div>
+            ) : fieldOperatingHours.length === 0 ? (
+              <div className="text-center py-12 px-4">
+                <Clock className="h-14 w-14 mx-auto mb-3 text-gray-300" />
+                <p className="text-gray-600 font-medium mb-4">Chưa có giờ hoạt động</p>
+                <button
+                  onClick={() => onAddOperatingHours(field.field_code)}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm"
+                >
+                  <Plus className="h-4 w-4" />
+                  Thêm giờ hoạt động đầu tiên
+                </button>
+              </div>
+            ) : (
+              fieldOperatingHours.map((operatingHours) => (
+                <OperatingHoursRow
+                  key={operatingHours.pricing_id}
+                  operatingHours={operatingHours}
+                  onEdit={onEditOperatingHours}
+                  onDelete={onDeleteOperatingHours}
+                />
+              ))
+            )}
+          </div>
         </div>
       )}
     </div>
@@ -359,7 +357,6 @@ const ShopFieldOperatingHoursPage: React.FC = () => {
       const result = await fetchShopFields();
       setFields(result.items || []);
 
-      // Load operating hours data for all fields
       if (result.items && result.items.length > 0) {
         await loadAllOperatingHoursData(result.items);
       }
@@ -403,7 +400,6 @@ const ShopFieldOperatingHoursPage: React.FC = () => {
       setOperatingHoursLoading((prev) => ({ ...prev, [fieldCode]: true }));
       const operatingHours = await fetchFieldOperatingHours(fieldCode);
 
-      // Update operating hours data for this specific field
       setOperatingHoursData((prev) => {
         const filtered = prev.filter((h) => h.field_code !== fieldCode);
         return [...filtered, ...operatingHours];
@@ -429,16 +425,10 @@ const ShopFieldOperatingHoursPage: React.FC = () => {
   const handleSaveOperatingHours = async (data: FieldOperatingHoursPayload) => {
     try {
       setError(null);
-      console.log("Saving operating hours with data:", data);
 
       let savedOperatingHours: FieldOperatingHours;
 
       if (editingOperatingHours) {
-        // Update existing operating hours
-        console.log(
-          "Updating existing operating hours:",
-          editingOperatingHours.pricing_id
-        );
         savedOperatingHours = await updateFieldOperatingHours(
           editingOperatingHours.pricing_id,
           data
@@ -451,10 +441,7 @@ const ShopFieldOperatingHoursPage: React.FC = () => {
           )
         );
       } else {
-        // Create new operating hours
-        console.log("Creating new operating hours");
         savedOperatingHours = await createFieldOperatingHours(data);
-        console.log("Created operating hours:", savedOperatingHours);
         setOperatingHoursData((prev) => [...prev, savedOperatingHours]);
       }
 
@@ -490,99 +477,99 @@ const ShopFieldOperatingHoursPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-500">Đang tải dữ liệu...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              Giá & Giờ hoạt động
-            </h1>
-            <p className="text-gray-600 mt-1">
-              Thiết lập giờ mở cửa, đóng cửa và giá cho từng thứ trong tuần
-            </p>
-          </div>
-        </div>
-
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <div className="flex items-center">
-            <div className="text-red-600 mr-3">
-              <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </div>
-            <div>
-              <h3 className="text-sm font-medium text-red-800">
-                Lỗi tải dữ liệu
-              </h3>
-              <p className="text-sm text-red-700 mt-1">{error}</p>
-            </div>
-          </div>
-          <div className="mt-3">
-            <button
-              onClick={loadFields}
-              className="text-sm bg-red-100 text-red-800 px-3 py-1 rounded-md hover:bg-red-200 transition-colors"
-            >
-              Thử lại
-            </button>
-          </div>
+          <div className="w-12 h-12 rounded-full border-4 border-gray-200 border-t-blue-600 animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600 font-medium">Đang tải dữ liệu...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Giờ hoạt động</h1>
-          <p className="text-gray-600 mt-1">
-            Thiết lập giờ mở cửa và đóng cửa cho từng thứ trong tuần
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-2">
+            <Clock className="h-8 w-8 text-blue-600" />
+            <h1 className="text-3xl font-bold text-gray-900">Giờ hoạt động</h1>
+          </div>
+          <p className="text-gray-600 ml-11">
+            Thiết lập giờ mở cửa và đóng cửa cho từng sân mỗi ngày
           </p>
         </div>
-      </div>
 
-      {fields.length === 0 ? (
-        <div className="text-center py-12 bg-gray-50 rounded-xl">
-          <Clock className="h-16 w-16 mx-auto mb-4 text-gray-300" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            Chưa có sân nào
-          </h3>
-          <p className="text-gray-500 mb-4">
-            Bạn cần tạo sân trước khi có thể thiết lập giờ hoạt động
-          </p>
-          <button className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-            Tạo sân đầu tiên
-          </button>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {fields.map((field) => (
-            <FieldOperatingHoursSection
-              key={field.field_code}
-              field={field}
-              operatingHoursList={operatingHoursData}
-              onAddOperatingHours={handleAddOperatingHours}
-              onEditOperatingHours={handleEditOperatingHours}
-              onDeleteOperatingHours={handleDeleteOperatingHours}
-              isLoading={operatingHoursLoading[field.field_code] || false}
-            />
-          ))}
-        </div>
-      )}
+        {/* Error Alert */}
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+            <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <h3 className="font-semibold text-red-900">Lỗi</h3>
+              <p className="text-sm text-red-700 mt-1">{error}</p>
+            </div>
+            <button
+              onClick={loadFields}
+              className="text-sm text-red-600 hover:text-red-700 font-medium whitespace-nowrap"
+            >
+              Thử lại
+            </button>
+          </div>
+        )}
+
+        {/* Stats */}
+        {fields.length > 0 && (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+            <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
+              <div className="text-gray-600 text-sm font-medium">Tổng sân</div>
+              <div className="text-3xl font-bold text-gray-900 mt-1">{fields.length}</div>
+            </div>
+            <div className="bg-white rounded-lg border border-blue-200 p-4 shadow-sm bg-gradient-to-br from-white to-blue-50">
+              <div className="text-blue-700 text-sm font-medium">Khung giờ</div>
+              <div className="text-3xl font-bold text-blue-900 mt-1">{operatingHoursData.length}</div>
+            </div>
+            <div className="bg-white rounded-lg border border-green-200 p-4 shadow-sm bg-gradient-to-br from-white to-green-50">
+              <div className="text-green-700 text-sm font-medium">Sân có giờ</div>
+              <div className="text-3xl font-bold text-green-900 mt-1">
+                {fields.filter((f) =>
+                  operatingHoursData.some((h) => h.field_code === f.field_code)
+                ).length}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Main Content */}
+        {fields.length === 0 ? (
+          <div className="text-center py-16 bg-white rounded-2xl border-2 border-dashed border-gray-300">
+            <Clock className="h-16 w-16 mx-auto mb-4 text-gray-300" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Chưa có sân nào
+            </h3>
+            <p className="text-gray-500 mb-6 max-w-sm mx-auto">
+              Bạn cần tạo sân trước khi có thể thiết lập giờ hoạt động
+            </p>
+            <button className="inline-flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+              <Plus className="h-4 w-4" />
+              Tạo sân đầu tiên
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {fields.map((field) => (
+              <FieldOperatingHoursSection
+                key={field.field_code}
+                field={field}
+                operatingHoursList={operatingHoursData}
+                onAddOperatingHours={handleAddOperatingHours}
+                onEditOperatingHours={handleEditOperatingHours}
+                onDeleteOperatingHours={handleDeleteOperatingHours}
+                isLoading={operatingHoursLoading[field.field_code] || false}
+              />
+            ))}
+          </div>
+        )}
+      </div>
 
       <EditOperatingHoursModal
         isOpen={isModalOpen}
