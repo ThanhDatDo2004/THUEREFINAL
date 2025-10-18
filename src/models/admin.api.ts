@@ -293,6 +293,19 @@ export interface AdminPayoutRequest {
   RequestedAt: string;
 }
 
+export interface AdminPayoutRequestWithBank {
+  PayoutID: number;
+  ShopCode: number;
+  ShopName: string;
+  Amount: number;
+  Status: "requested" | "processing" | "paid" | "rejected";
+  BankName: string;
+  AccountNumber: string;
+  AccountHolder?: string;
+  IsDefault?: string | boolean;
+  RequestedAt: string;
+}
+
 export interface AdminPayoutsResponse {
   data: AdminPayoutRequest[];
   pagination: {

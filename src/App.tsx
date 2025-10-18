@@ -36,6 +36,7 @@ import AdminInsightsPage from "./pages/admin/AdminInsightsPage";
 import AdminTransactionsPage from "./pages/admin/AdminTransactionsPage";
 import AdminActivityPage from "./pages/admin/AdminActivityPage";
 import AdminSettingsPage from "./pages/admin/AdminSettingsPage";
+import AdminPayoutRequestsPage from "./pages/admin/AdminPayoutRequestsPage";
 import PaymentPage from "./pages/PaymentPage";
 import PaymentResult from "./pages/PaymentResult";
 
@@ -166,6 +167,7 @@ function App() {
             <Route path="requests" element={<AdminRequestsPage />} />
             <Route path="insights" element={<AdminInsightsPage />} />
             <Route path="transactions" element={<AdminTransactionsPage />} />
+            <Route path="payouts" element={<AdminPayoutRequestsPage />} />
             <Route path="activity" element={<AdminActivityPage />} />
             <Route path="settings" element={<AdminSettingsPage />} />
           </Route>

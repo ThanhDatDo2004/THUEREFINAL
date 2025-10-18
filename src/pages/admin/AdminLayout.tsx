@@ -115,13 +115,13 @@ function AdminLayout() {
             </NavLink>
 
             <NavLink
-              to="/admin/transactions"
+              to="/admin/payouts"
               className={({ isActive }) =>
                 `${navItemBase} ${isActive ? navItemActive : navItemIdle}`
               }
             >
               <CreditCard className="h-4 w-4" />
-              {!collapsed && <span>Transactions</span>}
+              {!collapsed && <span>Yêu Cầu Rút Tiền</span>}
             </NavLink>
 
             <NavLink

@@ -51,6 +51,7 @@ export interface CreatePayoutRequest {
   amount: number;
   bank_id: number;
   note?: string;
+  password?: string; // Optional password for verification
 }
 
 export interface PayoutResponse {

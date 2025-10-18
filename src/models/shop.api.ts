@@ -361,6 +361,80 @@ export async function fetchMyShopBookings(): Promise<Bookings[]> {
   }
 }
 
+// New function to fetch shop bookings for revenue display
+export interface ShopBookingItem {
+  BookingCode: string;
+  FieldCode: number;
+  FieldName?: string;
+  ShopName?: string;
+  PlayDate?: string;
+  StartTime?: string;
+  EndTime?: string;
+  TotalPrice: number;
+  PlatformFee?: number;
+  NetToShop?: number;
+  BookingStatus: "pending" | "confirmed" | "cancelled" | "completed";
+  PaymentStatus: "pending" | "paid" | "failed" | "refunded";
+  CheckinCode?: string;
+  CustomerUserID?: number;
+  CustomerName?: string;
+  CustomerPhone?: string;
+  CustomerEmail?: string;
+  // Slots from Booking_Slots table
+  slots?: Array<{
+    Slot_ID: number;
+    PlayDate: string;
+    StartTime: string;
+    EndTime: string;
+    PricePerSlot?: number;
+    Status?: string;
+  }>;
+}
+
+export async function fetchShopBookingsForRevenue(): Promise<ShopBookingItem[]> {
+  try {
+    const { data } = await api.get<
+      ApiSuccess<MaybeArrayResult<ShopBookingItem[]>> | ApiError
+    >("/shops/me/bookings");
+    const payload = ensureSuccess(
+      data,
+      "Không thể tải danh sách đơn đặt của shop."
+    );
+    return normalizeList(payload);
+  } catch (error: unknown) {
+    throw new Error(
+      extractErrorMessage(error, "Không thể tải danh sách đơn đặt của shop.")
+    );
+  }
+}
+
+// Bank account types
+export interface ShopBankAccount {
+  ShopBankID: number;
+  ShopCode: number;
+  BankName: string;
+  AccountNumber: string;
+  AccountHolder?: string;
+  IsDefault?: string | boolean;
+}
+
+export async function fetchShopBankAccounts(): Promise<ShopBankAccount[]> {
+  try {
+    const { data } = await api.get<
+      ApiSuccess<MaybeArrayResult<ShopBankAccount[]>> | ApiError
+    >("/shops/me/bank-accounts");
+    const payload = ensureSuccess(
+      data,
+      "Không thể tải danh sách tài khoản ngân hàng."
+    );
+    return normalizeList(payload);
+  } catch (error: unknown) {
+    throw new Error(
+      extractErrorMessage(error, "Không thể tải danh sách tài khoản ngân hàng.")
+    );
+  }
+}
+
 export async function fetchMyShopCustomers(): Promise<Customers[]> {
   try {
     const { data } = await api.get<
