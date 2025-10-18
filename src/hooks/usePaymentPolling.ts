@@ -8,6 +8,7 @@ export interface UsePaymentPollingOptions {
   interval?: number; // milliseconds, default 2000
   onSuccess?: (status: string) => void;
   onError?: (error: string) => void;
+  timeout?: number; // milliseconds, default 15 minutes (900000ms)
 }
 
 export const usePaymentPolling = ({
@@ -16,14 +17,31 @@ export const usePaymentPolling = ({
   interval = 2000,
   onSuccess,
   onError,
+  timeout = 900000, // 15 minutes default
 }: UsePaymentPollingOptions) => {
   const [status, setStatus] = useState<string>("pending");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const startTimeRef = useRef<number | null>(null);
 
   const poll = useCallback(async () => {
     if (!enabled) return;
+
+    // Check if timeout exceeded
+    if (startTimeRef.current && Date.now() - startTimeRef.current > timeout) {
+      const timeoutMsg = `Timeout: Thanh toán chưa hoàn tất sau 15 phút. Vui lòng thử lại.`;
+      setError(timeoutMsg);
+      if (onError) {
+        onError(timeoutMsg);
+      }
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      return;
+    }
 
     try {
       setLoading(true);
@@ -45,6 +63,10 @@ export const usePaymentPolling = ({
             clearInterval(intervalRef.current);
             intervalRef.current = null;
           }
+          if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+            timeoutRef.current = null;
+          }
         }
       }
     } catch (err: unknown) {
@@ -56,10 +78,12 @@ export const usePaymentPolling = ({
     } finally {
       setLoading(false);
     }
-  }, [bookingCode, enabled, onSuccess, onError]);
+  }, [bookingCode, enabled, onSuccess, onError, timeout]);
 
   useEffect(() => {
     if (!enabled) return;
+
+    startTimeRef.current = Date.now();
 
     // Poll immediately first
     poll();
@@ -67,12 +91,28 @@ export const usePaymentPolling = ({
     // Then set up interval
     intervalRef.current = setInterval(poll, interval);
 
+    // Set up timeout
+    timeoutRef.current = setTimeout(() => {
+      const timeoutMsg = `Timeout: Thanh toán chưa hoàn tất sau 15 phút. Vui lòng thử lại.`;
+      setError(timeoutMsg);
+      if (onError) {
+        onError(timeoutMsg);
+      }
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    }, timeout);
+
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
       }
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
     };
-  }, [enabled, interval, poll]);
+  }, [enabled, interval, poll, timeout, onError]);
 
   return {
     status,

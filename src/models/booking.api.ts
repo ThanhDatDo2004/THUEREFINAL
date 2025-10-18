@@ -28,6 +28,9 @@ export interface ConfirmBookingResponse {
   payment_method: string;
   field_code: number;
   slots: ConfirmBookingSlotPayload[];
+  qr_code?: string; // SePay QR image URL from confirm
+  paymentID?: number; // Payment ID from confirm
+  amount?: number; // Total amount to pay
 }
 
 // New booking types for API v2

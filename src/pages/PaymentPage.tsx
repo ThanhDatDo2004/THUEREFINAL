@@ -1,6 +1,12 @@
-import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { CheckCircle, AlertCircle, Loader } from "lucide-react";
+import React, { useEffect, useMemo, useState } from "react";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
+import {
+  CheckCircle,
+  AlertCircle,
+  Loader,
+  RefreshCw,
+  Phone,
+} from "lucide-react";
 import { initiatePaymentApi, confirmPaymentApi } from "../models/payment.api";
 import { usePaymentPolling } from "../hooks/usePaymentPolling";
 import { extractErrorMessage } from "../models/api.helpers";
@@ -17,40 +23,99 @@ interface PaymentPageState {
   paymentID: number | null;
   expiresIn: number | null;
   bookingId: number | null;
+  pollInterval: number; // For exponential backoff
+  pollingEnabled: boolean; // ✅ NEW: Control when to start polling
 }
+
+type LocationState = {
+  qrCode?: string;
+  paymentID?: number;
+  amount?: number;
+};
 
 const PaymentPage: React.FC = () => {
   const { bookingCode } = useParams<{ bookingCode: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Get QR data from navigation state (passed from BookingPage)
+  const navigationState = useMemo(() => {
+    const state = location.state as LocationState | null;
+    return state || {};
+  }, [location.state]);
+
   const [state, setState] = useState<PaymentPageState>({
-    loading: true,
+    loading: !navigationState.qrCode, // Only load if no state data
     initiating: false,
     error: null,
-    qrCode: null,
+    qrCode: navigationState.qrCode || null,
     momoUrl: null,
-    amount: null,
-    paymentID: null,
-    expiresIn: null,
+    amount: navigationState.amount || null,
+    paymentID: navigationState.paymentID || null,
+    expiresIn: 900,
     bookingId: null,
+    pollInterval: 4000, // Start at 4s, will increase with backoff
+    pollingEnabled: false, // ✅ Start with polling disabled
   });
 
   const paymentPolling = usePaymentPolling({
     bookingCode: bookingCode || "",
-    enabled: !!bookingCode,
-    interval: 2000,
+    enabled:
+      !!bookingCode &&
+      !state.error &&
+      !!state.paymentID &&
+      state.pollingEnabled, // ✅ Only poll if enabled
+    interval: state.pollInterval,
     onSuccess: (status) => {
       if (status === "paid") {
         setState((prev) => ({ ...prev, initiating: false }));
-        const returnTo = `/payment/${bookingCode}`;
+        // Redirect to success/result page
         setTimeout(() => {
-          navigate(returnTo);
+          navigate(`/payment/${bookingCode}`);
         }, 1000);
+      } else if (status === "failed") {
+        setState((prev) => ({
+          ...prev,
+          error: "Thanh toán thất bại. Vui lòng thử lại.",
+        }));
       }
+    },
+    onError: (error) => {
+      // Timeout error
+      setState((prev) => ({
+        ...prev,
+        error,
+      }));
     },
   });
 
-  // Initialize payment - SePay bank transfer
+  // ✅ Auto-start polling after 5 second delay (wait for SePay webhook)
   useEffect(() => {
+    if (!state.paymentID || state.pollingEnabled) {
+      return; // Don't auto-start if already polling or no paymentID
+    }
+
+    const timer = setTimeout(() => {
+      setState((prev) => ({
+        ...prev,
+        pollingEnabled: true,
+      }));
+    }, 5000); // Wait 5 seconds before starting poll
+
+    return () => clearTimeout(timer);
+  }, [state.paymentID, state.pollingEnabled]);
+
+  // Initialize payment - SePay bank transfer (fallback if no state data)
+  useEffect(() => {
+    // If we already have QR data from state, skip initiate
+    if (
+      navigationState.qrCode &&
+      navigationState.paymentID &&
+      navigationState.amount
+    ) {
+      return;
+    }
+
     const initializePayment = async () => {
       if (!bookingCode) return;
 
@@ -61,9 +126,8 @@ const PaymentPage: React.FC = () => {
         if (response.success && response.data) {
           const data = response.data;
 
-          // SePay QR image URL
+          // SePay QR image URL (use fallback if not provided)
           const qrCode = data.qr_code || null;
-          const momoUrl: string | null = null;
           const amount = data.amount || null;
           const paymentID = data.paymentID || null;
           const bookingId =
@@ -85,7 +149,6 @@ const PaymentPage: React.FC = () => {
           setState((prev) => ({
             ...prev,
             qrCode,
-            momoUrl,
             amount,
             paymentID,
             expiresIn: data.expiresIn || 900,
@@ -106,9 +169,42 @@ const PaymentPage: React.FC = () => {
     };
 
     initializePayment();
-  }, [bookingCode]);
+  }, [bookingCode, navigationState]);
 
-  // SePay: no QR and no external redirect
+  // Exponential backoff: increase interval after each failed check (capped at 10s)
+  useEffect(() => {
+    if (paymentPolling.error && state.pollInterval < 10000) {
+      const timer = setTimeout(() => {
+        setState((prev) => ({
+          ...prev,
+          pollInterval: Math.min(prev.pollInterval + 1000, 10000),
+        }));
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [paymentPolling.error, state.pollInterval]);
+
+  const handleRetry = () => {
+    setState((prev) => ({
+      ...prev,
+      error: null,
+      pollInterval: 4000, // Reset to initial interval
+      pollingEnabled: true, // ✅ Enable polling on retry
+    }));
+  };
+
+  // Build SePay QR URL with proper format
+  const buildSePayQRUrl = () => {
+    if (state.qrCode) return state.qrCode; // Use backend QR if available
+    // Fallback: https://qr.sepay.vn/img?acc=96247THUERE&bank=BIDV&amount=912&des=BK20
+    const params = new URLSearchParams({
+      acc: "96247THUERE",
+      bank: "BIDV",
+      ...(state.amount ? { amount: String(state.amount) } : {}),
+      des: `BK${bookingCode}`,
+    });
+    return `https://qr.sepay.vn/img?${params.toString()}`;
+  };
 
   const handleTestPayment = async () => {
     if (!state.paymentID) return;
@@ -210,10 +306,7 @@ const PaymentPage: React.FC = () => {
                     <p className="text-sm font-medium mb-3">Quét mã QR SePay</p>
                     <div className="flex justify-center">
                       {(() => {
-                        const fallback = `https://qr.sepay.vn/img?acc=96247THUERE&bank=BIDV${
-                          state.amount ? `&amount=${state.amount}` : ""
-                        }&content=BK${bookingCode}`;
-                        const qrUrl = state.qrCode || fallback;
+                        const qrUrl = buildSePayQRUrl();
                         return (
                           <img
                             src={qrUrl}
@@ -289,6 +382,43 @@ const PaymentPage: React.FC = () => {
                   className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition"
                 >
                   Xem Kết Quả Thanh Toán
+                </button>
+              )}
+
+              {paymentPolling.isFailed && (
+                <button
+                  onClick={handleRetry}
+                  disabled={state.initiating || paymentPolling.loading}
+                  className="w-full bg-yellow-500 hover:bg-yellow-600 disabled:bg-gray-400 text-white font-bold py-2 px-4 rounded-lg transition text-sm flex items-center justify-center"
+                >
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Thử Lại
+                </button>
+              )}
+
+              {paymentPolling.isPending && (
+                <button
+                  onClick={handleRetry}
+                  disabled={state.initiating || paymentPolling.loading}
+                  className="w-full bg-gray-300 hover:bg-gray-400 disabled:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg transition text-sm flex items-center justify-center"
+                >
+                  <Loader className="mr-2 h-4 w-4 animate-spin" />
+                  Đang Kiểm Tra
+                </button>
+              )}
+
+              {paymentPolling.isPending && (
+                <button
+                  onClick={() => {
+                    alert(
+                      "Vui lòng liên hệ với chúng tôi để được hỗ trợ. Số điện thoại: 090.123.4567"
+                    );
+                    window.location.href = "tel:+84901234567";
+                  }}
+                  className="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition text-sm flex items-center justify-center"
+                >
+                  <Phone className="mr-2 h-4 w-4" />
+                  Liên Hệ Hỗ Trợ
                 </button>
               )}
             </div>
