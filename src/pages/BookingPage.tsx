@@ -474,11 +474,16 @@ const BookingPage: React.FC = () => {
         notes: formData.notes,
       });
 
+      console.log("✅ Booking confirmation response:", response);
+      console.log("📝 Booking code:", response?.booking_code);
+      console.log("💳 Payment ID:", response?.paymentID);
+      console.log("💰 Amount:", response?.amount);
       setConfirmation(response);
       setIsSuccess(true);
 
       // After successful booking, redirect to payment page with the booking code + QR info
       if (response?.booking_code) {
+        console.log(`🔄 Redirecting to payment page: /payment/${response.booking_code}/transfer`);
         navigate(`/payment/${response.booking_code}/transfer`, {
           state: {
             qrCode: response.qr_code,

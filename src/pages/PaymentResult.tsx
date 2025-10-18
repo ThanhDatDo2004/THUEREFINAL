@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import api from "../models/api";
-import { ensureSuccess, extractErrorMessage } from "../models/api.helpers";
+import { extractErrorMessage } from "../models/api.helpers";
+import { getBookingDetailApi, type BookingDetail } from "../models/booking.api";
 
 type SlotInfo = {
   PlayDate?: string;
@@ -12,14 +12,8 @@ type SlotInfo = {
   endTime?: string;
 };
 
-type PaymentResultData = {
-  bookingCode?: string;
+type PaymentResultData = BookingDetail & {
   transactionId?: string;
-  fieldName?: string;
-  amount?: number;
-  totalPrice?: number;
-  status?: string;
-  slots?: SlotInfo[];
 };
 
 const formatCurrency = (value?: number) => {
@@ -58,10 +52,12 @@ const PaymentResult: React.FC = () => {
       setLoading(true);
       setError(null);
       try {
-        const res = await api.get(`/payments/result/${bookingCode}`);
-        const payload = ensureSuccess<PaymentResultData>(res.data, "Không lấy được kết quả thanh toán.");
-        if (!ignore) setData(payload || {});
+        console.log("🔍 PaymentResult: bookingCode param =", bookingCode);
+        const res = await getBookingDetailApi(bookingCode);
+        console.log("✅ Booking detail response:", res);
+        if (!ignore) setData(res.data || {});
       } catch (err: unknown) {
+        console.error("❌ Error fetching booking detail:", err);
         if (!ignore) setError(extractErrorMessage(err, "Không thể tải kết quả thanh toán."));
       } finally {
         if (!ignore) setLoading(false);
@@ -74,7 +70,7 @@ const PaymentResult: React.FC = () => {
   }, [bookingCode]);
 
   const normalizedSlots = useMemo(() => {
-    return (data?.slots || []).map((s) => normalizeSlot(s));
+    return (data?.slots || []).map((s: SlotInfo) => normalizeSlot(s));
   }, [data]);
 
   if (loading) {
@@ -103,8 +99,8 @@ const PaymentResult: React.FC = () => {
     );
   }
 
-  const shownBookingCode = data?.bookingCode || bookingCode;
-  const amount = typeof data?.totalPrice === "number" ? data?.totalPrice : data?.amount;
+  const shownBookingCode = data?.BookingCode || bookingCode;
+  const amount = data?.TotalPrice;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-sky-100 py-10 px-4">
@@ -118,8 +114,8 @@ const PaymentResult: React.FC = () => {
               </svg>
             </div>
             <h1 className="text-2xl font-bold text-gray-900">Thanh Toán Thành Công!</h1>
-            {data?.status && (
-              <p className="mt-1 text-sm text-emerald-700">Trạng thái: {data.status}</p>
+            {data?.PaymentStatus && (
+              <p className="mt-1 text-sm text-emerald-700">Trạng thái: {data.PaymentStatus}</p>
             )}
           </div>
 
@@ -134,7 +130,7 @@ const PaymentResult: React.FC = () => {
             </div>
             <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
               <div className="text-xs uppercase tracking-wide text-gray-500">Sân</div>
-              <div className="mt-1 text-base font-semibold text-gray-900">{data?.fieldName || "-"}</div>
+              <div className="mt-1 text-base font-semibold text-gray-900">{data?.FieldName || "-"}</div>
             </div>
             <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
               <div className="text-xs uppercase tracking-wide text-gray-500">Tổng tiền</div>
@@ -177,5 +173,3 @@ const PaymentResult: React.FC = () => {
 };
 
 export default PaymentResult;
-
-

@@ -77,6 +77,9 @@ export interface BookingDetail {
   FieldName?: string;
   ShopName?: string;
   PlayDate?: string;
+  CustomerName?: string;
+  CustomerEmail?: string;
+  CustomerPhone?: string;
 }
 
 export interface CancelBookingRequest {
@@ -220,6 +223,9 @@ export interface CreateBookingRequest {
   playDate: string;
   startTime: string;
   endTime: string;
+  CustomerName?: string;
+  CustomerEmail?: string;
+  CustomerPhone?: string;
 }
 
 export interface CreateBookingData {
