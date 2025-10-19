@@ -36,10 +36,14 @@ export interface PayoutRequest {
   BankName: string;
   AccountNumber: string;
   RequestedAt: string;
+  Note?: string;
+  RejectionReason?: string;
+  CreateAt: string;
 }
 
 export interface PayoutRequestsResponse {
   data: PayoutRequest[];
+  list?: PayoutRequest[];
   pagination: {
     limit: number;
     offset: number;

@@ -1,5 +1,5 @@
-import React from "react";
-import { MapPin, Star, Clock, DollarSign } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { MapPin, TrendingUp, Clock, DollarSign } from "lucide-react";
 import type { FieldWithImages } from "../../types";
 import { Link } from "react-router-dom";
 import {
@@ -7,8 +7,8 @@ import {
   getFieldStatusLabel,
   getSportLabel,
   resolveFieldPrice,
-  resolveFieldRating,
 } from "../../utils/field-helpers";
+import { fetchFieldStats } from "../../models/fields.api";
 import resolveImageUrl from "../../utils/image-helpers";
 
 interface FieldCardProps {
@@ -16,6 +16,11 @@ interface FieldCardProps {
 }
 
 const FieldCard: React.FC<FieldCardProps> = ({ field }) => {
+  const [bookingCount, setBookingCount] = useState(
+    (field as any)?.booking_count || 0
+  );
+  const [statsLoading, setStatsLoading] = useState(false);
+
   const sportLabel = getSportLabel(field.sport_type);
   const statusLabel = getFieldStatusLabel(field.status);
   const statusClassName = getFieldStatusClass(field.status);
@@ -26,6 +31,25 @@ const FieldCard: React.FC<FieldCardProps> = ({ field }) => {
     normalizedStatus
   );
   const actionLabel = isBookable ? "Xem sân" : statusLabel;
+
+  // Fetch field stats to get booking count
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        setStatsLoading(true);
+        const stats = await fetchFieldStats(field.field_code);
+        setBookingCount(stats.booking_count || 0);
+      } catch (error) {
+        console.error("Error loading field stats:", error);
+        // Fallback to field data if available
+        setBookingCount((field as any)?.booking_count || 0);
+      } finally {
+        setStatsLoading(false);
+      }
+    };
+
+    loadStats();
+  }, [field.field_code]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("vi-VN", {
@@ -38,7 +62,6 @@ const FieldCard: React.FC<FieldCardProps> = ({ field }) => {
   const primaryImage = field.images?.[0];
   const img = resolveImageUrl(primaryImage?.image_url, primaryImage?.storage);
   const price = resolveFieldPrice(field);
-  const rating = resolveFieldRating(field);
 
   return (
     <div className="card field-card flex flex-col">
@@ -64,9 +87,9 @@ const FieldCard: React.FC<FieldCardProps> = ({ field }) => {
         <div className="flex-grow">
           <h3 className="card-title">{field.field_name}</h3>
           <div className="rating">
-            <Star className="rating-icon" />
+            <TrendingUp className="rating-icon text-green-500" />
             <span className="rating-text">
-              {rating > 0 ? rating.toFixed(1) : "0.0"}
+              {statsLoading ? "..." : `${bookingCount} lượt đặt`}
             </span>
           </div>
 

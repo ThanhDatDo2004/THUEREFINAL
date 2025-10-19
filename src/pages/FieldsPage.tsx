@@ -300,6 +300,19 @@ const FieldsPage: React.FC = () => {
     }
   };
 
+  // Handle sport type selection with toggle behavior
+  const handleSportTypeChange = (value: string) => {
+    // If clicking the same option, deselect it (toggle)
+    if (selectedSportType === value) {
+      setSelectedSportType("");
+    } else {
+      // Otherwise select the new sport type
+      setSelectedSportType(value);
+    }
+    setActiveQuickFilter(null);
+    setPage(1);
+  };
+
   const selectedProvince = useMemo(() => {
     if (!provinceCode) return null;
     return provinces.find((province) => province.code === provinceCode) ?? null;
@@ -400,12 +413,10 @@ const FieldsPage: React.FC = () => {
                 <select
                   value={selectedSportType}
                   onChange={(e) => {
-                    setSelectedSportType(e.target.value);
-                    setActiveQuickFilter(null);
-                    setPage(1);
+                    handleSportTypeChange(e.target.value);
                   }}
                 >
-                  <option value="">Tất cả</option>
+                  <option value="">Tất cả loại hình</option>
                   {facetSportTypeOptions.map((option) => (
                     <option key={option.value} value={option.value}>
                       {option.label}
@@ -416,27 +427,7 @@ const FieldsPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="filter-group">
-              <label className="filter-label">Khu vực</label>
-              <div className="filter-select">
-                <select
-                  value={selectedLocation}
-                  onChange={(e) => {
-                    setSelectedLocation(e.target.value);
-                    setActiveQuickFilter(null);
-                    setPage(1);
-                  }}
-                >
-                  <option value="">Tất cả</option>
-                  {facetLocationOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-                <MapPin className="filter-select-icon" />
-              </div>
-            </div>
+            {/* Khu vực filter REMOVED - as per user request */}
 
             <div className="filter-group">
               <label className="filter-label">Khoảng giá (VND / giờ)</label>
@@ -609,26 +600,6 @@ const FieldsPage: React.FC = () => {
                     ))}
                   </select>
                 </label>
-              </div>
-            </div>
-          )}
-
-          {!error && quickFilters.length > 0 && (
-            <div className="quick-filters">
-              <span className="quick-filters-label">Gợi ý nhanh:</span>
-              <div className="quick-filters-scroll">
-                {quickFilters.map((filter) => (
-                  <button
-                    key={filter.id}
-                    className={`quick-filter-chip ${
-                      activeQuickFilter === filter.id ? "active" : ""
-                    }`}
-                    onClick={() => applyQuickFilter(filter)}
-                    type="button"
-                  >
-                    {filter.label}
-                  </button>
-                ))}
               </div>
             </div>
           )}

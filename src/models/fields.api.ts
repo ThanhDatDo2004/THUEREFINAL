@@ -324,3 +324,80 @@ export async function fetchFieldAvailability(
     throw new Error(message);
   }
 }
+
+export interface FieldStats {
+  FieldCode: number;
+  FieldName: string;
+  Rent: number;
+  booking_count: number;
+  Status: string;
+  DefaultPricePerHour: number;
+  SportType: string;
+  ShopName: string;
+  confirmed_count: number;
+  total_bookings: number;
+}
+
+export interface FieldWithBookingStats extends FieldWithImages {
+  booking_count?: number;
+  Rent?: number;
+  confirmed_count?: number;
+  total_bookings?: number;
+}
+
+export interface FieldListWithRentResponse {
+  data: FieldWithBookingStats[];
+  pagination: {
+    limit: number;
+    offset: number;
+    total: number;
+  };
+}
+
+/**
+ * Get field stats including booking count
+ */
+export async function fetchFieldStats(
+  fieldCode: number
+): Promise<FieldStats> {
+  try {
+    const { data } = await api.get<ApiSuccess<FieldStats> | ApiError>(
+      `/fields/${fieldCode}/stats`
+    );
+    return ensureSuccess(data, "Không thể tải thông tin sân");
+  } catch (error: unknown) {
+    const typed = error as ErrorWithResponse;
+    if (typed.response?.status === 404) {
+      throw new Error("Sân không tồn tại");
+    }
+    const message = extractErrorMessage(error, "Không thể tải thông tin sân");
+    throw new Error(message);
+  }
+}
+
+/**
+ * Get list of fields with booking count sorted by Rent DESC
+ */
+export async function fetchFieldsWithRent(
+  shopCode: number,
+  limit: number = 10,
+  offset: number = 0
+): Promise<FieldListWithRentResponse> {
+  try {
+    const { data } = await api.get<
+      ApiSuccess<FieldListWithRentResponse> | ApiError
+    >(`/fields/shop/${shopCode}/with-rent`, {
+      params: { limit, offset },
+    });
+    return ensureSuccess(
+      data,
+      "Không thể tải danh sách sân"
+    );
+  } catch (error: unknown) {
+    const message = extractErrorMessage(
+      error,
+      "Không thể tải danh sách sân"
+    );
+    throw new Error(message);
+  }
+}

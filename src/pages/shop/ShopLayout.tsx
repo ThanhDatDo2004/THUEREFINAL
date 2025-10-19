@@ -5,7 +5,7 @@ import {
   LayoutDashboard,
   Layers,
   CalendarRange,
-  Users,
+  Zap,
   Wallet2,
   Settings,
   ChevronLeft,
@@ -132,13 +132,13 @@ const ShopLayout: React.FC = () => {
             </NavLink>
 
             <NavLink
-              to="/shop/customers"
+              to="/shop/utilities"
               className={({ isActive }) =>
                 `${navItemBase} ${isActive ? navItemActive : navItemIdle}`
               }
             >
-              <Users className="h-4 w-4" />
-              {!collapsed && <span>Khách hàng</span>}
+              <Zap className="h-4 w-4" />
+              {!collapsed && <span>Tiện ích</span>}
             </NavLink>
 
             <NavLink

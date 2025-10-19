@@ -22,7 +22,7 @@ import ShopOverview from "./pages/shop/ShopOverview";
 import ShopFieldsPage from "./pages/shop/ShopFieldsPage";
 import ShopFieldPricingPage from "./pages/shop/ShopFieldPricingPage";
 import ShopBookingsPage from "./pages/shop/ShopBookingsPage";
-import ShopCustomersPage from "./pages/shop/ShopCustomersPage";
+import ShopUtilitiesPage from "./pages/shop/ShopUtilitiesPage";
 import ShopRevenuePage from "./pages/shop/ShopRevenuePage";
 import ShopSettingsPage from "./pages/shop/ShopSettingsPage";
 
@@ -144,7 +144,7 @@ function App() {
             <Route path="fields" element={<ShopFieldsPage />} />
             <Route path="pricing" element={<ShopFieldPricingPage />} />
             <Route path="bookings" element={<ShopBookingsPage />} />
-            <Route path="customers" element={<ShopCustomersPage />} />
+            <Route path="utilities" element={<ShopUtilitiesPage />} />
             <Route path="revenue" element={<ShopRevenuePage />} />
             <Route path="settings" element={<ShopSettingsPage />} />
           </Route>

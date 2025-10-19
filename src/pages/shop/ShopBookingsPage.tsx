@@ -1,10 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useAuth } from "../../contexts/AuthContext";
-import {
-  fetchMyShop,
-  fetchShopFields,
-} from "../../models/shop.api";
-import type { FieldWithImages, Shops } from "../../types";
 import type { BookingItem } from "../../models/booking.api";
 import { ChevronLeft, ChevronRight, Search } from "lucide-react";
 import { api } from "../../models/api";
@@ -13,11 +8,11 @@ const ITEMS_PER_PAGE = 10;
 
 const ShopBookingsPage: React.FC = () => {
   const { user } = useAuth();
-  const [shop, setShop] = useState<Shops | null>(null);
-  const [fields, setFields] = useState<FieldWithImages[]>([]);
   const [bookings, setBookings] = useState<BookingItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "paid" | "failed">("all");
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "pending" | "paid" | "failed"
+  >("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -27,29 +22,20 @@ const ShopBookingsPage: React.FC = () => {
       if (!user?.user_code) return;
       setLoading(true);
       try {
-        const s = await fetchMyShop();
-        if (!s) {
-          if (!ignore) setShop(null);
-          return;
-        }
-        if (!ignore) setShop(s);
-
-        const [fieldsResponse, bookingsResponse] = await Promise.all([
-          fetchShopFields(s.shop_code, { page: 1, pageSize: 100 }),
-          api.get<any>("/shops/me/bookings"),
-        ]);
+        // Fetch all bookings - no search parameter
+        const bookingsResponse = await api.get<any>("/shops/me/bookings");
 
         if (ignore) return;
 
-        setFields(fieldsResponse.items ?? []);
-        const bookingData = bookingsResponse.data?.data?.data || bookingsResponse.data?.data || [];
+        const bookingData =
+          bookingsResponse.data?.data?.data ||
+          bookingsResponse.data?.data ||
+          [];
         setBookings(Array.isArray(bookingData) ? bookingData : []);
         setCurrentPage(1);
-        setStatusFilter("all");
       } catch (error) {
         console.error("Error fetching bookings:", error);
         if (!ignore) {
-          setFields([]);
           setBookings([]);
         }
       } finally {
@@ -61,26 +47,40 @@ const ShopBookingsPage: React.FC = () => {
     };
   }, [user?.user_code]);
 
-  // Filter by status and search
+  // Filter by status and search - client-side filtering
   const filteredBookings = useMemo(() => {
-    let result = bookings;
+    try {
+      let result = bookings;
 
-    if (statusFilter !== "all") {
-      result = result.filter((b) => b.PaymentStatus === statusFilter);
+      if (statusFilter !== "all") {
+        result = result.filter((b) => b.PaymentStatus === statusFilter);
+      }
+
+      if (searchTerm.trim()) {
+        const term = searchTerm.toLowerCase().trim();
+        result = result.filter((b) => {
+          // Convert all searchable fields to string and check includes
+          const bookingCode = String(b.BookingCode || "").toLowerCase();
+          const fieldName = String(b.FieldName || "").toLowerCase();
+          const customerPhone = String(b.CustomerPhone || "").toLowerCase();
+          const checkinCode = String(b.CheckinCode || "").toLowerCase();
+          const customerName = String(b.CustomerName || "").toLowerCase();
+
+          return (
+            bookingCode.includes(term) ||
+            fieldName.includes(term) ||
+            customerPhone.includes(term) ||
+            checkinCode.includes(term) ||
+            customerName.includes(term)
+          );
+        });
+      }
+
+      return result;
+    } catch (error) {
+      console.error("Error filtering bookings:", error);
+      return [];
     }
-
-    if (searchTerm.trim()) {
-      const term = searchTerm.toLowerCase();
-      result = result.filter(
-        (b) =>
-          b.BookingCode?.toLowerCase().includes(term) ||
-          b.FieldName?.toLowerCase().includes(term) ||
-          b.CustomerPhone?.toLowerCase().includes(term) ||
-          b.CheckinCode?.toLowerCase().includes(term)
-      );
-    }
-
-    return result;
   }, [bookings, statusFilter, searchTerm]);
 
   // Pagination
@@ -89,7 +89,17 @@ const ShopBookingsPage: React.FC = () => {
     return filteredBookings.slice(startIndex, startIndex + ITEMS_PER_PAGE);
   }, [filteredBookings, currentPage]);
 
-  const totalPages = Math.ceil(filteredBookings.length / ITEMS_PER_PAGE);
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredBookings.length / ITEMS_PER_PAGE)
+  );
+
+  // Auto-reset currentPage if it exceeds totalPages
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(1);
+    }
+  }, [totalPages, currentPage]);
 
   // Statistics
   const stats = useMemo(
@@ -162,8 +172,12 @@ const ShopBookingsPage: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Quản lý Đơn Đặt</h1>
-          <p className="text-gray-600">Theo dõi và quản lý tất cả đơn đặt sân của bạn</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Quản lý Đơn Đặt
+          </h1>
+          <p className="text-gray-600">
+            Theo dõi và quản lý tất cả đơn đặt sân của bạn
+          </p>
         </div>
 
         {loading ? (
@@ -178,27 +192,51 @@ const ShopBookingsPage: React.FC = () => {
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
               <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow">
-                <div className="text-gray-600 text-sm font-medium mb-2">Tổng Đơn</div>
-                <div className="text-3xl font-bold text-gray-900">{stats.total}</div>
-                <div className="text-xs text-gray-500 mt-2">Tất cả các đơn đặt</div>
+                <div className="text-gray-600 text-sm font-medium mb-2">
+                  Tổng Đơn
+                </div>
+                <div className="text-3xl font-bold text-gray-900">
+                  {stats.total}
+                </div>
+                <div className="text-xs text-gray-500 mt-2">
+                  Tất cả các đơn đặt
+                </div>
               </div>
 
               <div className="bg-white rounded-lg border border-amber-200 p-6 shadow-sm hover:shadow-md transition-shadow bg-gradient-to-br from-white to-amber-50">
-                <div className="text-amber-800 text-sm font-medium mb-2">Chờ Thanh Toán</div>
-                <div className="text-3xl font-bold text-amber-900">{stats.pending}</div>
-                <div className="text-xs text-amber-700 mt-2">Đang chờ xử lý</div>
+                <div className="text-amber-800 text-sm font-medium mb-2">
+                  Chờ Thanh Toán
+                </div>
+                <div className="text-3xl font-bold text-amber-900">
+                  {stats.pending}
+                </div>
+                <div className="text-xs text-amber-700 mt-2">
+                  Đang chờ xử lý
+                </div>
               </div>
 
               <div className="bg-white rounded-lg border border-emerald-200 p-6 shadow-sm hover:shadow-md transition-shadow bg-gradient-to-br from-white to-emerald-50">
-                <div className="text-emerald-800 text-sm font-medium mb-2">Đã Thanh Toán</div>
-                <div className="text-3xl font-bold text-emerald-900">{stats.paid}</div>
-                <div className="text-xs text-emerald-700 mt-2">Hoàn thành thanh toán</div>
+                <div className="text-emerald-800 text-sm font-medium mb-2">
+                  Đã Thanh Toán
+                </div>
+                <div className="text-3xl font-bold text-emerald-900">
+                  {stats.paid}
+                </div>
+                <div className="text-xs text-emerald-700 mt-2">
+                  Hoàn thành thanh toán
+                </div>
               </div>
 
               <div className="bg-white rounded-lg border border-red-200 p-6 shadow-sm hover:shadow-md transition-shadow bg-gradient-to-br from-white to-red-50">
-                <div className="text-red-800 text-sm font-medium mb-2">Thất Bại</div>
-                <div className="text-3xl font-bold text-red-900">{stats.failed}</div>
-                <div className="text-xs text-red-700 mt-2">Thanh toán thất bại</div>
+                <div className="text-red-800 text-sm font-medium mb-2">
+                  Thất Bại
+                </div>
+                <div className="text-3xl font-bold text-red-900">
+                  {stats.failed}
+                </div>
+                <div className="text-xs text-red-700 mt-2">
+                  Thanh toán thất bại
+                </div>
               </div>
             </div>
 
@@ -210,7 +248,7 @@ const ShopBookingsPage: React.FC = () => {
                   <Search className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
                   <input
                     type="text"
-                    placeholder="Tìm kiếm theo mã, sân, số điện thoại..."
+                    placeholder="Tìm kiếm theo tên, số điện thoại, mã Checkin..."
                     value={searchTerm}
                     onChange={(e) => {
                       setSearchTerm(e.target.value);
@@ -230,7 +268,9 @@ const ShopBookingsPage: React.FC = () => {
                   className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
                 >
                   <option value="all">Tất cả Trạng Thái ({stats.total})</option>
-                  <option value="pending">Chờ Thanh Toán ({stats.pending})</option>
+                  <option value="pending">
+                    Chờ Thanh Toán ({stats.pending})
+                  </option>
                   <option value="paid">Đã Thanh Toán ({stats.paid})</option>
                   <option value="failed">Thất Bại ({stats.failed})</option>
                 </select>
@@ -242,9 +282,13 @@ const ShopBookingsPage: React.FC = () => {
               {filteredBookings.length === 0 ? (
                 <div className="text-center py-16">
                   <div className="text-gray-400 mb-2 text-5xl">∅</div>
-                  <p className="text-gray-600 font-medium mb-1">Không có dữ liệu</p>
+                  <p className="text-gray-600 font-medium mb-1">
+                    Không có dữ liệu
+                  </p>
                   <p className="text-gray-500 text-sm">
-                    {searchTerm ? "Không tìm thấy kết quả phù hợp" : "Chưa có đơn đặt nào"}
+                    {searchTerm
+                      ? "Không tìm thấy kết quả phù hợp"
+                      : "Chưa có đơn đặt nào"}
                   </p>
                 </div>
               ) : (
@@ -253,33 +297,69 @@ const ShopBookingsPage: React.FC = () => {
                     <table className="w-full">
                       <thead className="bg-gray-50 border-b border-gray-200">
                         <tr>
-                          <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wide">Mã</th>
-                          <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wide">Sân</th>
-                          <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wide">Khách</th>
-                          <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wide">Số Điện Thoại</th>
-                          <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wide">Mã Check-in</th>
-                          <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wide">Ngày & Giờ</th>
-                          <th className="px-6 py-4 text-right text-xs font-semibold text-gray-700 uppercase tracking-wide">Tiền</th>
-                          <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wide">Thanh Toán</th>
-                          <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wide">Trạng Thái</th>
+                          <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wide">
+                            Mã
+                          </th>
+                          <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wide">
+                            Sân
+                          </th>
+                          <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wide">
+                            Khách
+                          </th>
+                          <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wide">
+                            Số Điện Thoại
+                          </th>
+                          <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wide">
+                            Mã Check-in
+                          </th>
+                          <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wide">
+                            Ngày & Giờ
+                          </th>
+                          <th className="px-6 py-4 text-right text-xs font-semibold text-gray-700 uppercase tracking-wide">
+                            Tiền
+                          </th>
+                          <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wide">
+                            Thanh Toán
+                          </th>
+                          <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wide">
+                            Trạng Thái
+                          </th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-200">
                         {paginatedBookings.map((b) => (
-                          <tr key={b.BookingCode} className="hover:bg-blue-50 transition-colors">
-                            <td className="px-6 py-4 text-sm font-semibold text-gray-900">{b.BookingCode}</td>
-                            <td className="px-6 py-4 text-sm text-gray-700">Sân {b.FieldCode}</td>
+                          <tr
+                            key={b.BookingCode}
+                            className="hover:bg-blue-50 transition-colors"
+                          >
+                            <td className="px-6 py-4 text-sm font-semibold text-gray-900">
+                              {b.BookingCode}
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-700">
+                              Sân {b.FieldCode}
+                            </td>
                             <td className="px-6 py-4 text-sm text-gray-700">
                               {b.CustomerName || `Khách #${b.CustomerUserID}`}
                             </td>
-                            <td className="px-6 py-4 text-sm text-gray-600">{b.CustomerPhone || '-'}</td>
-                            <td className="px-6 py-4 text-sm font-mono text-gray-700">{b.CheckinCode || '-'}</td>
+                            <td className="px-6 py-4 text-sm text-gray-600">
+                              {b.CustomerPhone || "-"}
+                            </td>
+                            <td className="px-6 py-4 text-sm font-mono text-gray-700">
+                              {b.CheckinCode || "-"}
+                            </td>
                             <td className="px-6 py-4 text-sm text-gray-700">
                               {b.slots && b.slots.length > 0 ? (
                                 <>
-                                  <div>{new Date(b.slots[0].PlayDate).toLocaleDateString('vi-VN')}</div>
+                                  <div>
+                                    {new Date(
+                                      b.slots[0].PlayDate
+                                    ).toLocaleDateString("vi-VN")}
+                                  </div>
                                   <div className="text-gray-500 text-xs">
-                                    {b.slots[0].StartTime?.substring(0, 5)} - {b.slots[b.slots.length - 1].EndTime?.substring(0, 5)}
+                                    {b.slots[0].StartTime?.substring(0, 5)} -{" "}
+                                    {b.slots[
+                                      b.slots.length - 1
+                                    ].EndTime?.substring(0, 5)}
                                   </div>
                                 </>
                               ) : (
@@ -287,15 +367,23 @@ const ShopBookingsPage: React.FC = () => {
                               )}
                             </td>
                             <td className="px-6 py-4 text-right text-sm font-semibold text-gray-900">
-                              {b.TotalPrice?.toLocaleString('vi-VN')}đ
+                              {b.TotalPrice?.toLocaleString("vi-VN")}đ
                             </td>
                             <td className="px-6 py-4 text-sm">
-                              <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium border ${getStatusBadgeColor(b.PaymentStatus)}`}>
+                              <span
+                                className={`inline-block px-3 py-1 rounded-full text-xs font-medium border ${getStatusBadgeColor(
+                                  b.PaymentStatus
+                                )}`}
+                              >
                                 {getPaymentStatusLabel(b.PaymentStatus)}
                               </span>
                             </td>
                             <td className="px-6 py-4 text-sm">
-                              <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium border ${getBookingStatusBadgeColor(b.BookingStatus)}`}>
+                              <span
+                                className={`inline-block px-3 py-1 rounded-full text-xs font-medium border ${getBookingStatusBadgeColor(
+                                  b.BookingStatus
+                                )}`}
+                              >
                                 {getBookingStatusLabel(b.BookingStatus)}
                               </span>
                             </td>
@@ -310,12 +398,18 @@ const ShopBookingsPage: React.FC = () => {
                     <div className="bg-gray-50 border-t border-gray-200 px-6 py-4 flex items-center justify-between">
                       <div className="text-sm text-gray-600">
                         Hiển thị {(currentPage - 1) * ITEMS_PER_PAGE + 1} đến{" "}
-                        {Math.min(currentPage * ITEMS_PER_PAGE, filteredBookings.length)} trong {filteredBookings.length} đơn
+                        {Math.min(
+                          currentPage * ITEMS_PER_PAGE,
+                          filteredBookings.length
+                        )}{" "}
+                        trong {filteredBookings.length} đơn
                       </div>
 
                       <div className="flex items-center gap-2">
                         <button
-                          onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                          onClick={() =>
+                            setCurrentPage((p) => Math.max(1, p - 1))
+                          }
                           disabled={currentPage === 1}
                           className="p-2 border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition"
                         >
@@ -323,7 +417,10 @@ const ShopBookingsPage: React.FC = () => {
                         </button>
 
                         <div className="flex items-center gap-1">
-                          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                          {Array.from(
+                            { length: totalPages },
+                            (_, i) => i + 1
+                          ).map((page) => (
                             <button
                               key={page}
                               onClick={() => setCurrentPage(page)}
@@ -339,7 +436,9 @@ const ShopBookingsPage: React.FC = () => {
                         </div>
 
                         <button
-                          onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                          onClick={() =>
+                            setCurrentPage((p) => Math.min(totalPages, p + 1))
+                          }
                           disabled={currentPage === totalPages}
                           className="p-2 border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition"
                         >
