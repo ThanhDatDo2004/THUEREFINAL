@@ -255,6 +255,7 @@ const BookingPage: React.FC = () => {
   );
   const [selectedQuantityID, setSelectedQuantityID] = useState<number>();
   const [loadingQuantities, setLoadingQuantities] = useState(false);
+  const [bookedQuantities, setBookedQuantities] = useState<Quantity[]>([]);
 
   useEffect(() => {
     if (!field?.field_code || !selectedDate) {
@@ -296,7 +297,7 @@ const BookingPage: React.FC = () => {
   }, [field?.field_code, selectedDate]);
 
   const availableSlots = useMemo(
-    () => slots.filter((slot) => deriveSlotState(slot).isAvailable),
+    () => slots, // Show all slots, locking is based on court availability
     [slots]
   );
 
@@ -393,9 +394,11 @@ const BookingPage: React.FC = () => {
   }, [selectedSlotIds, slots]);
 
   // Fetch available quantities when slots are selected
+  // For multiple slots, verify each slot has courts available, then find intersection
   useEffect(() => {
     if (!field || selectedSlots.length === 0) {
       setAvailableQuantities([]);
+      setBookedQuantities([]);
       setSelectedQuantityID(undefined);
       return;
     }
@@ -403,29 +406,79 @@ const BookingPage: React.FC = () => {
     setLoadingQuantities(true);
     (async () => {
       try {
-        const firstSlot = selectedSlots[0];
-        const lastSlot = selectedSlots[selectedSlots.length - 1];
-
-        const data = await fetchAvailableQuantities(
-          field.field_code,
-          firstSlot.play_date,
-          firstSlot.start_time,
-          lastSlot.end_time
+        // Check availability for EACH slot separately
+        // This ensures we find courts available in ALL selected slots
+        const availabilityBySlot = await Promise.all(
+          selectedSlots.map((slot) =>
+            fetchAvailableQuantities(
+              field.field_code,
+              slot.play_date,
+              slot.start_time,
+              slot.end_time
+            )
+          )
         );
 
-        setAvailableQuantities(data.availableQuantities || []);
+        console.log("📊 availabilityBySlot:", availabilityBySlot);
+
+        // Find intersection: courts available in ALL slots
+        const availableInFirstSlot = new Set(
+          (availabilityBySlot[0]?.availableQuantities || []).map(
+            (q) => q.quantity_id
+          )
+        );
+
+        // Filter to only courts available in all slots
+        let availableInAllSlots = Array.from(availableInFirstSlot);
+        for (let i = 1; i < availabilityBySlot.length; i++) {
+          const idsInThisSlot = new Set(
+            (availabilityBySlot[i]?.availableQuantities || []).map(
+              (q) => q.quantity_id
+            )
+          );
+          availableInAllSlots = availableInAllSlots.filter((id) =>
+            idsInThisSlot.has(id)
+          );
+        }
+
+        // Reconstruct availability data with intersection
+        const firstSlotData = availabilityBySlot[0];
+        const intersectionAvailable = (
+          firstSlotData?.availableQuantities || []
+        ).filter((q) => availableInAllSlots.includes(q.quantity_id));
+
+        // Booked courts are those booked in ANY slot
+        const bookedInAnySlot = new Set<number>();
+        availabilityBySlot.forEach((slotData) => {
+          (slotData?.bookedQuantities || []).forEach((q) => {
+            bookedInAnySlot.add(q.quantity_id);
+          });
+        });
+
+        const bookedQuantitiesData = (
+          firstSlotData?.availableQuantities || []
+        )
+          .filter((q) => bookedInAnySlot.has(q.quantity_id))
+          .concat(firstSlotData?.bookedQuantities || []);
+
+        console.log("✅ Available courts (intersection):", intersectionAvailable.length);
+        console.log("❌ Booked courts (in any slot):", bookedQuantitiesData.length);
+
+        setAvailableQuantities(intersectionAvailable);
+        setBookedQuantities(bookedQuantitiesData);
 
         // Auto-select first available court if not already selected
         if (
           !selectedQuantityID &&
-          data.availableQuantities &&
-          data.availableQuantities.length > 0
+          intersectionAvailable &&
+          intersectionAvailable.length > 0
         ) {
-          setSelectedQuantityID(data.availableQuantities[0].quantity_id);
+          setSelectedQuantityID(intersectionAvailable[0].quantity_id);
         }
       } catch (error) {
         console.error("Error fetching available quantities:", error);
         setAvailableQuantities([]);
+        setBookedQuantities([]);
       } finally {
         setLoadingQuantities(false);
       }
@@ -502,6 +555,13 @@ const BookingPage: React.FC = () => {
       setSlotsError("Vui lòng chọn khung giờ trống trước khi tiếp tục.");
       return;
     }
+
+    // Require court selection
+    if (!selectedQuantityID) {
+      setSlotsError("Vui lòng chọn sân trước khi tiếp tục.");
+      return;
+    }
+
     setIsProcessing(true);
     setSlotsError("");
     setIsSuccess(false);
@@ -548,11 +608,46 @@ const BookingPage: React.FC = () => {
       }
     } catch (error: unknown) {
       setIsSuccess(false);
-      const message = getErrorMessage(
-        error,
-        "Không thể xác nhận thanh toán. Vui lòng thử lại."
-      );
-      setSlotsError(message);
+      
+      // Handle 409 Conflict error - court already booked
+      const isConflictError =
+        error instanceof Error &&
+        (error.message.includes("409") ||
+          error.message.includes("đã được đặt") ||
+          error.message.includes("Sân"));
+
+      if (isConflictError) {
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : "Sân này đã được đặt trong khung giờ này";
+        setSlotsError(errorMessage);
+
+        // Refresh available quantities to show updated list
+        if (selectedSlots.length > 0) {
+          try {
+            const firstSlot = selectedSlots[0];
+            const lastSlot = selectedSlots[selectedSlots.length - 1];
+            const data = await fetchAvailableQuantities(
+              field.field_code,
+              firstSlot.play_date,
+              firstSlot.start_time,
+              lastSlot.end_time
+            );
+            setAvailableQuantities(data.availableQuantities || []);
+            setBookedQuantities(data.bookedQuantities || []);
+            setSelectedQuantityID(undefined); // Clear selection
+          } catch (refreshError) {
+            console.error("Error refreshing available quantities:", refreshError);
+          }
+        }
+      } else {
+        const message = getErrorMessage(
+          error,
+          "Không thể xác nhận thanh toán. Vui lòng thử lại."
+        );
+        setSlotsError(message);
+      }
     } finally {
       setIsProcessing(false);
     }
@@ -988,7 +1083,10 @@ const BookingPage: React.FC = () => {
                       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                         {slots.map((slot) => {
                           const slotState = deriveSlotState(slot);
-                          const isSelectable = slotState.isAvailable;
+                          // ✅ FIX: Allow ALL slots to be selectable
+                          // Locking happens at COURT level, not slot level
+                          // User can always click to see available courts
+                          const isSelectable = true;
                           const {
                             isHeld,
                             isBooked,
@@ -1160,6 +1258,7 @@ const BookingPage: React.FC = () => {
                       selectedQuantityID={selectedQuantityID}
                       onSelectCourt={setSelectedQuantityID}
                       loading={loadingQuantities}
+                      bookedQuantities={bookedQuantities}
                     />
                   </div>
                 )}
