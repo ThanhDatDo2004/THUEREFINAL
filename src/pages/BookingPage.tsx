@@ -161,7 +161,9 @@ const deriveSlotState = (slot: FieldSlot) => {
     updateAvailability(false);
   }
 
-  const isHeld = ["held", "on_hold", "holding", "hold"].includes(normalizedStatus);
+  const isHeld = ["held", "on_hold", "holding", "hold"].includes(
+    normalizedStatus
+  );
   const isBooked = ["booked", "confirmed", "reserved"].includes(
     normalizedStatus
   );
@@ -248,7 +250,9 @@ const BookingPage: React.FC = () => {
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [slotsError, setSlotsError] = useState("");
   const [selectedSlotIds, setSelectedSlotIds] = useState<number[]>([]);
-  const [availableQuantities, setAvailableQuantities] = useState<Quantity[]>([]);
+  const [availableQuantities, setAvailableQuantities] = useState<Quantity[]>(
+    []
+  );
   const [selectedQuantityID, setSelectedQuantityID] = useState<number>();
   const [loadingQuantities, setLoadingQuantities] = useState(false);
 
@@ -401,18 +405,22 @@ const BookingPage: React.FC = () => {
       try {
         const firstSlot = selectedSlots[0];
         const lastSlot = selectedSlots[selectedSlots.length - 1];
-        
+
         const data = await fetchAvailableQuantities(
           field.field_code,
           firstSlot.play_date,
           firstSlot.start_time,
           lastSlot.end_time
         );
-        
+
         setAvailableQuantities(data.availableQuantities || []);
-        
+
         // Auto-select first available court if not already selected
-        if (!selectedQuantityID && data.availableQuantities && data.availableQuantities.length > 0) {
+        if (
+          !selectedQuantityID &&
+          data.availableQuantities &&
+          data.availableQuantities.length > 0
+        ) {
           setSelectedQuantityID(data.availableQuantities[0].quantity_id);
         }
       } catch (error) {
@@ -514,7 +522,7 @@ const BookingPage: React.FC = () => {
           email: formData.customer_email,
           phone: formData.customer_phone,
         },
-        quantityID: selectedQuantityID,
+        quantity_id: selectedQuantityID,
         notes: formData.notes,
       });
 
@@ -527,7 +535,9 @@ const BookingPage: React.FC = () => {
 
       // After successful booking, redirect to payment page with the booking code + QR info
       if (response?.booking_code) {
-        console.log(`🔄 Redirecting to payment page: /payment/${response.booking_code}/transfer`);
+        console.log(
+          `🔄 Redirecting to payment page: /payment/${response.booking_code}/transfer`
+        );
         navigate(`/payment/${response.booking_code}/transfer`, {
           state: {
             qrCode: response.qr_code,
@@ -661,7 +671,12 @@ const BookingPage: React.FC = () => {
               </div>
               {selectedQuantityID && availableQuantities.length > 0 && (
                 <div>
-                  <strong>Số sân:</strong> Sân {availableQuantities.find(q => q.quantity_id === selectedQuantityID)?.quantity_number}
+                  <strong>Số sân:</strong> Sân{" "}
+                  {
+                    availableQuantities.find(
+                      (q) => q.quantity_id === selectedQuantityID
+                    )?.quantity_number
+                  }
                 </div>
               )}
               <div>

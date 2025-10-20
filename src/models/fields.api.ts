@@ -79,7 +79,7 @@ export type ApiError = {
   error?: { message?: string };
 };
 
-const ensureSuccess = <T,>(
+const ensureSuccess = <T>(
   payload: ApiSuccess<T> | ApiError,
   fallbackMessage: string
 ): T => {
@@ -213,22 +213,14 @@ export async function fetchFields(
   params: FieldsQuery = {}
 ): Promise<FieldsListResultNormalized> {
   try {
-    const { data } = await api.get<
-      ApiSuccess<FieldsListResult> | ApiError
-    >(
+    const { data } = await api.get<ApiSuccess<FieldsListResult> | ApiError>(
       "/fields",
       { params: buildQuery(params) }
     );
-    const payload = ensureSuccess(
-      data,
-      "Không thể tải danh sách sân"
-    );
+    const payload = ensureSuccess(data, "Không thể tải danh sách sân");
     return normalizeFieldsListResult(payload);
   } catch (error: unknown) {
-    const message = extractErrorMessage(
-      error,
-      "Không thể tải danh sách sân"
-    );
+    const message = extractErrorMessage(error, "Không thể tải danh sách sân");
     throw new Error(message);
   }
 }
@@ -237,19 +229,16 @@ export async function fetchFieldById(
   fieldId: number
 ): Promise<FieldWithImages | null> {
   try {
-    const { data } = await api.get<
-      ApiSuccess<FieldWithImages> | ApiError
-    >(`/fields/${fieldId}`);
+    const { data } = await api.get<ApiSuccess<FieldWithImages> | ApiError>(
+      `/fields/${fieldId}`
+    );
     return ensureSuccess(data, "Không thể tải thông tin sân");
   } catch (error: unknown) {
     const typed = error as ErrorWithResponse;
     if (typed.response?.status === 404) {
       return null;
     }
-    const message = extractErrorMessage(
-      error,
-      "Không thể tải thông tin sân"
-    );
+    const message = extractErrorMessage(error, "Không thể tải thông tin sân");
     throw new Error(message);
   }
 }
@@ -262,15 +251,13 @@ export async function uploadFieldImage(
   formData.append("images", file);
 
   try {
-    const { data } = await api.post<
-      ApiSuccess<FieldImages> | ApiError
-    >(`/fields/${fieldId}/images`, formData);
+    const { data } = await api.post<ApiSuccess<FieldImages> | ApiError>(
+      `/fields/${fieldId}/images`,
+      formData
+    );
     return ensureSuccess(data, "Không thể tải ảnh sân");
   } catch (error: unknown) {
-    const message = extractErrorMessage(
-      error,
-      "Không thể tải ảnh sân"
-    );
+    const message = extractErrorMessage(error, "Không thể tải ảnh sân");
     throw new Error(message);
   }
 }
@@ -317,10 +304,7 @@ export async function fetchFieldAvailability(
     });
     return ensureSuccess(data, "Không thể tải lịch sân");
   } catch (error: unknown) {
-    const message = extractErrorMessage(
-      error,
-      "Không thể tải lịch sân"
-    );
+    const message = extractErrorMessage(error, "Không thể tải lịch sân");
     throw new Error(message);
   }
 }
@@ -357,9 +341,7 @@ export interface FieldListWithRentResponse {
 /**
  * Get field stats including booking count
  */
-export async function fetchFieldStats(
-  fieldCode: number
-): Promise<FieldStats> {
+export async function fetchFieldStats(fieldCode: number): Promise<FieldStats> {
   try {
     const { data } = await api.get<ApiSuccess<FieldStats> | ApiError>(
       `/fields/${fieldCode}/stats`
@@ -389,15 +371,9 @@ export async function fetchFieldsWithRent(
     >(`/fields/shop/${shopCode}/with-rent`, {
       params: { limit, offset },
     });
-    return ensureSuccess(
-      data,
-      "Không thể tải danh sách sân"
-    );
+    return ensureSuccess(data, "Không thể tải danh sách sân");
   } catch (error: unknown) {
-    const message = extractErrorMessage(
-      error,
-      "Không thể tải danh sách sân"
-    );
+    const message = extractErrorMessage(error, "Không thể tải danh sách sân");
     throw new Error(message);
   }
 }
@@ -436,20 +412,25 @@ export interface QuantitiesListResponse {
 }
 
 /**
- * Get available courts for a specific time slot
- * GET /api/fields/:fieldCode/available-quantities?playDate=YYYY-MM-DD&startTime=HH:MM&endTime=HH:MM
+ * GET /api/fields/:fieldCode/available-quantities?playDate=YYYY-MM-DD&startTime=HH:MM&endTime=HH:MM&quantityId=X
  */
 export async function fetchAvailableQuantities(
   fieldCode: number,
   playDate: string,
   startTime: string,
-  endTime: string
+  endTime: string,
+  quantityId?: number
 ): Promise<AvailableQuantitiesResponse> {
   try {
     const { data } = await api.get<
       ApiSuccess<AvailableQuantitiesResponse> | ApiError
     >(`/fields/${fieldCode}/available-quantities`, {
-      params: { playDate, startTime, endTime },
+      params: {
+        playDate,
+        startTime,
+        endTime,
+        ...(quantityId && { quantityId }),
+      },
     });
     return ensureSuccess(data, "Không thể tải danh sách sân trống");
   } catch (error: unknown) {
@@ -474,10 +455,7 @@ export async function fetchFieldQuantities(
     >(`/fields/${fieldCode}/quantities`);
     return ensureSuccess(data, "Không thể tải danh sách sân");
   } catch (error: unknown) {
-    const message = extractErrorMessage(
-      error,
-      "Không thể tải danh sách sân"
-    );
+    const message = extractErrorMessage(error, "Không thể tải danh sách sân");
     throw new Error(message);
   }
 }
@@ -492,9 +470,10 @@ export async function updateQuantityStatus(
   status: "available" | "maintenance" | "inactive"
 ): Promise<Quantity> {
   try {
-    const { data } = await api.put<
-      ApiSuccess<Quantity> | ApiError
-    >(`/fields/${fieldCode}/quantities/${quantityNumber}/status`, { status });
+    const { data } = await api.put<ApiSuccess<Quantity> | ApiError>(
+      `/fields/${fieldCode}/quantities/${quantityNumber}/status`,
+      { status }
+    );
     return ensureSuccess(data, "Không thể cập nhật trạng thái sân");
   } catch (error: unknown) {
     const message = extractErrorMessage(

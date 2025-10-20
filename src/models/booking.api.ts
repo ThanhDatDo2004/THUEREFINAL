@@ -18,6 +18,7 @@ export interface ConfirmBookingPayload {
     email: string;
     phone?: string;
   };
+  quantity_id?: number;
   notes?: string;
 }
 
@@ -118,9 +119,7 @@ export interface VerifyCheckinResponse {
   checkinTime: string;
 }
 
-type ApiConfirmBookingResponse =
-  | ApiSuccess<ConfirmBookingResponse>
-  | ApiError;
+type ApiConfirmBookingResponse = ApiSuccess<ConfirmBookingResponse> | ApiError;
 
 const ensureSuccess = (
   payload: ApiConfirmBookingResponse,
@@ -129,8 +128,7 @@ const ensureSuccess = (
   if (payload?.success && payload.data) {
     return payload.data;
   }
-  const message =
-    payload?.error?.message || payload?.message || fallback;
+  const message = payload?.error?.message || payload?.message || fallback;
   throw new Error(message);
 };
 
@@ -260,10 +258,10 @@ export default confirmFieldBooking;
 // ===== Quantity Support for Bookings =====
 
 export interface CreateBookingWithQuantityRequest extends CreateBookingRequest {
-  quantityID?: number;  // NEW: specific court ID
+  quantityID?: number; // NEW: specific court ID
 }
 
 export interface BookingItemWithQuantity extends BookingItem {
-  quantityID?: number;  // NEW: specific court ID
-  quantityNumber?: number;  // NEW: court number display (e.g., 1, 2, 3)
+  quantityID?: number; // NEW: specific court ID
+  quantityNumber?: number; // NEW: court number display (e.g., 1, 2, 3)
 }
