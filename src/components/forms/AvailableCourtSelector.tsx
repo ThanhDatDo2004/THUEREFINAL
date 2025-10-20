@@ -1,18 +1,33 @@
 import React from "react";
-import type { Quantity } from "../../models/fields.api";
 import { AlertCircle } from "lucide-react";
 
+export type CourtAvailabilityOption = {
+  quantity_id: number;
+  quantity_number: number;
+  status: "available" | "held" | "booked";
+  holdExpiresAt?: string | null;
+};
+
 interface AvailableCourtSelectorProps {
-  availableQuantities: Quantity[];
-  bookedQuantities?: Quantity[];
+  courts: CourtAvailabilityOption[];
   selectedQuantityID?: number;
   onSelectCourt: (quantityID: number) => void;
   loading?: boolean;
 }
 
+const formatHoldExpiresAt = (value?: string | null) => {
+  if (!value) return "";
+  const normalized = value.replace(" ", "T");
+  const date = new Date(normalized);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleTimeString("vi-VN", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
 const AvailableCourtSelector: React.FC<AvailableCourtSelectorProps> = ({
-  availableQuantities,
-  bookedQuantities = [],
+  courts,
   selectedQuantityID,
   onSelectCourt,
   loading = false,
@@ -26,31 +41,20 @@ const AvailableCourtSelector: React.FC<AvailableCourtSelectorProps> = ({
     );
   }
 
-  if (availableQuantities.length === 0 && bookedQuantities.length === 0) {
+  if (!courts.length) {
     return (
       <div className="flex items-start gap-2 rounded-lg border border-yellow-200 bg-yellow-50 px-4 py-3 text-yellow-700">
-        <span>Không có sân nào cho khung giờ này.</span>
+        <span>Không có dữ liệu sân cho khung giờ này.</span>
       </div>
     );
   }
 
-  if (availableQuantities.length === 0) {
-    return (
-      <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-700">
-        <AlertCircle className="h-5 w-5 shrink-0 flex-shrink-0" />
-        <div>
-          <p className="font-medium">Không có sân nào trống</p>
-          <p className="text-sm">Vui lòng chọn khung giờ khác.</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Combine available and booked courts, sorted by quantity_number
-  const allCourts = [...availableQuantities, ...bookedQuantities].sort(
+  const sortedCourts = [...courts].sort(
     (a, b) => a.quantity_number - b.quantity_number
   );
-  const bookedIds = new Set(bookedQuantities.map((q) => q.quantity_id));
+  const availableCount = sortedCourts.filter(
+    (court) => court.status === "available"
+  ).length;
 
   return (
     <div className="space-y-4">
@@ -59,24 +63,26 @@ const AvailableCourtSelector: React.FC<AvailableCourtSelectorProps> = ({
           Chọn sân <span className="text-red-500">*</span>
         </label>
         <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
-          {allCourts.map((quantity) => {
-            const isBooked = bookedIds.has(quantity.quantity_id);
-            const isSelected = selectedQuantityID === quantity.quantity_id;
-            const isSelectable = !isBooked;
+          {sortedCourts.map((court) => {
+            const isSelected = selectedQuantityID === court.quantity_id;
+            const isSelectable = court.status === "available";
+            const isHeld = court.status === "held";
+            const isBooked = court.status === "booked";
+            const holdInfo = formatHoldExpiresAt(court.holdExpiresAt);
 
             return (
               <button
-                key={quantity.quantity_id}
+                key={court.quantity_id}
                 type="button"
                 onClick={() => {
                   if (isSelectable) {
-                    onSelectCourt(quantity.quantity_id);
+                    onSelectCourt(court.quantity_id);
                   }
                 }}
                 disabled={!isSelectable}
                 className={`relative flex flex-col items-center gap-2 rounded-xl border px-4 py-3 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 ${
-                  isBooked
-                    ? "border-gray-200 bg-gray-100 cursor-not-allowed opacity-60"
+                  !isSelectable
+                    ? "border-gray-200 bg-gray-100 text-gray-500 cursor-not-allowed opacity-70"
                     : isSelected
                     ? "border-emerald-500 bg-emerald-50 shadow-sm focus-visible:ring-emerald-400"
                     : "border-gray-200 bg-white hover:border-emerald-300 hover:bg-emerald-50/60 focus-visible:ring-emerald-400"
@@ -84,29 +90,34 @@ const AvailableCourtSelector: React.FC<AvailableCourtSelectorProps> = ({
                 aria-pressed={isSelected}
                 aria-disabled={!isSelectable}
               >
-                <span className={`text-2xl font-bold ${isBooked ? "text-gray-500" : "text-gray-900"}`}>
-                  Sân {quantity.quantity_number}
+                <span
+                  className={`text-2xl font-bold ${
+                    !isSelectable ? "text-gray-500" : "text-gray-900"
+                  }`}
+                >
+                  Sân {court.quantity_number}
                 </span>
                 <span
                   className={`text-xs font-medium rounded-full px-2 py-1 ${
-                    isBooked
-                      ? "bg-red-100 text-red-700"
-                      : quantity.status === "available"
+                    isSelectable
                       ? "bg-green-100 text-green-700"
-                      : quantity.status === "maintenance"
-                      ? "bg-yellow-100 text-yellow-700"
-                      : "bg-gray-100 text-gray-700"
+                      : isHeld
+                      ? "bg-amber-100 text-amber-700"
+                      : "bg-red-100 text-red-700"
                   }`}
                 >
-                  {isBooked
-                    ? "Đã được đặt"
-                    : quantity.status === "available"
+                  {isSelectable
                     ? "Trống"
-                    : quantity.status === "maintenance"
-                    ? "Bảo trì"
-                    : "Không khả dụng"}
+                    : isHeld
+                    ? "Đang giữ"
+                    : "Đã đặt"}
                 </span>
-                {isSelected && !isBooked && (
+                {!isSelectable && holdInfo && isHeld && (
+                  <span className="text-xs text-amber-600">
+                    Giữ đến {holdInfo}
+                  </span>
+                )}
+                {isSelected && isSelectable && (
                   <div className="absolute top-2 right-2 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500">
                     <svg
                       className="h-3 w-3 text-white"
@@ -127,10 +138,13 @@ const AvailableCourtSelector: React.FC<AvailableCourtSelectorProps> = ({
         </div>
       </div>
 
-      {bookedQuantities.length > 0 && (
-        <div className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-700">
-          <p className="font-medium mb-1">Ghi chú:</p>
-          <p>Sân ghi "Đã được đặt" không khả dụng trong khung giờ này. Hãy chọn sân khác hoặc thay đổi khung giờ.</p>
+      {availableCount === 0 && (
+        <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-700">
+          <AlertCircle className="h-5 w-5 shrink-0" />
+          <div>
+            <p className="font-medium">Không còn sân trống</p>
+            <p className="text-sm">Vui lòng chọn khung giờ khác.</p>
+          </div>
         </div>
       )}
     </div>

@@ -7,6 +7,8 @@ export interface ConfirmBookingSlotPayload {
   play_date: string;
   start_time: string;
   end_time: string;
+  quantity_id?: number | null;
+  quantity_number?: number | null;
 }
 
 export interface ConfirmBookingPayload {

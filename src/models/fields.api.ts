@@ -276,6 +276,8 @@ export type FieldSlotStatus =
 export interface FieldSlot {
   slot_id: number;
   field_code: number;
+  quantity_id?: number | null;
+  quantity_number?: number | null;
   play_date: string;
   start_time: string;
   end_time: string;
@@ -383,7 +385,7 @@ export async function fetchFieldsWithRent(
 export interface Quantity {
   quantity_id: number;
   quantity_number: number;
-  status: "available" | "maintenance" | "inactive";
+  status: "available" | "maintenance" | "inactive" | "held" | "booked";
   created_at?: string;
   updated_at?: string;
 }
@@ -429,7 +431,7 @@ export async function fetchAvailableQuantities(
         playDate,
         startTime,
         endTime,
-        ...(quantityId && { quantityId }),
+        ...(typeof quantityId === "number" ? { quantityId } : {}),
       },
     });
     return ensureSuccess(data, "Không thể tải danh sách sân trống");
