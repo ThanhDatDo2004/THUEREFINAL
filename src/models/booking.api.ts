@@ -256,3 +256,14 @@ export const createBookingApi = async (
 };
 
 export default confirmFieldBooking;
+
+// ===== Quantity Support for Bookings =====
+
+export interface CreateBookingWithQuantityRequest extends CreateBookingRequest {
+  quantityID?: number;  // NEW: specific court ID
+}
+
+export interface BookingItemWithQuantity extends BookingItem {
+  quantityID?: number;  // NEW: specific court ID
+  quantityNumber?: number;  // NEW: court number display (e.g., 1, 2, 3)
+}

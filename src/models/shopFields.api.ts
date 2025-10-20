@@ -18,6 +18,7 @@ export interface CreateFieldData {
   sport_type: string;
   address: string;
   price_per_hour: number;
+  quantityCount?: number;
   status?: "active" | "maintenance" | "inactive";
 }
 
@@ -109,6 +110,10 @@ export async function createMyField(
     formData.append("sport_type", fieldData.sport_type);
     formData.append("address", fieldData.address);
     formData.append("price_per_hour", fieldData.price_per_hour.toString());
+    
+    if (fieldData.quantityCount) {
+      formData.append("quantity_count", fieldData.quantityCount.toString());
+    }
 
     if (fieldData.status) {
       formData.append("status", fieldData.status);
@@ -181,3 +186,19 @@ export async function fetchMyFieldById(
   }
 }
 
+
+// ===== Quantity Support =====
+type ErrorWithResponse = {
+  response?: {
+    status?: number;
+    data?: {
+      error?: { message?: string | null } | null;
+      message?: string | null;
+    };
+  };
+  message?: string;
+};
+
+/**
+ * Update CreateFieldData interface to support quantityCount
+ */

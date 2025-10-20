@@ -401,3 +401,106 @@ export async function fetchFieldsWithRent(
     throw new Error(message);
   }
 }
+
+// ===== NEW: Field Quantity Management =====
+
+export interface Quantity {
+  quantity_id: number;
+  quantity_number: number;
+  status: "available" | "maintenance" | "inactive";
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface FieldWithQuantities {
+  fieldCode: number;
+  fieldName: string;
+  quantityCount: number;
+  quantities: Quantity[];
+}
+
+export interface AvailableQuantitiesResponse {
+  fieldCode: number;
+  playDate: string;
+  timeSlot: string;
+  totalQuantities: number;
+  availableQuantities: Quantity[];
+  bookedQuantities: Quantity[];
+  availableCount: number;
+}
+
+export interface QuantitiesListResponse {
+  fieldCode: number;
+  totalQuantities: number;
+  quantities: Quantity[];
+}
+
+/**
+ * Get available courts for a specific time slot
+ * GET /api/fields/:fieldCode/available-quantities?playDate=YYYY-MM-DD&startTime=HH:MM&endTime=HH:MM
+ */
+export async function fetchAvailableQuantities(
+  fieldCode: number,
+  playDate: string,
+  startTime: string,
+  endTime: string
+): Promise<AvailableQuantitiesResponse> {
+  try {
+    const { data } = await api.get<
+      ApiSuccess<AvailableQuantitiesResponse> | ApiError
+    >(`/fields/${fieldCode}/available-quantities`, {
+      params: { playDate, startTime, endTime },
+    });
+    return ensureSuccess(data, "Không thể tải danh sách sân trống");
+  } catch (error: unknown) {
+    const message = extractErrorMessage(
+      error,
+      "Không thể tải danh sách sân trống"
+    );
+    throw new Error(message);
+  }
+}
+
+/**
+ * Get all quantities for a field
+ * GET /api/fields/:fieldCode/quantities
+ */
+export async function fetchFieldQuantities(
+  fieldCode: number
+): Promise<QuantitiesListResponse> {
+  try {
+    const { data } = await api.get<
+      ApiSuccess<QuantitiesListResponse> | ApiError
+    >(`/fields/${fieldCode}/quantities`);
+    return ensureSuccess(data, "Không thể tải danh sách sân");
+  } catch (error: unknown) {
+    const message = extractErrorMessage(
+      error,
+      "Không thể tải danh sách sân"
+    );
+    throw new Error(message);
+  }
+}
+
+/**
+ * Update quantity status
+ * PUT /api/fields/:fieldCode/quantities/:quantityNumber/status
+ */
+export async function updateQuantityStatus(
+  fieldCode: number,
+  quantityNumber: number,
+  status: "available" | "maintenance" | "inactive"
+): Promise<Quantity> {
+  try {
+    const { data } = await api.put<
+      ApiSuccess<Quantity> | ApiError
+    >(`/fields/${fieldCode}/quantities/${quantityNumber}/status`, { status });
+    return ensureSuccess(data, "Không thể cập nhật trạng thái sân");
+  } catch (error: unknown) {
+    const message = extractErrorMessage(
+      error,
+      "Không thể cập nhật trạng thái sân"
+    );
+    throw new Error(message);
+  }
+}

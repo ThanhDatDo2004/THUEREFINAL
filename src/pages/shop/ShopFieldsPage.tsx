@@ -167,6 +167,7 @@ type BaseFieldFormState = {
   districtCode: string;
   wardCode: string;
   street: string;
+  quantityCount?: number;
 };
 
 type FormState = BaseFieldFormState & {
@@ -205,6 +206,7 @@ const ShopFieldsPage: React.FC = () => {
     field_name: "",
     sport_type: SPORT_OPTIONS[0].value,
     price_per_hour: 0,
+    quantityCount: 1,
     provinceCode: "",
     districtCode: "",
     wardCode: "",
@@ -728,6 +730,7 @@ const ShopFieldsPage: React.FC = () => {
       districtCode: "",
       wardCode: "",
       street: "",
+      quantityCount: 1,
     });
   };
 
@@ -753,12 +756,15 @@ const ShopFieldsPage: React.FC = () => {
         .filter(Boolean)
         .join(", ");
 
+      console.log("📝 Creating field with data:", formNew);
+      console.log("🔢 QuantityCount being sent:", Number(formNew.quantityCount), "Type:", typeof Number(formNew.quantityCount));
       const created = await createShopField(shop.shop_code, {
         field_name: formNew.field_name.trim(),
         sport_type: formNew.sport_type,
         price_per_hour: Number(formNew.price_per_hour) || 0,
         address: composedAddress,
         status: "active",
+        quantityCount: Number(formNew.quantityCount) || 1,
         images: newImages.map((entry) => entry.file),
       });
 
@@ -793,7 +799,8 @@ const ShopFieldsPage: React.FC = () => {
       }
 
       closeCreate();
-      setSuccessMessage(`Đã tạo sân "${created.field_name}" thành công.`);
+      const quantityMsg = created.quantityCount ? ` với ${created.quantityCount} sân` : "";
+      setSuccessMessage(`Đã tạo sân "${created.field_name}"${quantityMsg} thành công.`);
     } catch (error: any) {
       setCreateError(
         error?.message || "Không thể tạo sân mới. Vui lòng thử lại."
@@ -1627,6 +1634,34 @@ const ShopFieldsPage: React.FC = () => {
                   {formErrors.price_per_hour && (
                     <p className="mt-1 text-sm text-red-600">
                       {formErrors.price_per_hour}
+                    </p>
+                  )}
+                </label>
+
+                <label className="block">
+                  <span className="text-sm text-gray-600">Số sân *</span>
+                  <input
+                    type="number"
+                    min={1}
+                    max={20}
+                    className="input mt-1 w-full"
+                    value={formNew.quantityCount || 1}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setFormNew({
+                        ...formNew,
+                        quantityCount: val ? Number(val) : 1,
+                      });
+                      setFormErrors((prev) => ({
+                        ...prev,
+                        quantityCount: undefined,
+                      }));
+                    }}
+                    placeholder="VD: 3"
+                  />
+                  {formErrors.quantityCount && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {formErrors.quantityCount}
                     </p>
                   )}
                 </label>

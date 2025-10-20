@@ -18,7 +18,9 @@ import { useAuth } from "../contexts/AuthContext";
 import {
   fetchFieldAvailability,
   fetchFieldById,
+  fetchAvailableQuantities,
   type FieldSlot,
+  type Quantity,
 } from "../models/fields.api";
 import {
   confirmFieldBooking,
@@ -27,6 +29,7 @@ import {
 import type { FieldWithImages } from "../types";
 import { getSportLabel, resolveFieldPrice } from "../utils/field-helpers";
 import resolveImageUrl from "../utils/image-helpers";
+import AvailableCourtSelector from "../components/forms/AvailableCourtSelector";
 
 interface BookingFormData {
   customer_name: string;
@@ -245,6 +248,9 @@ const BookingPage: React.FC = () => {
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [slotsError, setSlotsError] = useState("");
   const [selectedSlotIds, setSelectedSlotIds] = useState<number[]>([]);
+  const [availableQuantities, setAvailableQuantities] = useState<Quantity[]>([]);
+  const [selectedQuantityID, setSelectedQuantityID] = useState<number>();
+  const [loadingQuantities, setLoadingQuantities] = useState(false);
 
   useEffect(() => {
     if (!field?.field_code || !selectedDate) {
@@ -382,6 +388,42 @@ const BookingPage: React.FC = () => {
       .sort((a, b) => a.start_time.localeCompare(b.start_time));
   }, [selectedSlotIds, slots]);
 
+  // Fetch available quantities when slots are selected
+  useEffect(() => {
+    if (!field || selectedSlots.length === 0) {
+      setAvailableQuantities([]);
+      setSelectedQuantityID(undefined);
+      return;
+    }
+
+    setLoadingQuantities(true);
+    (async () => {
+      try {
+        const firstSlot = selectedSlots[0];
+        const lastSlot = selectedSlots[selectedSlots.length - 1];
+        
+        const data = await fetchAvailableQuantities(
+          field.field_code,
+          firstSlot.play_date,
+          firstSlot.start_time,
+          lastSlot.end_time
+        );
+        
+        setAvailableQuantities(data.availableQuantities || []);
+        
+        // Auto-select first available court if not already selected
+        if (!selectedQuantityID && data.availableQuantities && data.availableQuantities.length > 0) {
+          setSelectedQuantityID(data.availableQuantities[0].quantity_id);
+        }
+      } catch (error) {
+        console.error("Error fetching available quantities:", error);
+        setAvailableQuantities([]);
+      } finally {
+        setLoadingQuantities(false);
+      }
+    })();
+  }, [field, selectedSlots, selectedQuantityID]);
+
   const effectiveBooking: BookingDetails | null = useMemo(() => {
     if (!field || !selectedSlots.length || !selectedDate) return null;
 
@@ -472,6 +514,7 @@ const BookingPage: React.FC = () => {
           email: formData.customer_email,
           phone: formData.customer_phone,
         },
+        quantityID: selectedQuantityID,
         notes: formData.notes,
       });
 
@@ -616,6 +659,11 @@ const BookingPage: React.FC = () => {
               <div>
                 <strong>Sân:</strong> {field.field_name}
               </div>
+              {selectedQuantityID && availableQuantities.length > 0 && (
+                <div>
+                  <strong>Số sân:</strong> Sân {availableQuantities.find(q => q.quantity_id === selectedQuantityID)?.quantity_number}
+                </div>
+              )}
               <div>
                 <strong>Ngày:</strong>{" "}
                 {new Date(effectiveBooking.date).toLocaleDateString("vi-VN")}
@@ -1087,6 +1135,17 @@ const BookingPage: React.FC = () => {
                         {effectiveBooking.slotCount}
                       </div>
                     </div>
+                  </div>
+                )}
+
+                {selectedSlots.length > 0 && (
+                  <div className="mt-6 pt-6 border-t border-gray-200">
+                    <AvailableCourtSelector
+                      availableQuantities={availableQuantities}
+                      selectedQuantityID={selectedQuantityID}
+                      onSelectCourt={setSelectedQuantityID}
+                      loading={loadingQuantities}
+                    />
                   </div>
                 )}
               </div>

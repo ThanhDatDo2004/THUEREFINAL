@@ -289,3 +289,18 @@ export interface AuthContextType {
   isShopOwner: () => boolean; // Helper to check if user is shop owner
   getShopCode: () => number | null; // Helper to get shop code
 }
+
+// ===== Quantity Types for Field_Quantity System =====
+
+export interface Quantity {
+  quantity_id: number;
+  quantity_number: number;
+  status: "available" | "maintenance" | "inactive";
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface FieldWithQuantity extends FieldWithImages {
+  quantityCount?: number;
+  quantities?: Quantity[];
+}

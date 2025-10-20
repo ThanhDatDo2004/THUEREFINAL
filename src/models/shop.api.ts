@@ -210,6 +210,7 @@ export interface CreateShopFieldPayload {
   address: string;
   status?: Fields["status"];
   images?: File[];
+  quantityCount?: number;
 }
 
 const buildShopFieldsQuery = (params: ShopFieldsQuery = {}) => {
@@ -269,6 +270,9 @@ export async function createShopField(
     formData.append("address", payload.address);
     if (payload.status) {
       formData.append("status", payload.status);
+    }
+    if (payload.quantityCount) {
+      formData.append("quantity_count", String(payload.quantityCount));
     }
     (payload.images ?? []).forEach((file) => {
       formData.append("images", file);

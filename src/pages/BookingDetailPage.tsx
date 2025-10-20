@@ -14,6 +14,8 @@ import { getBookingDetailApi, type BookingDetail } from "../models/booking.api";
 
 type BookingDetailPageState = BookingDetail & {
   transactionId?: string;
+  quantityID?: number;
+  quantityNumber?: number;
 };
 
 const formatCurrency = (value?: number) => {

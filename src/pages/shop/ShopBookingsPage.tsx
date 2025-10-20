@@ -304,6 +304,9 @@ const ShopBookingsPage: React.FC = () => {
                             Sân
                           </th>
                           <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wide">
+                            Số Sân
+                          </th>
+                          <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wide">
                             Khách
                           </th>
                           <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wide">
@@ -336,7 +339,16 @@ const ShopBookingsPage: React.FC = () => {
                               {b.BookingCode}
                             </td>
                             <td className="px-6 py-4 text-sm text-gray-700">
-                              Sân {b.FieldCode}
+                              {b.FieldName || `Sân ${b.FieldCode}`}
+                            </td>
+                            <td className="px-6 py-4 text-sm">
+                              {(b as any).quantityNumber ? (
+                                <span className="inline-block px-2 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-medium">
+                                  Sân {(b as any).quantityNumber}
+                                </span>
+                              ) : (
+                                <span className="text-gray-400 text-xs">-</span>
+                              )}
                             </td>
                             <td className="px-6 py-4 text-sm text-gray-700">
                               {b.CustomerName || `Khách #${b.CustomerUserID}`}
