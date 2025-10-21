@@ -137,11 +137,12 @@ const BookingDetailPage: React.FC = () => {
     (async () => {
       setLoading(true);
       setError(null);
-      try {
+        try {
         console.log("🔍 BookingDetailPage: bookingCode param =", bookingCode);
         const res = await getBookingDetailApi(bookingCode);
         console.log("✅ Booking detail response:", res);
-        if (!ignore) setData(res.data || {});
+        if (!ignore)
+          setData(res.data ? (res.data as BookingDetailPageState) : null);
       } catch (err: unknown) {
         console.error("❌ Error fetching booking detail:", err);
         if (!ignore)
