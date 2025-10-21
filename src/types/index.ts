@@ -127,6 +127,35 @@ export interface AdminRevenue {
   created_at: string;
 }
 
+export interface AdminFinanceBooking {
+  booking_code: number;
+  field_code: number;
+  field_name: string;
+  customer_user_id: number | null;
+  customer_name: string;
+  customer_email: string;
+  customer_phone: string;
+  total_price: number;
+  platform_fee: number;
+  net_to_shop: number;
+  booking_status: string;
+  payment_status: string;
+  checkin_code: string;
+  create_at: string | null;
+  quantity_id: number | null;
+}
+
+export interface AdminFinanceSummary {
+  total_records: number;
+  total_total_price: number;
+  total_platform_fee: number;
+  total_net_to_shop: number;
+  total_checkins: number;
+  total_quantity_ids: number;
+  first_create_at: string | null;
+  last_create_at: string | null;
+}
+
 export interface Reviews {
   review_code: number;
   field_code: number;

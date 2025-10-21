@@ -6,6 +6,8 @@ import type {
   Bookings,
   ShopRevenue,
   ShopRequests,
+  AdminFinanceBooking,
+  AdminFinanceSummary,
 } from "../types";
 import type { IApiSuccessResponse } from "../interfaces/common";
 
@@ -30,6 +32,25 @@ type MaybeArrayResult<T> =
   | { items: T; data?: never }
   | { data: T; items?: never }
   | { rows: T; items?: never; data?: never };
+
+export type AdminFinanceFilters = {
+  startDate?: string;
+  endDate?: string;
+  fieldCode?: string;
+  customerUserID?: string;
+  bookingStatus?: string;
+  limit?: number;
+  offset?: number;
+};
+
+export type AdminFinanceResponse = {
+  items: AdminFinanceBooking[];
+  summary: AdminFinanceSummary;
+  pagination?: {
+    limit: number;
+    offset: number;
+  };
+};
 
 const ensureSuccess = <T,>(
   payload: ApiSuccess<T> | ApiError,
@@ -206,6 +227,37 @@ export async function fetchAdminShopRequests(): Promise<ShopRequests[]> {
         error,
         "Không thể tải danh sách yêu cầu mở shop."
       )
+    );
+  }
+}
+
+export async function fetchAdminFinanceBookings(
+  filters: AdminFinanceFilters = {}
+): Promise<AdminFinanceResponse> {
+  try {
+    const params = new URLSearchParams();
+    if (filters.startDate) params.set("startDate", filters.startDate);
+    if (filters.endDate) params.set("endDate", filters.endDate);
+    if (filters.fieldCode) params.set("fieldCode", filters.fieldCode);
+    if (filters.customerUserID)
+      params.set("customerUserID", filters.customerUserID);
+    if (filters.bookingStatus && filters.bookingStatus !== "all")
+      params.set("bookingStatus", filters.bookingStatus);
+    if (typeof filters.limit === "number")
+      params.set("limit", String(filters.limit));
+    if (typeof filters.offset === "number")
+      params.set("offset", String(filters.offset));
+
+    const { data } = await api.get<
+      ApiSuccess<AdminFinanceResponse> | ApiError
+    >("/admin/finance/bookings", {
+      params,
+    });
+
+    return ensureSuccess(data, "Không thể tải dữ liệu tài chính.");
+  } catch (error: unknown) {
+    throw new Error(
+      extractErrorMessage(error, "Không thể tải dữ liệu tài chính.")
     );
   }
 }
