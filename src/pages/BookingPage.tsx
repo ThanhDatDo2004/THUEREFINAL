@@ -19,6 +19,7 @@ import {
   fetchFieldAvailability,
   fetchFieldById,
   fetchFieldQuantities,
+  fetchAvailableQuantities,
   type FieldSlot,
   type Quantity,
 } from "../models/fields.api";
@@ -380,8 +381,7 @@ const BookingPage: React.FC = () => {
       .map(([key, entry]) => {
         const sortedCourts = entry.courts
           .filter(
-            (court): court is FieldSlot =>
-              typeof court.quantity_id === "number"
+            (court): court is FieldSlot => typeof court.quantity_id === "number"
           )
           .sort((a, b) => {
             const numA =
@@ -470,8 +470,7 @@ const BookingPage: React.FC = () => {
         const isFullyBooked =
           effectiveCourts.length > 0 &&
           effectiveCourts.every(
-            (court) =>
-              String(court.status ?? "").toLowerCase() !== "available"
+            (court) => String(court.status ?? "").toLowerCase() !== "available"
           );
 
         return {
@@ -587,7 +586,7 @@ const BookingPage: React.FC = () => {
         return prefillIds;
       }
 
-      return sortedAvailable.length ? [sortedAvailable[0].slot_id] : [];
+      return [];
     });
   }, [baseSlots, bookingPrefill, selectedDate]);
 
@@ -638,102 +637,264 @@ const BookingPage: React.FC = () => {
 
     setLoadingQuantities(true);
 
-    const courtMap = new Map<
-      number,
-      {
-        quantity_id: number;
-        quantity_number: number;
-        statuses: CourtAvailabilityStatus[];
-        holdExpiresAt?: string | null;
-      }
-    >();
+    let cancelled = false;
 
+    const uniqueGroups = Array.from(
+      new Map(
+        selectedGroups.map((group) => [
+          `${group.play_date}|${group.start_time}|${group.end_time}`,
+          group,
+        ])
+      ).values()
+    );
+
+    const holdInfoByQuantity = new Map<number, string | null>();
     selectedGroups.forEach((group) => {
       group.courts.forEach((court) => {
         const quantityId = court.quantity_id;
         if (typeof quantityId !== "number") return;
-        const rawStatus = String(court.status ?? "available").toLowerCase();
-        let normalizedStatus: CourtAvailabilityStatus;
-        if (rawStatus === "held" || rawStatus === "holding") {
-          normalizedStatus = "held";
-        } else if (
-          rawStatus === "booked" ||
-          rawStatus === "confirmed" ||
-          rawStatus === "reserved"
-        ) {
-          normalizedStatus = "booked";
-        } else {
-          normalizedStatus = "available";
+        const status = String(court.status ?? "").toLowerCase();
+        if (status === "held" || status === "holding" || status === "on_hold") {
+          if (!holdInfoByQuantity.has(quantityId)) {
+            holdInfoByQuantity.set(quantityId, court.hold_expires_at ?? null);
+          }
         }
-
-        const existing =
-          courtMap.get(quantityId) ??
-          {
-            quantity_id: quantityId,
-            quantity_number:
-              (typeof court.quantity_number === "number"
-                ? court.quantity_number
-                : quantityId) ?? quantityId,
-            statuses: [] as CourtAvailabilityStatus[],
-            holdExpiresAt: court.hold_expires_at ?? null,
-          };
-
-        existing.statuses.push(normalizedStatus);
-        if (normalizedStatus === "held" && court.hold_expires_at) {
-          existing.holdExpiresAt = court.hold_expires_at;
-        }
-
-        courtMap.set(quantityId, existing);
       });
     });
 
-    const nextOptions: CourtAvailabilityOption[] = Array.from(
-      courtMap.values()
-    )
-      .map((item) => {
-        const finalStatus = item.statuses.every(
-          (status) => status === "available"
-        )
-          ? "available"
-          : item.statuses.some((status) => status === "held")
-          ? "held"
-          : "booked";
+    const baseQuantitiesMap = new Map<
+      number,
+      { quantity_id: number; quantity_number: number; baseStatus?: string }
+    >();
 
-        return {
-          quantity_id: item.quantity_id,
-          quantity_number: item.quantity_number,
-          status: finalStatus,
-          holdExpiresAt: item.holdExpiresAt ?? null,
-        };
-      })
-      .sort((a, b) => a.quantity_number - b.quantity_number);
-
-    setCourtOptions(nextOptions);
-    setLoadingQuantities(false);
-
-    setSelectedQuantityID((prev) => {
-      if (!nextOptions.length) {
-        return undefined;
-      }
-      if (
-        typeof prev === "number" &&
-        nextOptions.some(
-          (option) =>
-            option.quantity_id === prev && option.status === "available"
-        )
-      ) {
-        return prev;
-      }
-      const firstAvailable = nextOptions.find(
-        (option) => option.status === "available"
-      );
-      return firstAvailable ? firstAvailable.quantity_id : undefined;
+    fieldQuantities.forEach((quantity) => {
+      const quantityId = Number(quantity.quantity_id);
+      if (!Number.isFinite(quantityId)) return;
+      const quantityNumber =
+        typeof quantity.quantity_number === "number"
+          ? quantity.quantity_number
+          : quantityId;
+      baseQuantitiesMap.set(quantityId, {
+        quantity_id: quantityId,
+        quantity_number: quantityNumber,
+        baseStatus: quantity.status,
+      });
     });
+
+    if (baseQuantitiesMap.size === 0) {
+      selectedGroups.forEach((group) => {
+        group.courts.forEach((court) => {
+          const quantityId = court.quantity_id;
+          if (typeof quantityId !== "number") return;
+          const quantityNumber =
+            typeof court.quantity_number === "number"
+              ? court.quantity_number
+              : quantityId;
+          if (!baseQuantitiesMap.has(quantityId)) {
+            baseQuantitiesMap.set(quantityId, {
+              quantity_id: quantityId,
+              quantity_number: quantityNumber,
+            });
+          }
+        });
+      });
+    }
+
+    (async () => {
+      try {
+        const responses = await Promise.all(
+          uniqueGroups.map((group) =>
+            fetchAvailableQuantities(
+              field.field_code,
+              group.play_date,
+              group.start_time,
+              group.end_time
+            )
+          )
+        );
+
+        if (cancelled) return;
+
+        responses.forEach((response) => {
+          response.availableQuantities.forEach((quantity) => {
+            const quantityId = Number(quantity.quantity_id);
+            if (!Number.isFinite(quantityId)) return;
+            const quantityNumber =
+              typeof quantity.quantity_number === "number"
+                ? quantity.quantity_number
+                : quantityId;
+            if (!baseQuantitiesMap.has(quantityId)) {
+              baseQuantitiesMap.set(quantityId, {
+                quantity_id: quantityId,
+                quantity_number: quantityNumber,
+              });
+            }
+          });
+          response.bookedQuantities.forEach((quantity) => {
+            const quantityId = Number(quantity.quantity_id);
+            if (!Number.isFinite(quantityId)) return;
+            const quantityNumber =
+              typeof quantity.quantity_number === "number"
+                ? quantity.quantity_number
+                : quantityId;
+            if (!baseQuantitiesMap.has(quantityId)) {
+              baseQuantitiesMap.set(quantityId, {
+                quantity_id: quantityId,
+                quantity_number: quantityNumber,
+              });
+            }
+          });
+        });
+
+        const baseQuantitiesList = Array.from(baseQuantitiesMap.values());
+        if (baseQuantitiesList.length === 0) {
+          setCourtOptions([]);
+          setSelectedQuantityID(undefined);
+          return;
+        }
+
+        const aggregated = new Map<
+          number,
+          {
+            quantity_id: number;
+            quantity_number: number;
+            statuses: CourtAvailabilityStatus[];
+          }
+        >();
+
+        const ensureEntry = (quantityId: number, quantityNumber: number) => {
+          if (!aggregated.has(quantityId)) {
+            aggregated.set(quantityId, {
+              quantity_id: quantityId,
+              quantity_number: quantityNumber,
+              statuses: [],
+            });
+          }
+          return aggregated.get(quantityId)!;
+        };
+
+        const pushStatus = (
+          quantityId: number,
+          quantityNumber: number,
+          status: CourtAvailabilityStatus
+        ) => {
+          const entry = ensureEntry(quantityId, quantityNumber);
+          entry.statuses.push(status);
+        };
+
+        responses.forEach((response) => {
+          const availableSet = new Set(
+            response.availableQuantities
+              .map((quantity) => Number(quantity.quantity_id))
+              .filter((id) => Number.isFinite(id))
+          );
+
+          const bookedMap = new Map<number, CourtAvailabilityStatus>();
+          response.bookedQuantities.forEach((quantity) => {
+            const quantityId = Number(quantity.quantity_id);
+            if (!Number.isFinite(quantityId)) return;
+            const rawStatus = String(quantity.status ?? "").toLowerCase();
+            const status: CourtAvailabilityStatus =
+              rawStatus === "held" ? "held" : "booked";
+            bookedMap.set(quantityId, status);
+          });
+
+          baseQuantitiesList.forEach((quantity) => {
+            const { quantity_id: quantityId, quantity_number: quantityNumber } =
+              quantity;
+            if (!Number.isFinite(quantityId)) return;
+
+            let status: CourtAvailabilityStatus;
+            if (availableSet.has(quantityId)) {
+              status = "available";
+            } else if (bookedMap.get(quantityId) === "held") {
+              status = "held";
+            } else if (bookedMap.has(quantityId)) {
+              status = "booked";
+            } else if (
+              quantity.baseStatus &&
+              quantity.baseStatus !== "available"
+            ) {
+              status = "booked";
+            } else {
+              status = "booked";
+            }
+
+            pushStatus(quantityId, quantityNumber, status);
+          });
+        });
+
+        const nextOptions: CourtAvailabilityOption[] = Array.from(
+          aggregated.values()
+        )
+          .map((item) => {
+            const finalStatus = item.statuses.every(
+              (status) => status === "available"
+            )
+              ? "available"
+              : item.statuses.some((status) => status === "held")
+              ? "held"
+              : "booked";
+
+            const holdExpiresAt =
+              finalStatus === "held"
+                ? holdInfoByQuantity.get(item.quantity_id) ?? null
+                : null;
+
+            return {
+              quantity_id: item.quantity_id,
+              quantity_number: item.quantity_number,
+              status: finalStatus,
+              holdExpiresAt,
+            };
+          })
+          .sort((a, b) => a.quantity_number - b.quantity_number);
+
+        setCourtOptions(nextOptions);
+        setSelectedQuantityID((prev) => {
+          if (!nextOptions.length) {
+            return undefined;
+          }
+          if (
+            typeof prev === "number" &&
+            nextOptions.some(
+              (option) =>
+                option.quantity_id === prev && option.status === "available"
+            )
+          ) {
+            return prev;
+          }
+          const firstAvailable = nextOptions.find(
+            (option) => option.status === "available"
+          );
+          return firstAvailable ? firstAvailable.quantity_id : undefined;
+        });
+      } catch (error) {
+        if (cancelled) return;
+        console.error("Không thể tải danh sách sân trống:", error);
+        setCourtOptions([]);
+        setSelectedQuantityID(undefined);
+        setSlotsError(
+          (prev) =>
+            prev ||
+            "Không thể tải danh sách sân cho các khung giờ đã chọn. Vui lòng thử lại."
+        );
+      } finally {
+        if (!cancelled) {
+          setLoadingQuantities(false);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [
     field,
     selectedSlotIds,
     selectedGroups,
     selectedRequiresCourtSelection,
+    fieldQuantities,
   ]);
 
   const effectiveBooking: BookingDetails | null = useMemo(() => {
@@ -861,7 +1022,7 @@ const BookingPage: React.FC = () => {
       }
     } catch (error: unknown) {
       setIsSuccess(false);
-      
+
       // Handle 409 Conflict error - court already booked
       const isConflictError =
         error instanceof Error &&
@@ -893,7 +1054,10 @@ const BookingPage: React.FC = () => {
             }
             setSelectedQuantityID(undefined);
           } catch (refreshError) {
-            console.error("Error refreshing available quantities:", refreshError);
+            console.error(
+              "Error refreshing available quantities:",
+              refreshError
+            );
             setLoadingSlots(false);
           }
         }
@@ -1391,7 +1555,7 @@ const BookingPage: React.FC = () => {
                             return "Không khả dụng";
                           })();
                           const badgeClasses = (() => {
-                            if (isActive || matchesSelectedCourt) {
+                            if (isActive) {
                               return "bg-emerald-500 text-white";
                             }
                             if (isSelectable) {
@@ -1426,7 +1590,8 @@ const BookingPage: React.FC = () => {
                           ).length;
                           const heldCourtCount = group.courts.filter(
                             (court) =>
-                              String(court.status ?? "").toLowerCase() === "held"
+                              String(court.status ?? "").toLowerCase() ===
+                              "held"
                           ).length;
 
                           return (
@@ -1480,7 +1645,8 @@ const BookingPage: React.FC = () => {
                                 <div className="flex items-center gap-2">
                                   {totalCourts > 0 && (
                                     <span className="rounded-full bg-emerald-50 px-2 py-0.5 font-medium text-emerald-700">
-                                      {availableCourtCount}/{totalCourts} sân trống
+                                      {availableCourtCount}/{totalCourts} sân
+                                      trống
                                     </span>
                                   )}
                                   {heldCourtCount > 0 && (
@@ -1549,15 +1715,15 @@ const BookingPage: React.FC = () => {
                   (selectedRequiresCourtSelection ||
                     loadingQuantities ||
                     courtOptions.length > 0) && (
-                  <div className="mt-6 pt-6 border-t border-gray-200">
-                    <AvailableCourtSelector
-                      courts={courtOptions}
-                      selectedQuantityID={selectedQuantityID}
-                      onSelectCourt={setSelectedQuantityID}
-                      loading={loadingQuantities}
-                    />
-                  </div>
-                )}
+                    <div className="mt-6 pt-6 border-t border-gray-200">
+                      <AvailableCourtSelector
+                        courts={courtOptions}
+                        selectedQuantityID={selectedQuantityID}
+                        onSelectCourt={setSelectedQuantityID}
+                        loading={loadingQuantities}
+                      />
+                    </div>
+                  )}
               </div>
             </section>
 
