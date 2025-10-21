@@ -39,6 +39,7 @@ export interface ConfirmBookingResponse {
 // New booking types for API v2
 export interface BookingSlot {
   SlotID: number;
+  QuantityNumber: number;
   PlayDate: string;
   StartTime: string;
   EndTime: string;

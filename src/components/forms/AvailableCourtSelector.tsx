@@ -6,6 +6,7 @@ export type CourtAvailabilityOption = {
   quantity_number: number;
   status: "available" | "held" | "booked";
   holdExpiresAt?: string | null;
+  holdExpiresAtTs?: number | null;
 };
 
 interface AvailableCourtSelectorProps {
@@ -15,7 +16,19 @@ interface AvailableCourtSelectorProps {
   loading?: boolean;
 }
 
-const formatHoldExpiresAt = (value?: string | null) => {
+const formatHoldExpiresAt = (
+  value?: string | null,
+  epochSeconds?: number | null
+) => {
+  if (typeof epochSeconds === "number" && !Number.isNaN(epochSeconds)) {
+    const date = new Date(epochSeconds * 1000);
+    if (!Number.isNaN(date.getTime())) {
+      return date.toLocaleTimeString("vi-VN", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    }
+  }
   if (!value) return "";
   const normalized = value.replace(" ", "T");
   const date = new Date(normalized);
@@ -68,7 +81,10 @@ const AvailableCourtSelector: React.FC<AvailableCourtSelectorProps> = ({
             const isSelectable = court.status === "available";
             const isHeld = court.status === "held";
             const isBooked = court.status === "booked";
-            const holdInfo = formatHoldExpiresAt(court.holdExpiresAt);
+            const holdInfo = formatHoldExpiresAt(
+              court.holdExpiresAt,
+              court.holdExpiresAtTs
+            );
 
             return (
               <button

@@ -293,7 +293,7 @@ const ShopBookingsPage: React.FC = () => {
                 </div>
               ) : (
                 <>
-                  <div className="overflow-x-auto">
+                  <div className="overflow-x-auto -mx-4 md:mx-0">
                     <table className="w-full">
                       <thead className="bg-gray-50 border-b border-gray-200">
                         <tr>
@@ -367,11 +367,13 @@ const ShopBookingsPage: React.FC = () => {
                                       b.slots[0].PlayDate
                                     ).toLocaleDateString("vi-VN")}
                                   </div>
-                                  <div className="text-gray-500 text-xs">
-                                    {b.slots[0].StartTime?.substring(0, 5)} -{" "}
-                                    {b.slots[
-                                      b.slots.length - 1
-                                    ].EndTime?.substring(0, 5)}
+                                  <div className="text-gray-500 text-xs flex flex-col gap-1">
+                                    {b.slots.map((slot) => (
+                                      <span key={slot.Slot_ID}>
+                                        {slot.StartTime?.substring(0, 5)} -{" "}
+                                        {slot.EndTime?.substring(0, 5)}
+                                      </span>
+                                    ))}
                                   </div>
                                 </>
                               ) : (

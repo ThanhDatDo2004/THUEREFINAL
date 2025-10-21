@@ -283,6 +283,8 @@ export interface FieldSlot {
   end_time: string;
   status: FieldSlotStatus;
   hold_expires_at: string | null;
+  hold_expires_at_ts?: number | null;
+  update_at_ts?: number | null;
   is_available?: boolean;
   availability_state?: string | null;
   availability_status?: string | null;
@@ -343,20 +345,68 @@ export interface FieldListWithRentResponse {
 /**
  * Get field stats including booking count
  */
-export async function fetchFieldStats(fieldCode: number): Promise<FieldStats> {
-  try {
-    const { data } = await api.get<ApiSuccess<FieldStats> | ApiError>(
-      `/fields/${fieldCode}/stats`
-    );
-    return ensureSuccess(data, "Không thể tải thông tin sân");
-  } catch (error: unknown) {
-    const typed = error as ErrorWithResponse;
-    if (typed.response?.status === 404) {
-      throw new Error("Sân không tồn tại");
-    }
-    const message = extractErrorMessage(error, "Không thể tải thông tin sân");
-    throw new Error(message);
+type FieldStatsCacheEntry = {
+  data?: FieldStats;
+  expiresAt?: number;
+  promise?: Promise<FieldStats>;
+};
+
+const FIELD_STATS_CACHE = new Map<number, FieldStatsCacheEntry>();
+const FIELD_STATS_TTL = 60 * 1000; // 60 seconds
+
+export async function fetchFieldStats(
+  fieldCode: number,
+  options: { forceRefresh?: boolean } = {}
+): Promise<FieldStats> {
+  const { forceRefresh = false } = options;
+
+  const now = Date.now();
+  const cacheEntry = FIELD_STATS_CACHE.get(fieldCode);
+
+  if (
+    !forceRefresh &&
+    cacheEntry?.data &&
+    cacheEntry.expiresAt !== undefined &&
+    cacheEntry.expiresAt > now
+  ) {
+    return cacheEntry.data;
   }
+
+  if (!forceRefresh && cacheEntry?.promise) {
+    return cacheEntry.promise;
+  }
+
+  const refreshPromise = (async () => {
+    try {
+      const { data } = await api.get<ApiSuccess<FieldStats> | ApiError>(
+        `/fields/${fieldCode}/stats`
+      );
+      const stats = ensureSuccess(data, "Không thể tải thông tin sân");
+
+      FIELD_STATS_CACHE.set(fieldCode, {
+        data: stats,
+        expiresAt: Date.now() + FIELD_STATS_TTL,
+        promise: undefined,
+      });
+
+      return stats;
+    } catch (error) {
+      FIELD_STATS_CACHE.delete(fieldCode);
+      const typed = error as ErrorWithResponse;
+      if (typed.response?.status === 404) {
+        throw new Error("Sân không tồn tại");
+      }
+      const message = extractErrorMessage(error, "Không thể tải thông tin sân");
+      throw new Error(message);
+    }
+  })();
+
+  FIELD_STATS_CACHE.set(fieldCode, {
+    ...cacheEntry,
+    promise: refreshPromise,
+  });
+
+  return refreshPromise;
 }
 
 /**

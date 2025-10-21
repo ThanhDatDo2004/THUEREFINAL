@@ -29,14 +29,22 @@ const formatCurrency = (value?: number) => {
 
 const getStatusBadge = (status: string) => {
   const mapping: Record<string, { bg: string; text: string; label: string }> = {
-    pending: { bg: "bg-amber-100", text: "text-amber-700", label: "Chờ xác nhận" },
+    pending: {
+      bg: "bg-amber-100",
+      text: "text-amber-700",
+      label: "Chờ xác nhận",
+    },
     confirmed: {
       bg: "bg-emerald-100",
       text: "text-emerald-700",
       label: "Đã xác nhận",
     },
     cancelled: { bg: "bg-red-100", text: "text-red-700", label: "Đã hủy" },
-    completed: { bg: "bg-blue-100", text: "text-blue-700", label: "Hoàn thành" },
+    completed: {
+      bg: "bg-blue-100",
+      text: "text-blue-700",
+      label: "Hoàn thành",
+    },
   };
   const config = mapping[status] || mapping.pending;
   return { ...config, value: status };
@@ -44,13 +52,70 @@ const getStatusBadge = (status: string) => {
 
 const getPaymentStatusBadge = (status: string) => {
   const mapping: Record<string, { bg: string; text: string; label: string }> = {
-    pending: { bg: "bg-amber-100", text: "text-amber-700", label: "Chưa thanh toán" },
-    paid: { bg: "bg-emerald-100", text: "text-emerald-700", label: "Đã thanh toán" },
-    failed: { bg: "bg-red-100", text: "text-red-700", label: "Thanh toán thất bại" },
-    refunded: { bg: "bg-gray-100", text: "text-gray-700", label: "Đã hoàn tiền" },
+    pending: {
+      bg: "bg-amber-100",
+      text: "text-amber-700",
+      label: "Chưa thanh toán",
+    },
+    paid: {
+      bg: "bg-emerald-100",
+      text: "text-emerald-700",
+      label: "Đã thanh toán",
+    },
+    failed: {
+      bg: "bg-red-100",
+      text: "text-red-700",
+      label: "Thanh toán thất bại",
+    },
+    refunded: {
+      bg: "bg-gray-100",
+      text: "text-gray-700",
+      label: "Đã hoàn tiền",
+    },
   };
   const config = mapping[status] || mapping.pending;
   return { ...config, value: status };
+};
+
+const getSlotStatusBadge = (status?: string | null) => {
+  const normalized = String(status ?? "").toLowerCase();
+  if (
+    ["held", "holding", "on_hold", "pending", "pending_hold"].includes(
+      normalized
+    )
+  ) {
+    return {
+      bg: "bg-amber-100",
+      text: "text-amber-700",
+      label: "Đang giữ chỗ",
+    };
+  }
+  if (["cancelled", "canceled"].includes(normalized)) {
+    return {
+      bg: "bg-red-100",
+      text: "text-red-700",
+      label: "Đã hủy",
+    };
+  }
+  if (["available"].includes(normalized)) {
+    return {
+      bg: "bg-emerald-50",
+      text: "text-emerald-700",
+      label: "Trống",
+    };
+  }
+  if (["booked", "confirmed", "reserved"].includes(normalized)) {
+    return {
+      bg: "bg-emerald-100",
+      text: "text-emerald-700",
+      label: "Đã đặt",
+    };
+  }
+  return {
+    bg: "bg-gray-100",
+    text: "text-gray-700",
+    label: status || "Không xác định",
+  };
 };
 
 const BookingDetailPage: React.FC = () => {
@@ -168,7 +233,9 @@ const BookingDetailPage: React.FC = () => {
   }
 
   const bookingStatusBadge = getStatusBadge(data.BookingStatus || "pending");
-  const paymentStatusBadge = getPaymentStatusBadge(data.PaymentStatus || "pending");
+  const paymentStatusBadge = getPaymentStatusBadge(
+    data.PaymentStatus || "pending"
+  );
 
   return (
     <div className="page bg-slate-50/80 pb-10">
@@ -190,7 +257,10 @@ const BookingDetailPage: React.FC = () => {
                   Chi Tiết Đặt Sân
                 </h1>
                 <p className="text-sm text-gray-500">
-                  Mã booking: <span className="font-mono font-semibold text-gray-900">{data.BookingCode}</span>
+                  Mã booking:{" "}
+                  <span className="font-mono font-semibold text-gray-900">
+                    {data.BookingCode}
+                  </span>
                 </p>
               </div>
               <div className="flex flex-col gap-2">
@@ -213,7 +283,7 @@ const BookingDetailPage: React.FC = () => {
             <div className="grid gap-4 md:grid-cols-2">
               <div className="rounded-lg border border-gray-200 bg-white px-4 py-3">
                 <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">
-                  Sân
+                  Chi nhánh
                 </p>
                 <p className="text-lg font-semibold text-gray-900">
                   {data.FieldName || "-"}
@@ -234,19 +304,15 @@ const BookingDetailPage: React.FC = () => {
           <div className="grid gap-4 md:grid-cols-2">
             <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-6 py-4">
               <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700 mb-2 flex items-center gap-1">
-                <Calendar className="w-4 h-4" />
-                Ngày thi đấu
+                Sân
               </p>
-              <p className="text-2xl font-bold text-emerald-900">
-                {data.PlayDate
-                  ? new Date(data.PlayDate).toLocaleDateString("vi-VN")
-                  : "-"}
-              </p>
+              <span className="text-2xl font-bold text-emerald-900">
+                Sân {data.slots[0].QuantityNumber}
+              </span>
             </div>
 
             <div className="rounded-xl border border-blue-200 bg-blue-50 px-6 py-4">
               <p className="text-xs font-semibold uppercase tracking-wide text-blue-700 mb-2 flex items-center gap-1">
-                <DollarSign className="w-4 h-4" />
                 Tổng tiền
               </p>
               <p className="text-2xl font-bold text-blue-900">
@@ -266,17 +332,33 @@ const BookingDetailPage: React.FC = () => {
                 {data.slots.map((slot: any, idx: number) => (
                   <div
                     key={idx}
-                    className="flex items-center justify-between px-4 py-3"
+                    className="flex flex-wrap items-center justify-between gap-3 px-4 py-3"
                   >
                     <span className="text-sm text-gray-600">
-                      {slot.PlayDate ? new Date(slot.PlayDate).toLocaleDateString("vi-VN") : "-"}
+                      {slot.PlayDate
+                        ? new Date(slot.PlayDate).toLocaleDateString("vi-VN")
+                        : "-"}
                     </span>
                     <span className="font-semibold text-gray-900">
                       {slot.StartTime} - {slot.EndTime}
                     </span>
-                    <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-700">
-                      {slot.Status || "booked"}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      {typeof slot.QuantityID === "number" && (
+                        <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-700">
+                          Sân {slot.QuantityNumber}
+                        </span>
+                      )}
+                      {(() => {
+                        const badge = getSlotStatusBadge(slot.Status);
+                        return (
+                          <span
+                            className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${badge.bg} ${badge.text}`}
+                          >
+                            {badge.label}
+                          </span>
+                        );
+                      })()}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -304,7 +386,9 @@ const BookingDetailPage: React.FC = () => {
                     <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">
                       Email
                     </p>
-                    <p className="text-gray-900 break-all">{data.CustomerEmail}</p>
+                    <p className="text-gray-900 break-all">
+                      {data.CustomerEmail}
+                    </p>
                   </div>
                 )}
                 {data.CustomerPhone && (
@@ -322,27 +406,25 @@ const BookingDetailPage: React.FC = () => {
           {/* Actions */}
           <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
             <button
-              onClick={() => navigate(`/bookings/${data.BookingCode}/checkin-code`)}
+              onClick={() =>
+                navigate(`/bookings/${data.BookingCode}/checkin-code`)
+              }
               className="btn-primary flex-1 flex items-center justify-center gap-2"
             >
               <CheckCircle className="w-5 h-5" />
               Xem Mã Check-In
             </button>
-            <button
-              onClick={() => navigate(-1)}
-              className="btn-ghost flex-1"
-            >
+            <button onClick={() => navigate(-1)} className="btn-ghost flex-1">
               Quay lại
             </button>
           </div>
 
           {/* Info Note */}
           <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
-            <p className="font-semibold mb-1">📌 Thông tin cần biết:</p>
+            <p className="font-semibold mb-1">Thông tin cần biết:</p>
             <ul className="list-disc list-inside space-y-1 text-xs">
               <li>Vui lòng đến sân 15 phút trước giờ đặt</li>
               <li>Mang theo mã check-in để xác nhận khi check-in</li>
-              <li>Liên hệ cơ sở nếu có thay đổi lịch</li>
             </ul>
           </div>
         </div>

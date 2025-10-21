@@ -8,7 +8,10 @@ import {
   QrCode,
 } from "lucide-react";
 import { extractErrorMessage } from "../models/api.helpers";
-import { getCheckinCodeApi, type CheckinCodeResponse } from "../models/booking.api";
+import {
+  getCheckinCodeApi,
+  type CheckinCodeResponse,
+} from "../models/booking.api";
 
 const CheckinCodePage: React.FC = () => {
   const { bookingCode } = useParams<{ bookingCode: string }>();
@@ -238,22 +241,6 @@ const CheckinCodePage: React.FC = () => {
                   </p>
                 </div>
               </div>
-
-              <div className="flex gap-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
-                <div className="flex-shrink-0">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-200 font-semibold text-blue-700">
-                    3
-                  </div>
-                </div>
-                <div>
-                  <p className="font-medium text-blue-900">
-                    Mang theo giấy tờ tùy thân để xác nhận
-                  </p>
-                  <p className="text-sm text-blue-700">
-                    Chuẩn bị CCCD/Hộ chiếu khi check-in
-                  </p>
-                </div>
-              </div>
             </div>
           </div>
 
@@ -262,7 +249,6 @@ const CheckinCodePage: React.FC = () => {
             <p className="font-semibold mb-2">⚠️ Lưu ý quan trọng:</p>
             <ul className="list-disc list-inside space-y-1 text-xs">
               <li>Mã check-in này chỉ có hiệu lực vào ngày đặt</li>
-              <li>Nếu muốn hủy, vui lòng thực hiện ít nhất 2 giờ trước</li>
               <li>Liên hệ cơ sở nếu có bất kỳ thay đổi nào</li>
             </ul>
           </div>
@@ -270,24 +256,17 @@ const CheckinCodePage: React.FC = () => {
           {/* Actions */}
           <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
             <button
-              onClick={() =>
-                navigate(`/bookings/${data.bookingCode}`)
-              }
+              onClick={() => navigate(`/bookings/${data.bookingCode}`)}
               className="btn-primary flex-1 flex items-center justify-center gap-2"
             >
-              <CheckCircle className="w-5 h-5" />
               Xem Chi Tiết Booking
             </button>
-            <button onClick={() => navigate(-1)} className="btn-ghost flex-1">
+            <button
+              onClick={() => navigate(-1)}
+              className="btn-ghost flex items-center justify-center flex-1"
+            >
               Quay lại
             </button>
-          </div>
-
-          {/* QR Hint */}
-          <div className="text-center pt-4">
-            <p className="text-xs text-gray-500">
-              💡 Gợi ý: Lưu lại ảnh chụp màn hình mã check-in để tiện sử dụng
-            </p>
           </div>
         </div>
       </div>

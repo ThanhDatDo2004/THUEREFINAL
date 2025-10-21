@@ -1,5 +1,5 @@
 // src/pages/BookingPage.tsx
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import {
@@ -104,7 +104,19 @@ const minutesToLabel = (minutes: number) => {
   return `${minutes} phút`;
 };
 
-const formatHoldExpiresAt = (value: string | null) => {
+const formatHoldExpiresAt = (
+  value: string | null,
+  epochSeconds?: number | null
+) => {
+  if (typeof epochSeconds === "number" && !Number.isNaN(epochSeconds)) {
+    const date = new Date(epochSeconds * 1000);
+    if (!Number.isNaN(date.getTime())) {
+      return date.toLocaleTimeString("vi-VN", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    }
+  }
   if (!value) return "";
   const normalized = value.replace(" ", "T");
   const date = new Date(normalized);
@@ -158,19 +170,38 @@ const parseDateTime = (value: string | null | undefined): Date | null => {
   return parsed;
 };
 
-const isHoldStillActive = (holdExpiresAt?: string | null): boolean => {
-  const parsed = parseDateTime(holdExpiresAt);
+const getHoldExpiryDate = (
+  holdExpiresAt?: string | null,
+  holdExpiresAtTs?: number | null
+): Date | null => {
+  if (typeof holdExpiresAtTs === "number" && !Number.isNaN(holdExpiresAtTs)) {
+    const date = new Date(holdExpiresAtTs * 1000);
+    if (!Number.isNaN(date.getTime())) {
+      return date;
+    }
+  }
+  return parseDateTime(holdExpiresAt);
+};
+
+const isHoldStillActive = (
+  holdExpiresAt?: string | null,
+  holdExpiresAtTs?: number | null
+): boolean => {
+  const parsed = getHoldExpiryDate(holdExpiresAt, holdExpiresAtTs);
   if (!parsed) return true;
   return parsed.getTime() > Date.now();
 };
 
 const normalizeCourtStatusValue = (
   value: string | null | undefined,
-  holdExpiresAt?: string | null
+  holdExpiresAt?: string | null,
+  holdExpiresAtTs?: number | null
 ): CourtAvailabilityStatus => {
   const normalized = String(value ?? "").toLowerCase();
   if (isHeldStatus(normalized)) {
-    return isHoldStillActive(holdExpiresAt) ? "held" : "available";
+    return isHoldStillActive(holdExpiresAt, holdExpiresAtTs)
+      ? "held"
+      : "available";
   }
   if (isBookedStatus(normalized)) {
     return "booked";
@@ -332,11 +363,14 @@ const BookingPage: React.FC = () => {
   const [slotsError, setSlotsError] = useState("");
   const [selectedSlotIds, setSelectedSlotIds] = useState<number[]>([]);
   const [selectedQuantityID, setSelectedQuantityID] = useState<number>();
+  const [availabilityRefreshKey, setAvailabilityRefreshKey] = useState(0);
   const [loadingQuantities, setLoadingQuantities] = useState(false);
   const [courtOptions, setCourtOptions] = useState<CourtAvailabilityOption[]>(
     []
   );
   const [fieldQuantities, setFieldQuantities] = useState<Quantity[]>([]);
+  const availabilityRefreshTimerRef = useRef<number | null>(null);
+  const availabilityRefreshTargetRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!field?.field_code || !selectedDate) {
@@ -375,7 +409,71 @@ const BookingPage: React.FC = () => {
     return () => {
       ignore = true;
     };
-  }, [field?.field_code, selectedDate]);
+  }, [field?.field_code, selectedDate, availabilityRefreshKey]);
+
+useEffect(() => {
+  const clearPendingRefresh = () => {
+    if (availabilityRefreshTimerRef.current !== null) {
+      clearTimeout(availabilityRefreshTimerRef.current);
+      availabilityRefreshTimerRef.current = null;
+    }
+    availabilityRefreshTargetRef.current = null;
+  };
+
+  if (!slots.length) {
+    clearPendingRefresh();
+    return;
+  }
+
+  const now = Date.now();
+  const nextExpiryMs = slots
+    .map((slot) =>
+      getHoldExpiryDate(
+        slot.hold_expires_at,
+        slot.hold_expires_at_ts ?? null
+      )
+    )
+    .filter((date): date is Date => Boolean(date))
+    .map((date) => date.getTime())
+    .filter((time) => time > now)
+    .sort((a, b) => a - b)[0];
+
+  if (!nextExpiryMs) {
+    clearPendingRefresh();
+    return;
+  }
+
+  const targetTime = nextExpiryMs + 200;
+  const existingTarget = availabilityRefreshTargetRef.current;
+
+  if (
+    availabilityRefreshTimerRef.current !== null &&
+    existingTarget !== null &&
+    Math.abs(existingTarget - targetTime) <= 250
+  ) {
+    return;
+  }
+
+  clearPendingRefresh();
+
+  const delay = Math.max(500, targetTime - now);
+  availabilityRefreshTargetRef.current = targetTime;
+  availabilityRefreshTimerRef.current = window.setTimeout(() => {
+    availabilityRefreshTimerRef.current = null;
+    availabilityRefreshTargetRef.current = null;
+    setAvailabilityRefreshKey((prev) => prev + 1);
+  }, delay);
+}, [slots]);
+
+useEffect(() => {
+  return () => {
+    if (availabilityRefreshTimerRef.current !== null) {
+      clearTimeout(availabilityRefreshTimerRef.current);
+      availabilityRefreshTimerRef.current = null;
+    }
+    availabilityRefreshTargetRef.current = null;
+  };
+}, []);
 
   useEffect(() => {
     if (!field?.field_code) {
@@ -525,6 +623,7 @@ const BookingPage: React.FC = () => {
                   : quantityId,
               status: "available" as FieldSlot["status"],
               hold_expires_at: null,
+              hold_expires_at_ts: null,
               is_available: true,
             } satisfies FieldSlot;
           })
@@ -714,20 +813,30 @@ const BookingPage: React.FC = () => {
       ).values()
     );
 
-    const holdInfoByQuantity = new Map<number, string | null>();
+    const holdInfoByQuantity = new Map<
+      number,
+      { raw: string | null; ts: number | null }
+    >();
     selectedGroups.forEach((group) => {
       group.courts.forEach((court) => {
         const quantityId = court.quantity_id;
         if (typeof quantityId !== "number") return;
         const status = String(court.status ?? "").toLowerCase();
+        const holdExpiresAtTs =
+          typeof court.hold_expires_at_ts === "number"
+            ? court.hold_expires_at_ts
+            : null;
         if (
           isHeldStatus(status) &&
-          isHoldStillActive(court.hold_expires_at ?? null)
+          isHoldStillActive(court.hold_expires_at ?? null, holdExpiresAtTs)
         ) {
-          holdInfoByQuantity.set(quantityId, court.hold_expires_at ?? null);
+          holdInfoByQuantity.set(quantityId, {
+            raw: court.hold_expires_at ?? null,
+            ts: holdExpiresAtTs,
+          });
         } else if (
           holdInfoByQuantity.has(quantityId) &&
-          !isHoldStillActive(court.hold_expires_at ?? null)
+          !isHoldStillActive(court.hold_expires_at ?? null, holdExpiresAtTs)
         ) {
           holdInfoByQuantity.delete(quantityId);
         }
@@ -867,7 +976,8 @@ const BookingPage: React.FC = () => {
             if (!Number.isFinite(quantityId)) return;
             const status = normalizeCourtStatusValue(
               quantity.status,
-              holdInfoByQuantity.get(quantityId) ?? null
+              holdInfoByQuantity.get(quantityId)?.raw ?? null,
+              holdInfoByQuantity.get(quantityId)?.ts ?? null
             );
             bookedMap.set(quantityId, status === "held" ? "held" : "booked");
           });
@@ -890,9 +1000,11 @@ const BookingPage: React.FC = () => {
                 quantity.baseStatus &&
                 quantity.baseStatus !== "available"
               ) {
+                const holdInfo = holdInfoByQuantity.get(quantityId);
                 const baseNormalized = normalizeCourtStatusValue(
                   quantity.baseStatus,
-                  holdInfoByQuantity.get(quantityId) ?? null
+                  holdInfo?.raw ?? null,
+                  holdInfo?.ts ?? null
                 );
                 status = baseNormalized === "held" ? "held" : "booked";
               } else {
@@ -916,16 +1028,18 @@ const BookingPage: React.FC = () => {
               ? "held"
               : "booked";
 
+            const holdInfo = holdInfoByQuantity.get(item.quantity_id);
             const holdExpiresAt =
-              finalStatus === "held"
-                ? holdInfoByQuantity.get(item.quantity_id) ?? null
-                : null;
+              finalStatus === "held" ? holdInfo?.raw ?? null : null;
+            const holdExpiresAtTs =
+              finalStatus === "held" ? holdInfo?.ts ?? null : null;
 
             return {
               quantity_id: item.quantity_id,
               quantity_number: item.quantity_number,
               status: finalStatus,
               holdExpiresAt,
+              holdExpiresAtTs,
             };
           })
           .sort((a, b) => a.quantity_number - b.quantity_number);
@@ -975,6 +1089,7 @@ const BookingPage: React.FC = () => {
     selectedGroups,
     selectedRequiresCourtSelection,
     fieldQuantities,
+    availabilityRefreshKey,
   ]);
 
   const effectiveBooking: BookingDetails | null = useMemo(() => {
@@ -1639,7 +1754,10 @@ const BookingPage: React.FC = () => {
                               ? minutesToLabel(slotDurationMinutes)
                               : "";
                           const holdInfo = isHeld
-                            ? formatHoldExpiresAt(slot.hold_expires_at)
+                            ? formatHoldExpiresAt(
+                                slot.hold_expires_at,
+                                slot.hold_expires_at_ts ?? null
+                              )
                             : "";
                           const statusLabel = (() => {
                             if (!isSelectable) {
@@ -1696,11 +1814,13 @@ const BookingPage: React.FC = () => {
                           const courtStatuses = group.courts.map((court) => {
                             const normalized = normalizeCourtStatusValue(
                               court.status,
-                              court.hold_expires_at ?? null
+                              court.hold_expires_at ?? null,
+                              court.hold_expires_at_ts ?? null
                             );
                             return {
                               status: normalized,
                               holdExpiresAt: court.hold_expires_at ?? null,
+                              holdExpiresAtTs: court.hold_expires_at_ts ?? null,
                             };
                           });
                           const availableCourtCount = courtStatuses.filter(
