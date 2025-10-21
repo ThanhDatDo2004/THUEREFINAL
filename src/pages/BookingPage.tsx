@@ -115,6 +115,72 @@ const formatHoldExpiresAt = (value: string | null) => {
   });
 };
 
+const HELD_STATUS_SET = new Set([
+  "held",
+  "holding",
+  "on_hold",
+  "pending",
+  "pending_hold",
+  "pending_booking",
+  "pending_payment",
+  "pending_confirmation",
+  "pending_confirm",
+]);
+
+const BOOKED_STATUS_SET = new Set([
+  "booked",
+  "confirmed",
+  "reserved",
+  "paid",
+  "success",
+  "completed",
+  "done",
+  "inactive",
+  "maintenance",
+  "blocked",
+  "cancelled",
+  "cancel",
+]);
+
+const isHeldStatus = (value: string | null | undefined) =>
+  HELD_STATUS_SET.has(String(value ?? "").toLowerCase());
+
+const isBookedStatus = (value: string | null | undefined) =>
+  BOOKED_STATUS_SET.has(String(value ?? "").toLowerCase());
+
+const parseDateTime = (value: string | null | undefined): Date | null => {
+  if (!value) return null;
+  const normalized = value.includes("T") ? value : value.replace(" ", "T");
+  const parsed = new Date(normalized);
+  if (Number.isNaN(parsed.getTime())) {
+    return null;
+  }
+  return parsed;
+};
+
+const isHoldStillActive = (holdExpiresAt?: string | null): boolean => {
+  const parsed = parseDateTime(holdExpiresAt);
+  if (!parsed) return true;
+  return parsed.getTime() > Date.now();
+};
+
+const normalizeCourtStatusValue = (
+  value: string | null | undefined,
+  holdExpiresAt?: string | null
+): CourtAvailabilityStatus => {
+  const normalized = String(value ?? "").toLowerCase();
+  if (isHeldStatus(normalized)) {
+    return isHoldStillActive(holdExpiresAt) ? "held" : "available";
+  }
+  if (isBookedStatus(normalized)) {
+    return "booked";
+  }
+  if (normalized === "available") {
+    return "available";
+  }
+  return "booked";
+};
+
 const getErrorMessage = (error: unknown, fallback: string) => {
   if (error instanceof Error && error.message) {
     return error.message;
@@ -654,10 +720,16 @@ const BookingPage: React.FC = () => {
         const quantityId = court.quantity_id;
         if (typeof quantityId !== "number") return;
         const status = String(court.status ?? "").toLowerCase();
-        if (status === "held" || status === "holding" || status === "on_hold") {
-          if (!holdInfoByQuantity.has(quantityId)) {
-            holdInfoByQuantity.set(quantityId, court.hold_expires_at ?? null);
-          }
+        if (
+          isHeldStatus(status) &&
+          isHoldStillActive(court.hold_expires_at ?? null)
+        ) {
+          holdInfoByQuantity.set(quantityId, court.hold_expires_at ?? null);
+        } else if (
+          holdInfoByQuantity.has(quantityId) &&
+          !isHoldStillActive(court.hold_expires_at ?? null)
+        ) {
+          holdInfoByQuantity.delete(quantityId);
         }
       });
     });
@@ -793,10 +865,11 @@ const BookingPage: React.FC = () => {
           response.bookedQuantities.forEach((quantity) => {
             const quantityId = Number(quantity.quantity_id);
             if (!Number.isFinite(quantityId)) return;
-            const rawStatus = String(quantity.status ?? "").toLowerCase();
-            const status: CourtAvailabilityStatus =
-              rawStatus === "held" ? "held" : "booked";
-            bookedMap.set(quantityId, status);
+            const status = normalizeCourtStatusValue(
+              quantity.status,
+              holdInfoByQuantity.get(quantityId) ?? null
+            );
+            bookedMap.set(quantityId, status === "held" ? "held" : "booked");
           });
 
           baseQuantitiesList.forEach((quantity) => {
@@ -807,17 +880,24 @@ const BookingPage: React.FC = () => {
             let status: CourtAvailabilityStatus;
             if (availableSet.has(quantityId)) {
               status = "available";
-            } else if (bookedMap.get(quantityId) === "held") {
-              status = "held";
-            } else if (bookedMap.has(quantityId)) {
-              status = "booked";
-            } else if (
-              quantity.baseStatus &&
-              quantity.baseStatus !== "available"
-            ) {
-              status = "booked";
             } else {
-              status = "booked";
+              const bookedStatus = bookedMap.get(quantityId);
+              if (bookedStatus === "held") {
+                status = "held";
+              } else if (bookedStatus === "booked") {
+                status = "booked";
+              } else if (
+                quantity.baseStatus &&
+                quantity.baseStatus !== "available"
+              ) {
+                const baseNormalized = normalizeCourtStatusValue(
+                  quantity.baseStatus,
+                  holdInfoByQuantity.get(quantityId) ?? null
+                );
+                status = baseNormalized === "held" ? "held" : "booked";
+              } else {
+                status = "booked";
+              }
             }
 
             pushStatus(quantityId, quantityNumber, status);
@@ -980,13 +1060,43 @@ const BookingPage: React.FC = () => {
     setConfirmation(null);
 
     try {
+      const selectedCourt =
+        typeof selectedQuantityID === "number"
+          ? courtOptions.find(
+              (option) => option.quantity_id === selectedQuantityID
+            )
+          : undefined;
+
       const response = await confirmFieldBooking(field.field_code, {
-        slots: selectedSlots.map((slot) => ({
-          slot_id: Number(slot.slot_id),
-          play_date: slot.play_date,
-          start_time: slot.start_time,
-          end_time: slot.end_time,
-        })),
+        slots: selectedSlots.map((slot) => {
+          const slotQuantityId =
+            typeof slot.quantity_id === "number" ? slot.quantity_id : undefined;
+          const slotQuantityNumber =
+            typeof slot.quantity_number === "number"
+              ? slot.quantity_number
+              : undefined;
+
+          const effectiveQuantityId = selectedRequiresCourtSelection
+            ? selectedQuantityID
+            : slotQuantityId;
+
+          const effectiveQuantityNumber = selectedRequiresCourtSelection
+            ? selectedCourt?.quantity_number
+            : slotQuantityNumber;
+
+          return {
+            slot_id: Number(slot.slot_id),
+            play_date: slot.play_date,
+            start_time: slot.start_time,
+            end_time: slot.end_time,
+            ...(typeof effectiveQuantityId === "number"
+              ? { quantity_id: effectiveQuantityId }
+              : {}),
+            ...(typeof effectiveQuantityNumber === "number"
+              ? { quantity_number: effectiveQuantityNumber }
+              : {}),
+          };
+        }),
         payment_method: formData.payment_method,
         total_price: effectiveBooking.totalPrice,
         customer: {
@@ -1583,15 +1693,21 @@ const BookingPage: React.FC = () => {
                               : "",
                           ].join(" ");
                           const totalCourts = group.courts.length;
-                          const availableCourtCount = group.courts.filter(
-                            (court) =>
-                              String(court.status ?? "").toLowerCase() ===
-                              "available"
+                          const courtStatuses = group.courts.map((court) => {
+                            const normalized = normalizeCourtStatusValue(
+                              court.status,
+                              court.hold_expires_at ?? null
+                            );
+                            return {
+                              status: normalized,
+                              holdExpiresAt: court.hold_expires_at ?? null,
+                            };
+                          });
+                          const availableCourtCount = courtStatuses.filter(
+                            (item) => item.status === "available"
                           ).length;
-                          const heldCourtCount = group.courts.filter(
-                            (court) =>
-                              String(court.status ?? "").toLowerCase() ===
-                              "held"
+                          const heldCourtCount = courtStatuses.filter(
+                            (item) => item.status === "held"
                           ).length;
 
                           return (
