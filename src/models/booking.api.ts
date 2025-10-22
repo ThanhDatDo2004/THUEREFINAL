@@ -22,6 +22,7 @@ export interface ConfirmBookingPayload {
   };
   quantity_id?: number;
   notes?: string;
+  created_by?: number;
 }
 
 export interface ConfirmBookingResponse {

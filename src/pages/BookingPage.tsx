@@ -175,7 +175,11 @@ const getHoldExpiryDate = (
   holdExpiresAtTs?: number | null
 ): Date | null => {
   if (typeof holdExpiresAtTs === "number" && !Number.isNaN(holdExpiresAtTs)) {
-    const date = new Date(holdExpiresAtTs * 1000);
+    const normalizedMs =
+      holdExpiresAtTs > 1_000_000_000_000
+        ? holdExpiresAtTs
+        : holdExpiresAtTs * 1000;
+    const date = new Date(normalizedMs);
     if (!Number.isNaN(date.getTime())) {
       return date;
     }
@@ -292,6 +296,11 @@ const deriveSlotState = (slot: FieldSlot) => {
   };
 };
 
+const MIN_AVAILABILITY_REFRESH_DELAY_MS = 1000;
+const MAX_AVAILABILITY_REFRESH_DELAY_MS = 60000;
+const EXPIRY_MATCH_EPSILON_MS = 1000;
+const MAX_TIMEOUT_MS = 2147483647;
+
 const BookingPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
@@ -365,17 +374,21 @@ const BookingPage: React.FC = () => {
   const [selectedQuantityID, setSelectedQuantityID] = useState<number>();
   const [availabilityRefreshKey, setAvailabilityRefreshKey] = useState(0);
   const [loadingQuantities, setLoadingQuantities] = useState(false);
-  const [courtOptions, setCourtOptions] = useState<CourtAvailabilityOption[]>(
-    []
-  );
-  const [fieldQuantities, setFieldQuantities] = useState<Quantity[]>([]);
-  const availabilityRefreshTimerRef = useRef<number | null>(null);
-  const availabilityRefreshTargetRef = useRef<number | null>(null);
+const [courtOptions, setCourtOptions] = useState<CourtAvailabilityOption[]>(
+  []
+);
+const [fieldQuantities, setFieldQuantities] = useState<Quantity[]>([]);
+const availabilityRefreshTimerRef = useRef<number | null>(null);
+const availabilityRefreshTargetRef = useRef<number | null>(null);
+const availabilityRefreshBackoffRef = useRef<number>(
+  MIN_AVAILABILITY_REFRESH_DELAY_MS
+);
+const availabilityLastObservedExpiryRef = useRef<number | null>(null);
 
-  useEffect(() => {
-    if (!field?.field_code || !selectedDate) {
-      setSlots([]);
-      return;
+useEffect(() => {
+  if (!field?.field_code || !selectedDate) {
+    setSlots([]);
+    return;
     }
     let ignore = false;
     setLoadingSlots(true);
@@ -422,6 +435,8 @@ useEffect(() => {
 
   if (!slots.length) {
     clearPendingRefresh();
+    availabilityRefreshBackoffRef.current = MIN_AVAILABILITY_REFRESH_DELAY_MS;
+    availabilityLastObservedExpiryRef.current = null;
     return;
   }
 
@@ -440,24 +455,44 @@ useEffect(() => {
 
   if (!nextExpiryMs) {
     clearPendingRefresh();
+    availabilityRefreshBackoffRef.current = MIN_AVAILABILITY_REFRESH_DELAY_MS;
+    availabilityLastObservedExpiryRef.current = null;
     return;
   }
 
-  const targetTime = nextExpiryMs + 200;
+  const previousObservedExpiry = availabilityLastObservedExpiryRef.current;
+  if (
+    previousObservedExpiry !== null &&
+    Math.abs(previousObservedExpiry - nextExpiryMs) <= EXPIRY_MATCH_EPSILON_MS
+  ) {
+    availabilityRefreshBackoffRef.current = Math.min(
+      availabilityRefreshBackoffRef.current * 2,
+      MAX_AVAILABILITY_REFRESH_DELAY_MS
+    );
+  } else {
+    availabilityRefreshBackoffRef.current = MIN_AVAILABILITY_REFRESH_DELAY_MS;
+  }
+  availabilityLastObservedExpiryRef.current = nextExpiryMs;
+
+  const baseDelay = Math.max(500, nextExpiryMs - now + 200);
+  const delay = Math.min(
+    Math.max(availabilityRefreshBackoffRef.current, baseDelay),
+    MAX_TIMEOUT_MS
+  );
+  const scheduledTarget = now + delay;
   const existingTarget = availabilityRefreshTargetRef.current;
 
   if (
     availabilityRefreshTimerRef.current !== null &&
     existingTarget !== null &&
-    Math.abs(existingTarget - targetTime) <= 250
+    Math.abs(existingTarget - scheduledTarget) <= 250
   ) {
     return;
   }
 
   clearPendingRefresh();
 
-  const delay = Math.max(500, targetTime - now);
-  availabilityRefreshTargetRef.current = targetTime;
+  availabilityRefreshTargetRef.current = scheduledTarget;
   availabilityRefreshTimerRef.current = window.setTimeout(() => {
     availabilityRefreshTimerRef.current = null;
     availabilityRefreshTargetRef.current = null;
@@ -472,6 +507,8 @@ useEffect(() => {
       availabilityRefreshTimerRef.current = null;
     }
     availabilityRefreshTargetRef.current = null;
+    availabilityRefreshBackoffRef.current = MIN_AVAILABILITY_REFRESH_DELAY_MS;
+    availabilityLastObservedExpiryRef.current = null;
   };
 }, []);
 
@@ -1182,6 +1219,10 @@ useEffect(() => {
             )
           : undefined;
 
+      if (!user?.user_code) {
+        throw new Error("Bạn cần đăng nhập để đặt sân.");
+      }
+
       const response = await confirmFieldBooking(field.field_code, {
         slots: selectedSlots.map((slot) => {
           const slotQuantityId =
@@ -1219,6 +1260,7 @@ useEffect(() => {
           email: formData.customer_email,
           phone: formData.customer_phone,
         },
+        created_by: Number(user.user_code),
         quantity_id: selectedRequiresCourtSelection
           ? selectedQuantityID
           : undefined,
