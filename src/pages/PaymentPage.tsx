@@ -297,44 +297,6 @@ const PaymentPage: React.FC = () => {
         </div>
 
         <div className="bg-white rounded-lg shadow-lg p-8 mb-6">
-          <div className="flex items-center justify-center mb-6">
-            {paymentPolling.isPaid && (
-              <div className="flex flex-col items-center">
-                <CheckCircle className="w-16 h-16 text-green-500 mb-2" />
-                <span className="text-xl font-semibold text-green-600">
-                  Thanh Toán Thành Công
-                </span>
-              </div>
-            )}
-            {paymentPolling.isFailed && (
-              <div className="flex flex-col items-center">
-                <AlertCircle className="w-16 h-16 text-red-500 mb-2" />
-                <span className="text-xl font-semibold text-red-600">
-                  Thanh Toán Thất Bại
-                </span>
-              </div>
-            )}
-            {paymentPolling.isPending && (
-              <div className="flex flex-col items-center">
-                {state.pollingEnabled && paymentPolling.loading ? (
-                  <>
-                    <Loader className="w-16 h-16 text-blue-500 mb-2 animate-spin" />
-                    <span className="text-xl font-semibold text-blue-600">
-                      Đang Chờ Thanh Toán
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <div className="w-16 h-16 rounded-full border-4 border-yellow-400 mb-2"></div>
-                    <span className="text-xl font-semibold text-yellow-600">
-                      Chưa Thanh Toán
-                    </span>
-                  </>
-                )}
-              </div>
-            )}
-          </div>
-
           {state.amount && (
             <div className="text-center mb-6 pb-6 border-b">
               <p className="text-gray-600 text-sm mb-1">Số Tiền Thanh Toán</p>
@@ -428,7 +390,7 @@ const PaymentPage: React.FC = () => {
                 ) : state.checkCooldown > 0 ? (
                   `${state.checkCooldown}s`
                 ) : (
-                  "✓ Xác Nhận Đã Chuyển Tiền"
+                  "Xác Nhận Đã Chuyển Tiền"
                 )}
               </button>
             )}
@@ -474,13 +436,6 @@ const PaymentPage: React.FC = () => {
               Vui lòng hoàn tất chuyển khoản trong{" "}
               {Math.ceil(state.expiresIn / 60)} phút
             </p>
-          )}
-        </div>
-
-        <div className="text-center text-sm text-gray-600">
-          <p>Trạng thái: {paymentPolling.status}</p>
-          {state.pollingEnabled && paymentPolling.loading && (
-            <p className="text-blue-600">Đang kiểm tra...</p>
           )}
         </div>
       </div>

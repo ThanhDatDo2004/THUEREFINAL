@@ -107,7 +107,7 @@ const ShopLayout: React.FC = () => {
               }
             >
               <Clock className="h-4 w-4" />
-              {!collapsed && <span>Giá & Giờ hoạt động</span>}
+              {!collapsed && <span>Giờ hoạt động</span>}
             </NavLink>
 
             <NavLink
@@ -159,16 +159,9 @@ const ShopLayout: React.FC = () => {
               }
             >
               <Settings className="h-4 w-4" />
-              {!collapsed && <span>Cài đặt</span>}
+              {!collapsed && <span>Thiết lập</span>}
             </NavLink>
           </nav>
-
-          {/* Footer */}
-          <div className="px-4 pb-4 pt-2 text-xs text-gray-400">
-            {!collapsed && (
-              <span>© {new Date().getFullYear()} SportBooking</span>
-            )}
-          </div>
         </aside>
 
         {/* CONTENT */}

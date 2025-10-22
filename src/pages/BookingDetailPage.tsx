@@ -137,7 +137,7 @@ const BookingDetailPage: React.FC = () => {
     (async () => {
       setLoading(true);
       setError(null);
-        try {
+      try {
         console.log("🔍 BookingDetailPage: bookingCode param =", bookingCode);
         const res = await getBookingDetailApi(bookingCode);
         console.log("✅ Booking detail response:", res);
@@ -412,8 +412,7 @@ const BookingDetailPage: React.FC = () => {
               }
               className="btn-primary flex-1 flex items-center justify-center gap-2"
             >
-              <CheckCircle className="w-5 h-5" />
-              Xem Mã Check-In
+              Xem Mã Check-in
             </button>
             <button onClick={() => navigate(-1)} className="btn-ghost flex-1">
               Quay lại

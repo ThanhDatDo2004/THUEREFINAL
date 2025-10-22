@@ -145,3 +145,24 @@ export async function fetchActiveShopPromotions(
     throw new Error("Không thể tải khuyến mãi đang áp dụng");
   }
 }
+
+export async function deleteShopPromotion(promotionId: number): Promise<void> {
+  if (!Number.isFinite(promotionId) || promotionId <= 0) {
+    throw new Error("Mã khuyến mãi không hợp lệ");
+  }
+  try {
+    const { data } = await api.delete<ApiResponse<{ promotionId: number }>>(
+      `/shops/me/promotions/${promotionId}`
+    );
+    if (!data?.success) {
+      throw new Error(
+        data?.error?.message || data?.message || "Không thể xóa khuyến mãi"
+      );
+    }
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error("Không thể xóa khuyến mãi");
+  }
+}

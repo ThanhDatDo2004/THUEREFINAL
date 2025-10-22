@@ -585,7 +585,7 @@ const AdminDashboard: React.FC = () => {
             </div>
             <p className="mt-1 text-xs text-slate-500">
               {formatNumber(summary.total_checkins)} lượt check-in ·{" "}
-              {formatNumber(summary.total_quantity_ids)} QuantityID
+              {formatNumber(summary.total_quantity_ids)} Sân lẻ
             </p>
           </div>
 

@@ -55,13 +55,6 @@ const HomePage: React.FC = () => {
     };
   }, []);
 
-  const stats = [
-    { icon: Users, label: "Người dùng", value: "25K+" },
-    { icon: CheckCircle, label: "Đặt sân thành công", value: "120K+" },
-    { icon: Calendar, label: "Sân khả dụng", value: "350+" },
-    { icon: Star, label: "Đánh giá trung bình", value: "4.8/5" },
-  ];
-
   const quickShortcuts = [
     {
       icon: MapPin,
@@ -94,7 +87,7 @@ const HomePage: React.FC = () => {
       icon: Sparkles,
       title: "Trải nghiệm liền mạch",
       description:
-        "Tra cứu lịch trống, đặt sân, thanh toán và nhắc lịch – tất cả trong một giao diện thống nhất.",
+        "Tra cứu lịch trống, đặt sân, thanh toán – tất cả trong một giao diện thống nhất.",
     },
     {
       icon: Zap,
@@ -143,35 +136,14 @@ const HomePage: React.FC = () => {
       step: "02",
       title: "Giữ lịch tức thì",
       description:
-        "Xem lịch trống theo thời gian thực, giữ chỗ online và nhận xác nhận qua email, SMS.",
+        "Xem lịch trống theo thời gian thực, giữ chỗ online và nhận xác nhận qua email.",
     },
     {
       step: "03",
       title: "Tận hưởng trận đấu",
       description:
-        "Check-in bằng mã QR, nhận hỗ trợ từ đội ngũ chăm sóc và tích điểm thưởng mỗi lần chơi.",
+        "Check-in bằng mã CODE, nhận hỗ trợ từ đội ngũ chăm sóc và tích điểm thưởng mỗi lần chơi.",
     },
-  ];
-
-  const testimonials = [
-    {
-      quote:
-        "Từ khi dùng nền tảng, đội mình không còn phải chat group hỏi sân trống nữa. Đặt rất nhanh và chủ sân hỗ trợ cực kỳ nhiệt tình.",
-      name: "Trần Hải Nam",
-      role: "Cap đội The Lions FC",
-    },
-    {
-      quote:
-        "Lịch quản lý rõ ràng, thanh toán linh hoạt và đặc biệt là tính năng gợi ý slot thích hợp cho chị em công sở như tụi mình.",
-      name: "Ngô Bích Phương",
-      role: "Captain CLB Cầu Lông Sunrise",
-    },
-  ];
-
-  const topDestinations = [
-    { city: "Hà Nội", detail: "Mỹ Đình, Cầu Giấy, Long Biên" },
-    { city: "TP. Hồ Chí Minh", detail: "Quận 7, Thủ Đức, Bình Thạnh" },
-    { city: "Đà Nẵng", detail: "Hải Châu, Sơn Trà, Ngũ Hành Sơn" },
   ];
 
   return (
@@ -181,14 +153,16 @@ const HomePage: React.FC = () => {
         <div className="hero-pattern" />
         <div className="hero-inner hero-grid">
           <div className="hero-copy">
-            <span className="hero-eyebrow">Nền tảng đặt sân thể thao #1</span>
+            <span className="hero-eyebrow">Nền tảng đặt sân thể thao</span>
             <h1 className="hero-title">
               Sẵn sàng cho trận đấu{" "}
               <span className="hero-highlight">mọi lúc</span>,
               <span className="hero-highlight"> mọi nơi</span>.
             </h1>
             <p className="hero-subtitle">
-              Chọn sân phù hợp, giữ slot đẹp và hoàn tất thanh toán chỉ trong vài thao tác. Đội của bạn sẽ luôn có mặt sân hoàn hảo cho mỗi cuộc hẹn.
+              Chọn sân phù hợp, giữ vị trí đẹp và hoàn tất thanh toán chỉ trong
+              vài thao tác. Đội của bạn sẽ luôn có mặt sân hoàn hảo cho mỗi cuộc
+              hẹn.
             </p>
 
             <div className="hero-actions">
@@ -205,10 +179,6 @@ const HomePage: React.FC = () => {
 
             <div className="hero-badges">
               <div className="hero-badge">
-                <ShieldCheck className="w-4 h-4" />
-                Đã kiểm duyệt 2 bước
-              </div>
-              <div className="hero-badge">
                 <Timer className="w-4 h-4" />
                 Giữ lịch tức thời
               </div>
@@ -216,16 +186,6 @@ const HomePage: React.FC = () => {
                 <Sparkles className="w-4 h-4" />
                 Ưu đãi độc quyền hằng tuần
               </div>
-            </div>
-
-            <div className="hero-stats">
-              {stats.map((stat) => (
-                <div key={stat.label} className="hero-stat-card">
-                  <stat.icon className="w-5 h-5 text-emerald-200" />
-                  <span className="hero-stat-value">{stat.value}</span>
-                  <span className="hero-stat-label">{stat.label}</span>
-                </div>
-              ))}
             </div>
           </div>
 
@@ -258,7 +218,7 @@ const HomePage: React.FC = () => {
             <div className="hero-card-footer">
               <ShieldCheck className="w-4 h-4 text-emerald-500" />
               <p className="text-xs text-gray-500">
-                Giá hiển thị đã bao gồm phí sân và bảo hiểm cơ bản cho đội.
+                Giá hiển thị đã bao gồm phí sân và có thể áp dụng khuyến mãi.
               </p>
             </div>
           </div>
@@ -268,9 +228,10 @@ const HomePage: React.FC = () => {
       {/* Feature highlights */}
       <section className="home-section">
         <div className="section-header">
-          <span className="section-eyebrow">Vì sao chọn chúng tôi</span>
+          <span className="section-eyebrow">Vì sao chọn chúng tôi?</span>
           <h2 className="section-title">
-            Nền tảng đặt sân được tín nhiệm bởi hàng chục nghìn đội bóng, câu lạc bộ và doanh nghiệp.
+            Nền tảng đặt sân được tín nhiệm bởi hàng nghìn đội bóng, câu lạc bộ
+            và doanh nghiệp.
           </h2>
         </div>
         <div className="feature-grid">
@@ -293,7 +254,7 @@ const HomePage: React.FC = () => {
         <div className="section-header">
           <span className="section-eyebrow">Danh mục hot</span>
           <h2 className="section-title">
-            Khám phá các bộ môn được đặt nhiều nhất tuần này
+            Khám phá các bộ môn được đặt nhiều trong tuần này
           </h2>
         </div>
         <div className="categories-scroll">
@@ -303,19 +264,6 @@ const HomePage: React.FC = () => {
               <div className="category-meta">{item.meta}</div>
             </Link>
           ))}
-        </div>
-        <div className="top-destination">
-          <div className="top-destination-icon">
-            <Compass className="w-5 h-5" />
-          </div>
-          <div className="top-destination-list">
-            {topDestinations.map((item) => (
-              <div key={item.city} className="top-destination-item">
-                <span className="city">{item.city}</span>
-                <span className="detail">{item.detail}</span>
-              </div>
-            ))}
-          </div>
         </div>
       </section>
 
@@ -329,7 +277,7 @@ const HomePage: React.FC = () => {
             </Link>
           </div>
           <h2 className="section-title">
-            Những sân đang được đặt kín lịch – bạn nên giữ chỗ sớm!
+            Những sân đang được đặt lịch – bạn nên giữ chỗ sớm!
           </h2>
         </div>
         <div className="featured-grid">
@@ -358,7 +306,8 @@ const HomePage: React.FC = () => {
         <div className="section-header">
           <span className="section-eyebrow">Đặt sân trong 3 bước</span>
           <h2 className="section-title">
-            Quy trình tối giản giúp bạn dành thời gian cho trận đấu thay vì việc quản lý.
+            Quy trình tối giản giúp bạn dành thời gian cho trận đấu thay vì việc
+            quản lý.
           </h2>
         </div>
         <div className="workflow-grid">
@@ -374,28 +323,6 @@ const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* Testimonials */}
-      <section className="home-section testimonials-section">
-        <div className="section-header">
-          <span className="section-eyebrow">Người thật nói gì?</span>
-          <h2 className="section-title">
-            Các đội bóng và câu lạc bộ gắn bó cùng chúng tôi mỗi tuần
-          </h2>
-        </div>
-        <div className="testimonial-grid">
-          {testimonials.map((item) => (
-            <figure key={item.name} className="testimonial-card">
-              <Quote className="testimonial-quote-icon" />
-              <blockquote className="testimonial-quote">{item.quote}</blockquote>
-              <figcaption className="testimonial-author">
-                <span className="name">{item.name}</span>
-                <span className="role">{item.role}</span>
-              </figcaption>
-            </figure>
-          ))}
-        </div>
-      </section>
-
       {/* Shop CTA */}
       <section className="home-section shop-invite">
         <div className="shop-invite-content">
@@ -404,10 +331,12 @@ const HomePage: React.FC = () => {
               Dành cho chủ sân & quản lý cụm sân
             </span>
             <h2 className="shop-invite-title">
-              Tăng tỷ lệ lấp đầy & quản lý lịch thông minh chỉ với một bảng điều khiển
+              Tăng tỷ lệ lấp đầy & quản lý lịch thông minh chỉ với một bảng điều
+              khiển
             </h2>
             <p className="shop-invite-subtitle">
-              Đăng ký miễn phí, nhận hỗ trợ onboarding tận nơi và cùng hàng trăm đối tác xây dựng trải nghiệm thể thao đẳng cấp.
+              Đăng ký miễn phí, nhận hỗ trợ và cùng hàng trăm đối tác xây dựng
+              trải nghiệm thể thao đẳng cấp.
             </p>
           </div>
           <a href="#shop-form" className="shop-invite-button">

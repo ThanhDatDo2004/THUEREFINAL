@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { MapPin, TrendingUp, Clock, DollarSign } from "lucide-react";
+import { MapPin, TrendingUp, Clock } from "lucide-react";
 import type { FieldWithImages } from "../../types";
 import { Link } from "react-router-dom";
 import {

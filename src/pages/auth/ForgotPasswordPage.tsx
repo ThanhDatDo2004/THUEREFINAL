@@ -29,7 +29,7 @@ const ForgotPasswordPage: React.FC = () => {
       setFeedback({
         type: "success",
         message:
-          "Nếu email của bạn tồn tại trong hệ thống, một liên kết đặt lại mật khẩu đã được gửi. Vui lòng kiểm tra hộp thư.",
+          "Liên kết đặt lại mật khẩu đã được gửi. Vui lòng kiểm tra hộp thư.",
       });
     } catch (e: any) {
       // Hiển thị một thông báo lỗi chung chung để tăng cường bảo mật

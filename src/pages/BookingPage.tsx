@@ -1222,6 +1222,7 @@ useEffect(() => {
       minimumFractionDigits: 0,
     }).format(value);
 
+  const isAuthenticated = Boolean(user?.user_code);
   const normalizedPromotionCode = promotionCode.trim().toUpperCase();
   const selectedPromotion = useMemo(() => {
     if (!normalizedPromotionCode) return null;
@@ -1239,6 +1240,7 @@ useEffect(() => {
   }, [selectedPromotion, effectiveBooking]);
 
   const promotionDiscount = useMemo(() => {
+    if (!isAuthenticated) return 0;
     if (!selectedPromotion || !effectiveBooking) return 0;
     if (!meetsPromotionRequirement) return 0;
     let discount =
@@ -1264,6 +1266,9 @@ useEffect(() => {
 
   const promotionFeedback = useMemo(() => {
     if (!promotionCode.trim()) return "";
+    if (!isAuthenticated) {
+      return "Hãy đăng ký để được áp dụng khuyến mãi.";
+    }
     if (!selectedPromotion) {
       if (promotionOptions.length === 0) {
         return "Mã sẽ được kiểm tra khi xác nhận. Vui lòng nhập chính xác.";
@@ -1292,9 +1297,17 @@ useEffect(() => {
     promotionDiscount,
     meetsPromotionRequirement,
     effectiveBooking,
+    isAuthenticated,
   ]);
 
   const hasPromotionApplied = promotionDiscount > 0;
+
+  const promotionFeedbackClass = useMemo(() => {
+    if (!promotionFeedback) return "text-gray-600";
+    if (!isAuthenticated && promotionCode.trim()) return "text-red-600";
+    if (hasPromotionApplied) return "text-emerald-600";
+    return "text-gray-600";
+  }, [promotionFeedback, isAuthenticated, promotionCode, hasPromotionApplied]);
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -1394,7 +1407,7 @@ useEffect(() => {
         payload.created_by = createdBy;
       }
 
-      if (normalizedPromotionCode) {
+      if (isAuthenticated && normalizedPromotionCode) {
         payload.promotion_code = normalizedPromotionCode;
       }
 
@@ -2447,11 +2460,7 @@ useEffect(() => {
                     )}
                     {promotionFeedback && (
                       <p
-                        className={`text-xs ${
-                          hasPromotionApplied
-                            ? "text-emerald-600"
-                            : "text-gray-600"
-                        }`}
+                        className={`text-xs ${promotionFeedbackClass}`}
                       >
                         {promotionFeedback}
                       </p>

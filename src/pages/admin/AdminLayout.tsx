@@ -7,7 +7,6 @@ import {
   FileClock,
   BarChart3,
   CreditCard,
-  Activity,
   Settings,
   ChevronLeft,
   ChevronRight,
@@ -122,16 +121,6 @@ function AdminLayout() {
             >
               <CreditCard className="h-4 w-4" />
               {!collapsed && <span>Yêu Cầu Rút Tiền</span>}
-            </NavLink>
-
-            <NavLink
-              to="/admin/activity"
-              className={({ isActive }) =>
-                `${navItemBase} ${isActive ? navItemActive : navItemIdle}`
-              }
-            >
-              <Activity className="h-4 w-4" />
-              {!collapsed && <span>Activity Log</span>}
             </NavLink>
 
           </nav>

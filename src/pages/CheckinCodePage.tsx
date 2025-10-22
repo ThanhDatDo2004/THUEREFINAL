@@ -179,13 +179,13 @@ const CheckinCodePage: React.FC = () => {
             <div className="relative rounded-2xl border-2 border-emerald-300 bg-gradient-to-br from-emerald-50 to-emerald-100 p-8 shadow-lg">
               <div className="text-center">
                 <p className="text-xs font-semibold uppercase tracking-widest text-emerald-700 mb-3">
-                  Mã Check-In
+                  Mã Check-in
                 </p>
                 <div className="font-mono text-5xl font-bold text-emerald-900 tracking-wider mb-4 select-all">
                   {data.checkinCode}
                 </div>
                 <p className="text-sm text-emerald-700">
-                  Vui lòng nhớ mã này khi đến sân
+                  Vui lòng xuất trình mã này khi đến sân
                 </p>
               </div>
             </div>

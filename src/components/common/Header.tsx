@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { User, LogOut, Settings, Home } from "lucide-react";
+import { User, LogOut, Trophy } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 
 const Header: React.FC = () => {
@@ -19,7 +19,7 @@ const Header: React.FC = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
             <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center">
-              <Home className="w-5 h-5 text-white" />
+              <Trophy className="w-5 h-5 text-white" />
             </div>
             <span className="text-xl font-bold text-gray-900">ThueRe</span>
           </Link>

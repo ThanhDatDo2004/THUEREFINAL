@@ -34,7 +34,6 @@ import AdminShopsPage from "./pages/admin/AdminShopsPage";
 import AdminRequestsPage from "./pages/admin/AdminRequestsPage";
 import AdminInsightsPage from "./pages/admin/AdminInsightsPage";
 import AdminTransactionsPage from "./pages/admin/AdminTransactionsPage";
-import AdminActivityPage from "./pages/admin/AdminActivityPage";
 import AdminPayoutRequestsPage from "./pages/admin/AdminPayoutRequestsPage";
 import PaymentPage from "./pages/PaymentPage";
 import PaymentResult from "./pages/PaymentResult";
@@ -88,21 +87,17 @@ function App() {
           <Route
             path="/bookings/:bookingCode"
             element={
-              <PrivateRoute>
-                <Layout showFooter={false}>
-                  <BookingDetailPage />
-                </Layout>
-              </PrivateRoute>
+              <Layout showFooter={false}>
+                <BookingDetailPage />
+              </Layout>
             }
           />
           <Route
             path="/bookings/:bookingCode/checkin-code"
             element={
-              <PrivateRoute>
-                <Layout showFooter={false}>
-                  <CheckinCodePage />
-                </Layout>
-              </PrivateRoute>
+              <Layout showFooter={false}>
+                <CheckinCodePage />
+              </Layout>
             }
           />
 
@@ -166,7 +161,6 @@ function App() {
             <Route path="insights" element={<AdminInsightsPage />} />
             <Route path="transactions" element={<AdminTransactionsPage />} />
             <Route path="payouts" element={<AdminPayoutRequestsPage />} />
-            <Route path="activity" element={<AdminActivityPage />} />
           </Route>
 
           {/* Forgot / Reset password */}

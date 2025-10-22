@@ -70,7 +70,7 @@ const ShopUtilitiesPage: React.FC = () => {
       setError("");
       setSuccess("");
       await updateShopUtilities(shopCode, selectedUtilities);
-      setSuccess("✓ Cập nhật tiện ích thành công!");
+      setSuccess("Cập nhật tiện ích thành công!");
       // Refetch utilities
       const utils = await getShopUtilities(shopCode);
       setUtilities(utils);
@@ -196,7 +196,7 @@ const ShopUtilitiesPage: React.FC = () => {
           className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition font-semibold flex items-center gap-2"
         >
           {saving && <Loader className="w-4 h-4 animate-spin" />}
-          {saving ? "Đang lưu..." : "✓ Lưu Thay Đổi"}
+          {saving ? "Đang lưu..." : "Lưu Thay Đổi"}
         </button>
         <button
           onClick={() => {
@@ -233,19 +233,6 @@ const ShopUtilitiesPage: React.FC = () => {
             </p>
           </div>
         </div>
-      </div>
-
-      {/* Info */}
-      <div className="mt-8 p-6 bg-blue-50 rounded-xl border border-blue-200">
-        <h3 className="font-semibold text-gray-900 mb-2">💡 Mẹo</h3>
-        <ul className="text-sm text-gray-700 space-y-2">
-          <li>
-            • Chọn các tiện ích mà sân của bạn có để tăng tính hấp dẫn cho khách
-            hàng
-          </li>
-          <li>• Cập nhật thường xuyên nếu thêm hoặc bỏ tiện ích nào</li>
-          <li>• Khách hàng sẽ dễ dàng tìm thấy sân bạn qua bộ lọc tiện ích</li>
-        </ul>
       </div>
     </div>
   );

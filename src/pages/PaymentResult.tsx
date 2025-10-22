@@ -58,7 +58,10 @@ const PaymentResult: React.FC = () => {
         if (!ignore) setData(res.data || {});
       } catch (err: unknown) {
         console.error("❌ Error fetching booking detail:", err);
-        if (!ignore) setError(extractErrorMessage(err, "Không thể tải kết quả thanh toán."));
+        if (!ignore)
+          setError(
+            extractErrorMessage(err, "Không thể tải kết quả thanh toán.")
+          );
       } finally {
         if (!ignore) setLoading(false);
       }
@@ -88,11 +91,17 @@ const PaymentResult: React.FC = () => {
     return (
       <div className="min-h-screen flex items-center justify-center px-4">
         <div className="max-w-md w-full text-center">
-          <div className="mb-4 text-red-600 text-2xl font-semibold">Có lỗi xảy ra</div>
+          <div className="mb-4 text-red-600 text-2xl font-semibold">
+            Có lỗi xảy ra
+          </div>
           <div className="mb-6 text-gray-700">{error}</div>
           <div className="flex flex-col gap-3">
-            <button className="btn-primary" onClick={() => navigate(-1)}>Quay lại</button>
-            <button className="btn-ghost" onClick={() => navigate("/")}>Về trang chủ</button>
+            <button className="btn-primary" onClick={() => navigate(-1)}>
+              Quay lại
+            </button>
+            <button className="btn-ghost" onClick={() => navigate("/")}>
+              Về trang chủ
+            </button>
           </div>
         </div>
       </div>
@@ -108,44 +117,87 @@ const PaymentResult: React.FC = () => {
         <div className="bg-white shadow-lg rounded-xl p-8">
           <div className="text-center mb-6">
             <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-emerald-100 flex items-center justify-center">
-              <svg className="h-10 w-10 text-emerald-600" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
+              <svg
+                className="h-10 w-10 text-emerald-600"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M9 12l2 2 4-4"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="9"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                />
               </svg>
             </div>
-            <h1 className="text-2xl font-bold text-gray-900">Thanh Toán Thành Công!</h1>
-            {data?.PaymentStatus && (
-              <p className="mt-1 text-sm text-emerald-700">Trạng thái: {data.PaymentStatus}</p>
-            )}
+            <h1 className="text-2xl font-bold text-gray-900">
+              Thanh Toán Thành Công!
+            </h1>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
-              <div className="text-xs uppercase tracking-wide text-gray-500">Mã Booking</div>
-              <div className="mt-1 font-mono text-base font-semibold text-gray-900">{shownBookingCode}</div>
+              <div className="text-xs uppercase tracking-wide text-gray-500">
+                Mã Booking
+              </div>
+              <div className="mt-1 font-mono text-base font-semibold text-gray-900">
+                {shownBookingCode}
+              </div>
             </div>
             <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
-              <div className="text-xs uppercase tracking-wide text-gray-500">Mã Giao Dịch</div>
-              <div className="mt-1 font-mono text-base text-gray-900">{data?.transactionId || "Đang cập nhật"}</div>
+              <div className="text-xs uppercase tracking-wide text-gray-500">
+                Mã Giao Dịch
+              </div>
+              <div className="mt-1 font-mono text-base text-gray-900">
+                {data?.transactionId || "Đang cập nhật"}
+              </div>
             </div>
             <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
-              <div className="text-xs uppercase tracking-wide text-gray-500">Sân</div>
-              <div className="mt-1 text-base font-semibold text-gray-900">{data?.FieldName || "-"}</div>
+              <div className="text-xs uppercase tracking-wide text-gray-500">
+                Sân
+              </div>
+              <div className="mt-1 text-base font-semibold text-gray-900">
+                {data?.FieldName || "-"}
+              </div>
             </div>
             <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
-              <div className="text-xs uppercase tracking-wide text-gray-500">Tổng tiền</div>
-              <div className="mt-1 text-base font-semibold text-emerald-700">{formatCurrency(amount)}</div>
+              <div className="text-xs uppercase tracking-wide text-gray-500">
+                Tổng tiền
+              </div>
+              <div className="mt-1 text-base font-semibold text-emerald-700">
+                {formatCurrency(amount)}
+              </div>
             </div>
           </div>
 
           {normalizedSlots.length > 0 && (
             <div className="mt-6">
-              <h3 className="text-sm font-semibold text-gray-700 mb-2">Khung giờ đã đặt</h3>
+              <h3 className="text-sm font-semibold text-gray-700 mb-2">
+                Khung giờ đã đặt
+              </h3>
               <div className="rounded-lg border border-gray-200 divide-y">
                 {normalizedSlots.map((s, idx) => (
-                  <div key={idx} className="px-4 py-2 flex items-center justify-between text-sm">
-                    <span className="text-gray-600">{s.playDate ? new Date(s.playDate).toLocaleDateString("vi-VN") : "-"}</span>
-                    <span className="font-medium text-gray-900">{s.startTime} - {s.endTime}</span>
+                  <div
+                    key={idx}
+                    className="px-4 py-2 flex items-center justify-between text-sm"
+                  >
+                    <span className="text-gray-600">
+                      {s.playDate
+                        ? new Date(s.playDate).toLocaleDateString("vi-VN")
+                        : "-"}
+                    </span>
+                    <span className="font-medium text-gray-900">
+                      {s.startTime} - {s.endTime}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -161,7 +213,9 @@ const PaymentResult: React.FC = () => {
             </button>
             <button
               className="btn-ghost w-full"
-              onClick={() => navigate(`/bookings/${shownBookingCode}/checkin-code`)}
+              onClick={() =>
+                navigate(`/bookings/${shownBookingCode}/checkin-code`)
+              }
             >
               Xem Mã Check-in
             </button>
