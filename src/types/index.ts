@@ -222,7 +222,7 @@ export type FieldsQuery = {
   date?: string;
   startTime?: string;
   endTime?: string;
-  sortBy?: "price" | "rating" | "name";
+  sortBy?: "price" | "rating" | "name" | "rent";
   sortDir?: "asc" | "desc";
   page?: number;
   pageSize?: number;

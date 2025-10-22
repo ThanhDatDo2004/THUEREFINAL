@@ -44,6 +44,21 @@ type QuickFilter =
       type: "reset";
     };
 
+type SortOption =
+  | "default"
+  | "price_asc"
+  | "price_desc"
+  | "name_asc"
+  | "rent_desc";
+
+const SORT_OPTIONS: Array<{ value: SortOption; label: string }> = [
+  { value: "default", label: "Mặc định" },
+  { value: "rent_desc", label: "Đặt nhiều nhất" },
+  { value: "price_asc", label: "Giá thấp → cao" },
+  { value: "price_desc", label: "Giá cao → thấp" },
+  { value: "name_asc", label: "Tên A → Z" },
+];
+
 const FieldsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSportType, setSelectedSportType] = useState("");
@@ -55,6 +70,7 @@ const FieldsPage: React.FC = () => {
   const [activeQuickFilter, setActiveQuickFilter] = useState<string | null>(
     null
   );
+  const [sortOption, setSortOption] = useState<SortOption>("default");
 
   const [provinces, setProvinces] = useState<ProvinceOption[]>([]);
   const [locationsLoading, setLocationsLoading] = useState(false);
@@ -90,6 +106,27 @@ const FieldsPage: React.FC = () => {
       pageSize,
       // Do not force sorting by rating; let backend default ordering apply
     };
+
+    switch (sortOption) {
+      case "price_asc":
+        q.sortBy = "price";
+        q.sortDir = "asc";
+        break;
+      case "price_desc":
+        q.sortBy = "price";
+        q.sortDir = "desc";
+        break;
+      case "name_asc":
+        q.sortBy = "name";
+        q.sortDir = "asc";
+        break;
+      case "rent_desc":
+        q.sortBy = "rent";
+        q.sortDir = "desc";
+        break;
+      default:
+        break;
+    }
     try {
       // DEBUG: verify requested page/params
       // eslint-disable-next-line no-console
@@ -130,6 +167,7 @@ const FieldsPage: React.FC = () => {
     searchQuery,
     selectedLocation,
     selectedSportType,
+    sortOption,
   ]);
 
   useEffect(() => {
@@ -596,6 +634,23 @@ const FieldsPage: React.FC = () => {
                     {PAGE_SIZE_OPTIONS.map((size) => (
                       <option key={size} value={size}>
                         {size} / trang
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="fields-page-size">
+                  <span>Sắp xếp</span>
+                  <select
+                    value={sortOption}
+                    onChange={(e) => {
+                      const value = e.target.value as SortOption;
+                      setSortOption(value);
+                      setPage(1);
+                    }}
+                  >
+                    {SORT_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
                       </option>
                     ))}
                   </select>
