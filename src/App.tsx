@@ -1,5 +1,5 @@
 // src/App.tsx
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 
 import Layout from "./components/layouts/Layout";
@@ -18,13 +18,13 @@ import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
 
 // Shop
 import ShopLayout from "./pages/shop/ShopLayout";
-import ShopOverview from "./pages/shop/ShopOverview";
 import ShopFieldsPage from "./pages/shop/ShopFieldsPage";
 import ShopFieldPricingPage from "./pages/shop/ShopFieldPricingPage";
 import ShopBookingsPage from "./pages/shop/ShopBookingsPage";
 import ShopUtilitiesPage from "./pages/shop/ShopUtilitiesPage";
 import ShopRevenuePage from "./pages/shop/ShopRevenuePage";
 import ShopSettingsPage from "./pages/shop/ShopSettingsPage";
+import ShopPromotionsPage from "./pages/shop/ShopPromotionsPage";
 
 // Admin
 import AdminLayout from "./pages/admin/AdminLayout";
@@ -35,7 +35,6 @@ import AdminRequestsPage from "./pages/admin/AdminRequestsPage";
 import AdminInsightsPage from "./pages/admin/AdminInsightsPage";
 import AdminTransactionsPage from "./pages/admin/AdminTransactionsPage";
 import AdminActivityPage from "./pages/admin/AdminActivityPage";
-import AdminSettingsPage from "./pages/admin/AdminSettingsPage";
 import AdminPayoutRequestsPage from "./pages/admin/AdminPayoutRequestsPage";
 import PaymentPage from "./pages/PaymentPage";
 import PaymentResult from "./pages/PaymentResult";
@@ -79,11 +78,9 @@ function App() {
           <Route
             path="/booking/:id"
             element={
-              <PrivateRoute>
-                <Layout showFooter={false}>
-                  <BookingPage />
-                </Layout>
-              </PrivateRoute>
+              <Layout showFooter={false}>
+                <BookingPage />
+              </Layout>
             }
           />
 
@@ -140,11 +137,12 @@ function App() {
               </PrivateRoute>
             }
           >
-            <Route index element={<ShopOverview />} />
+            <Route index element={<Navigate to="fields" replace />} />
             <Route path="fields" element={<ShopFieldsPage />} />
             <Route path="pricing" element={<ShopFieldPricingPage />} />
             <Route path="bookings" element={<ShopBookingsPage />} />
             <Route path="utilities" element={<ShopUtilitiesPage />} />
+            <Route path="promotions" element={<ShopPromotionsPage />} />
             <Route path="revenue" element={<ShopRevenuePage />} />
             <Route path="settings" element={<ShopSettingsPage />} />
           </Route>
@@ -169,7 +167,6 @@ function App() {
             <Route path="transactions" element={<AdminTransactionsPage />} />
             <Route path="payouts" element={<AdminPayoutRequestsPage />} />
             <Route path="activity" element={<AdminActivityPage />} />
-            <Route path="settings" element={<AdminSettingsPage />} />
           </Route>
 
           {/* Forgot / Reset password */}

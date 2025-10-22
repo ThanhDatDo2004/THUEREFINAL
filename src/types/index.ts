@@ -119,6 +119,34 @@ export interface ShopRevenue {
   Year: number;
 }
 
+export type ShopPromotionStatus =
+  | "draft"
+  | "scheduled"
+  | "active"
+  | "expired"
+  | "disabled";
+
+export interface ShopPromotion {
+  promotion_id: number;
+  shop_code: number;
+  promotion_code: string;
+  title: string;
+  description: string | null;
+  discount_type: "percent" | "fixed";
+  discount_value: number;
+  max_discount_amount: number | null;
+  min_order_amount: number | null;
+  usage_limit: number | null;
+  usage_per_customer: number | null;
+  start_at: string;
+  end_at: string;
+  status: ShopPromotionStatus;
+  current_status: ShopPromotionStatus;
+  usage_count: number;
+  create_at: string;
+  update_at: string;
+}
+
 export interface AdminRevenue {
   revenue_code: number;
   booking_code: number;

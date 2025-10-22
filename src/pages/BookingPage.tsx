@@ -13,6 +13,8 @@ import {
   ArrowLeft,
   CheckCircle,
   AlertCircle,
+  BadgePercent,
+  XCircle,
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import {
@@ -25,14 +27,16 @@ import {
 } from "../models/fields.api";
 import {
   confirmFieldBooking,
+  type ConfirmBookingPayload,
   type ConfirmBookingResponse,
 } from "../models/booking.api";
-import type { FieldWithQuantity } from "../types";
+import type { FieldWithQuantity, ShopPromotion } from "../types";
 import { getSportLabel, resolveFieldPrice } from "../utils/field-helpers";
 import resolveImageUrl from "../utils/image-helpers";
 import AvailableCourtSelector, {
   type CourtAvailabilityOption,
 } from "../components/forms/AvailableCourtSelector";
+import { fetchActiveShopPromotions } from "../models/promotions.api";
 
 interface BookingFormData {
   customer_name: string;
@@ -384,6 +388,11 @@ const availabilityRefreshBackoffRef = useRef<number>(
   MIN_AVAILABILITY_REFRESH_DELAY_MS
 );
 const availabilityLastObservedExpiryRef = useRef<number | null>(null);
+
+const [promotionCode, setPromotionCode] = useState("");
+const [promotionOptions, setPromotionOptions] = useState<ShopPromotion[]>([]);
+const [promotionLoading, setPromotionLoading] = useState(false);
+const [promotionError, setPromotionError] = useState("");
 
 useEffect(() => {
   if (!field?.field_code || !selectedDate) {
@@ -1129,6 +1138,42 @@ useEffect(() => {
     availabilityRefreshKey,
   ]);
 
+  useEffect(() => {
+    if (!field?.shop?.shop_code) {
+      setPromotionOptions([]);
+      setPromotionError("");
+      return;
+    }
+    let ignore = false;
+    (async () => {
+      try {
+        setPromotionLoading(true);
+        setPromotionError("");
+        const data = await fetchActiveShopPromotions(field.shop.shop_code);
+        if (!ignore) {
+          setPromotionOptions(data);
+        }
+      } catch (error) {
+        if (!ignore) {
+          setPromotionOptions([]);
+          setPromotionError(
+            getErrorMessage(
+              error,
+              "Không thể tải danh sách khuyến mãi của sân."
+            )
+          );
+        }
+      } finally {
+        if (!ignore) {
+          setPromotionLoading(false);
+        }
+      }
+    })();
+    return () => {
+      ignore = true;
+    };
+  }, [field?.shop?.shop_code]);
+
   const effectiveBooking: BookingDetails | null = useMemo(() => {
     if (!field || !selectedSlots.length || !selectedDate) return null;
 
@@ -1177,6 +1222,80 @@ useEffect(() => {
       minimumFractionDigits: 0,
     }).format(value);
 
+  const normalizedPromotionCode = promotionCode.trim().toUpperCase();
+  const selectedPromotion = useMemo(() => {
+    if (!normalizedPromotionCode) return null;
+    return (
+      promotionOptions.find(
+        (item) => item.promotion_code === normalizedPromotionCode
+      ) ?? null
+    );
+  }, [promotionOptions, normalizedPromotionCode]);
+
+  const meetsPromotionRequirement = useMemo(() => {
+    if (!selectedPromotion || !effectiveBooking) return false;
+    const minOrder = selectedPromotion.min_order_amount ?? 0;
+    return effectiveBooking.totalPrice >= minOrder;
+  }, [selectedPromotion, effectiveBooking]);
+
+  const promotionDiscount = useMemo(() => {
+    if (!selectedPromotion || !effectiveBooking) return 0;
+    if (!meetsPromotionRequirement) return 0;
+    let discount =
+      selectedPromotion.discount_type === "percent"
+        ? (effectiveBooking.totalPrice * selectedPromotion.discount_value) /
+          100
+        : selectedPromotion.discount_value;
+    if (
+      selectedPromotion.discount_type === "percent" &&
+      selectedPromotion.max_discount_amount !== null &&
+      selectedPromotion.max_discount_amount >= 0
+    ) {
+      discount = Math.min(discount, selectedPromotion.max_discount_amount);
+    }
+    discount = Math.min(discount, effectiveBooking.totalPrice);
+    return Math.round(discount * 100) / 100;
+  }, [selectedPromotion, effectiveBooking, meetsPromotionRequirement]);
+
+  const finalPreviewTotal = useMemo(() => {
+    if (!effectiveBooking) return 0;
+    return Math.max(effectiveBooking.totalPrice - promotionDiscount, 0);
+  }, [effectiveBooking, promotionDiscount]);
+
+  const promotionFeedback = useMemo(() => {
+    if (!promotionCode.trim()) return "";
+    if (!selectedPromotion) {
+      if (promotionOptions.length === 0) {
+        return "Mã sẽ được kiểm tra khi xác nhận. Vui lòng nhập chính xác.";
+      }
+      return "Không tìm thấy khuyến mãi tương ứng. Mã sẽ được kiểm tra khi xác nhận.";
+    }
+    if (!effectiveBooking) return "";
+    if (!meetsPromotionRequirement) {
+      const minOrder = selectedPromotion.min_order_amount ?? 0;
+      if (minOrder > 0) {
+        return `Áp dụng cho đơn từ ${formatPrice(minOrder)}.`;
+      }
+      return "Khuyến mãi chưa đáp ứng điều kiện áp dụng.";
+    }
+    if (promotionDiscount > 0) {
+      if (selectedPromotion.discount_type === "percent") {
+        return `Đã giảm ${formatPrice(promotionDiscount)} (-${selectedPromotion.discount_value}%${selectedPromotion.max_discount_amount ? `, tối đa ${formatPrice(selectedPromotion.max_discount_amount)}` : ""}).`;
+      }
+      return `Đã giảm ${formatPrice(promotionDiscount)}.`;
+    }
+    return "Khuyến mãi chưa áp dụng được.";
+  }, [
+    promotionCode,
+    selectedPromotion,
+    promotionOptions.length,
+    promotionDiscount,
+    meetsPromotionRequirement,
+    effectiveBooking,
+  ]);
+
+  const hasPromotionApplied = promotionDiscount > 0;
+
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [confirmation, setConfirmation] =
@@ -1219,11 +1338,12 @@ useEffect(() => {
             )
           : undefined;
 
-      if (!user?.user_code) {
-        throw new Error("Bạn cần đăng nhập để đặt sân.");
-      }
+      const createdBy =
+        typeof user?.user_code === "number"
+          ? Number(user.user_code)
+          : undefined;
 
-      const response = await confirmFieldBooking(field.field_code, {
+      const payload: ConfirmBookingPayload = {
         slots: selectedSlots.map((slot) => {
           const slotQuantityId =
             typeof slot.quantity_id === "number" ? slot.quantity_id : undefined;
@@ -1254,18 +1374,31 @@ useEffect(() => {
           };
         }),
         payment_method: formData.payment_method,
-        total_price: effectiveBooking.totalPrice,
+        total_price: finalPreviewTotal,
         customer: {
           name: formData.customer_name,
           email: formData.customer_email,
           phone: formData.customer_phone,
         },
-        created_by: Number(user.user_code),
         quantity_id: selectedRequiresCourtSelection
           ? selectedQuantityID
           : undefined,
         notes: formData.notes,
-      });
+      };
+
+      if (
+        typeof createdBy === "number" &&
+        Number.isFinite(createdBy) &&
+        createdBy > 0
+      ) {
+        payload.created_by = createdBy;
+      }
+
+      if (normalizedPromotionCode) {
+        payload.promotion_code = normalizedPromotionCode;
+      }
+
+      const response = await confirmFieldBooking(field.field_code, payload);
 
       console.log("✅ Booking confirmation response:", response);
       console.log("📝 Booking code:", response?.booking_code);
@@ -1385,6 +1518,14 @@ useEffect(() => {
       return status.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase());
     })();
 
+    const amountBeforeDiscount =
+      confirmation.amount_before_discount ?? effectiveBooking.totalPrice;
+    const computedFinalAmount =
+      confirmation.amount ?? amountBeforeDiscount;
+    const discountApplied =
+      confirmation.discount_amount ??
+      Math.max(amountBeforeDiscount - computedFinalAmount, 0);
+
     const transactionId =
       confirmation.transaction_id && confirmation.transaction_id.trim()
         ? confirmation.transaction_id
@@ -1471,8 +1612,21 @@ useEffect(() => {
                 {minutesToLabel(Math.round(effectiveBooking.duration * 60))})
               </div>
               <div>
+                <strong>Giá gốc:</strong>{" "}
+                {formatPrice(amountBeforeDiscount)}
+              </div>
+              {discountApplied > 0 && (
+                <div className="text-emerald-600">
+                  <strong>Giảm:</strong>{" "}-
+                  {formatPrice(discountApplied)}
+                  {confirmation.promotion_code
+                    ? ` (Mã ${confirmation.promotion_code})`
+                    : ""}
+                </div>
+              )}
+              <div>
                 <strong>Tổng tiền:</strong>{" "}
-                {formatPrice(effectiveBooking.totalPrice)}
+                {formatPrice(computedFinalAmount)}
               </div>
               <div>
                 <strong>Địa chỉ:</strong> {field.address}
@@ -2257,21 +2411,113 @@ useEffect(() => {
                     )}
                   </div>
 
+                  <div className="space-y-2 rounded-xl border border-gray-200 bg-white px-4 py-3">
+                    <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                      <BadgePercent className="h-4 w-4" /> Mã khuyến mãi
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={promotionCode}
+                        onChange={(event) =>
+                          setPromotionCode(event.target.value.toUpperCase())
+                        }
+                        placeholder="Nhập mã (nếu có)"
+                        className="input flex-1 uppercase"
+                        disabled={promotionLoading}
+                      />
+                      {promotionCode ? (
+                        <button
+                          type="button"
+                          className="btn-outline shrink-0"
+                          onClick={() => setPromotionCode("")}
+                          title="Xoá mã khuyến mãi"
+                        >
+                          <XCircle className="h-4 w-4" />
+                        </button>
+                      ) : null}
+                    </div>
+                    {promotionLoading && (
+                      <p className="text-xs text-gray-500">
+                        Đang tải khuyến mãi...
+                      </p>
+                    )}
+                    {promotionError && (
+                      <p className="text-xs text-red-600">{promotionError}</p>
+                    )}
+                    {promotionFeedback && (
+                      <p
+                        className={`text-xs ${
+                          hasPromotionApplied
+                            ? "text-emerald-600"
+                            : "text-gray-600"
+                        }`}
+                      >
+                        {promotionFeedback}
+                      </p>
+                    )}
+                    {promotionOptions.length > 0 && (
+                      <div className="flex flex-wrap gap-2 pt-1">
+                        {promotionOptions.map((promo) => {
+                          const isSelected =
+                            promo.promotion_code === normalizedPromotionCode;
+                          const meetsMin = effectiveBooking
+                            ? effectiveBooking.totalPrice >=
+                              (promo.min_order_amount ?? 0)
+                            : false;
+                          return (
+                            <button
+                              key={promo.promotion_id}
+                              type="button"
+                              onClick={() =>
+                                setPromotionCode(promo.promotion_code)
+                              }
+                              title={promo.title}
+                              className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
+                                isSelected
+                                  ? "border-emerald-500 bg-emerald-50 text-emerald-600"
+                                  : "border-gray-200 text-gray-600 hover:border-emerald-400"
+                              } ${!meetsMin ? "opacity-60" : ""}`}
+                            >
+                              {promo.promotion_code}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+
                   <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
-                    <div className="flex items-center justify-between text-lg font-bold">
-                      <span className="flex items-center gap-1">
-                        <DollarSign className="h-5 w-5" />
-                        Tổng tiền
-                      </span>
-                      <span className="text-emerald-600">
+                    <div className="flex items-center justify-between text-sm text-gray-700">
+                      <span>Giá gốc</span>
+                      <span className="font-medium">
                         {effectiveBooking
                           ? formatPrice(effectiveBooking.totalPrice)
                           : "-"}
                       </span>
                     </div>
+                    {hasPromotionApplied && (
+                      <div className="mt-1 flex items-center justify-between text-sm text-emerald-600">
+                        <span>Giảm</span>
+                        <span>-{formatPrice(promotionDiscount)}</span>
+                      </div>
+                    )}
+                    <div className="mt-2 flex items-center justify-between text-lg font-bold">
+                      <span className="flex items-center gap-1">
+                        <DollarSign className="h-5 w-5" />
+                        Tạm tính
+                      </span>
+                      <span className="text-emerald-600">
+                        {effectiveBooking
+                          ? formatPrice(finalPreviewTotal)
+                          : "-"}
+                      </span>
+                    </div>
                     <p className="mt-2 text-xs text-emerald-700">
-                      Giá tạm tính dựa trên thời lượng đã chọn. Hoàn tất thanh
-                      toán để đảm bảo giữ chỗ.
+                      Giá tạm tính dựa trên thời lượng đã chọn.
+                      {hasPromotionApplied
+                        ? " Đã bao gồm khuyến mãi áp dụng."
+                        : " Hoàn tất thanh toán để đảm bảo giữ chỗ."}
                     </p>
                   </div>
 

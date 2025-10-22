@@ -2,7 +2,6 @@
 import React, { useEffect, useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import {
-  LayoutDashboard,
   Layers,
   CalendarRange,
   Zap,
@@ -11,6 +10,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock,
+  TicketPercent,
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { fetchMyShop } from "../../models/shop.api";
@@ -91,17 +91,6 @@ const ShopLayout: React.FC = () => {
           {/* Nav */}
           <nav className="p-3 space-y-1">
             <NavLink
-              to="/shop"
-              end
-              className={({ isActive }) =>
-                `${navItemBase} ${isActive ? navItemActive : navItemIdle}`
-              }
-            >
-              <LayoutDashboard className="h-4 w-4" />
-              {!collapsed && <span>Tổng quan</span>}
-            </NavLink>
-
-            <NavLink
               to="/shop/fields"
               className={({ isActive }) =>
                 `${navItemBase} ${isActive ? navItemActive : navItemIdle}`
@@ -139,6 +128,16 @@ const ShopLayout: React.FC = () => {
             >
               <Zap className="h-4 w-4" />
               {!collapsed && <span>Tiện ích</span>}
+            </NavLink>
+
+            <NavLink
+              to="/shop/promotions"
+              className={({ isActive }) =>
+                `${navItemBase} ${isActive ? navItemActive : navItemIdle}`
+              }
+            >
+              <TicketPercent className="h-4 w-4" />
+              {!collapsed && <span>Khuyến mãi</span>}
             </NavLink>
 
             <NavLink

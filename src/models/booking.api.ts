@@ -23,6 +23,7 @@ export interface ConfirmBookingPayload {
   quantity_id?: number;
   notes?: string;
   created_by?: number;
+  promotion_code?: string;
 }
 
 export interface ConfirmBookingResponse {
@@ -35,6 +36,10 @@ export interface ConfirmBookingResponse {
   qr_code?: string; // SePay QR image URL from confirm
   paymentID?: number; // Payment ID from confirm
   amount?: number; // Total amount to pay
+  amount_before_discount?: number;
+  discount_amount?: number;
+  promotion_code?: string | null;
+  promotion_title?: string | null;
 }
 
 // New booking types for API v2

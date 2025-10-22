@@ -16,4 +16,4 @@ export * from "./payment.api";
 export * from "./wallet.api";
 export * from "./review.api";
 export * from "./notification.api";
-
+export * from "./promotions.api";

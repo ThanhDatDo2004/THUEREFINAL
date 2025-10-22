@@ -134,17 +134,6 @@ function AdminLayout() {
               {!collapsed && <span>Activity Log</span>}
             </NavLink>
 
-            <div className="pt-2 mt-2 border-t border-gray-100" />
-
-            <NavLink
-              to="/admin/settings"
-              className={({ isActive }) =>
-                `${navItemBase} ${isActive ? navItemActive : navItemIdle}`
-              }
-            >
-              <Settings className="h-4 w-4" />
-              {!collapsed && <span>Settings</span>}
-            </NavLink>
           </nav>
 
           {/* Footer note */}

@@ -8,8 +8,7 @@ type ShopStatusFilter = "all" | "approved" | "pending";
 const AdminShopsPage: React.FC = () => {
   const [shops, setShops] = useState<Shops[]>([]);
   const [q, setQ] = useState("");
-  const [statusFilter, setStatusFilter] =
-    useState<ShopStatusFilter>("all");
+  const [statusFilter, setStatusFilter] = useState<ShopStatusFilter>("all");
   const [selectedShop, setSelectedShop] = useState<Shops | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -60,8 +59,7 @@ const AdminShopsPage: React.FC = () => {
   const stats = useMemo(() => {
     const total = shops.length;
     const approved = shops.filter(
-      (shop) =>
-        shop.isapproved === 1 || String(shop.isapproved ?? "") === "1"
+      (shop) => shop.isapproved === 1 || String(shop.isapproved ?? "") === "1"
     ).length;
     const pending = total - approved;
     return { total, approved, pending };
@@ -79,11 +77,6 @@ const AdminShopsPage: React.FC = () => {
       prev && prev.shop_code === shop.shop_code
         ? { ...prev, isapproved: approved ? 1 : 0 }
         : prev
-    );
-    window.alert(
-      `Đã ${
-        approved ? "đánh dấu duyệt" : "đánh dấu chờ duyệt"
-      } cho shop "${shop.shop_name}" (mô phỏng frontend).`
     );
   };
 
@@ -141,15 +134,11 @@ const AdminShopsPage: React.FC = () => {
           <div className="stat-label">Tổng số shop</div>
         </div>
         <div className="stat-card">
-          <div className="stat-value text-emerald-600">
-            {stats.approved}
-          </div>
+          <div className="stat-value text-emerald-600">{stats.approved}</div>
           <div className="stat-label">Đã duyệt</div>
         </div>
         <div className="stat-card">
-          <div className="stat-value text-amber-600">
-            {stats.pending}
-          </div>
+          <div className="stat-value text-amber-600">{stats.pending}</div>
           <div className="stat-label">Chờ duyệt</div>
         </div>
       </div>
@@ -165,7 +154,6 @@ const AdminShopsPage: React.FC = () => {
                   <th className="th">Địa chỉ</th>
                   <th className="th">Ngân hàng</th>
                   <th className="th">Trạng thái</th>
-                  <th className="th">Tùy chọn</th>
                 </tr>
               </thead>
               <tbody>
@@ -190,41 +178,13 @@ const AdminShopsPage: React.FC = () => {
                         Chủ sở hữu #{shop.user_code}
                       </div>
                     </td>
-                    <td className="td text-sm text-gray-600">
-                      {shop.address}
-                    </td>
+                    <td className="td text-sm text-gray-600">{shop.address}</td>
                     <td className="td text-sm text-gray-600">
                       {shop.bank_name || "—"}
                       {shop.bank_account_number &&
                         ` • ${shop.bank_account_number}`}
                     </td>
                     <td className="td">{renderStatusBadge(shop)}</td>
-                    <td className="td">
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          className="btn-primary flex items-center gap-1"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            handleMarkStatus(shop, true);
-                          }}
-                        >
-                          <CheckCircle2 className="h-4 w-4" />
-                          Duyệt
-                        </button>
-                        <button
-                          type="button"
-                          className="btn-outline flex items-center gap-1 text-amber-600 border-amber-200 hover:bg-amber-50"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            handleMarkStatus(shop, false);
-                          }}
-                        >
-                          <Ban className="h-4 w-4" />
-                          Chờ duyệt
-                        </button>
-                      </div>
-                    </td>
                   </tr>
                 ))}
                 {!filtered.length && (
