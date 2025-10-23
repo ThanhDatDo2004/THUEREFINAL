@@ -21,7 +21,9 @@ function pickErrorMessage(err: any, fallback = "Đã có lỗi xảy ra") {
   );
 }
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true); // chỉ dùng để hydrate ban đầu
 
@@ -37,11 +39,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(false);
   }, []);
 
-  const login = async (emailOrPhone: string, password: string): Promise<boolean> => {
+  const login = async (
+    emailOrPhone: string,
+    password: string
+  ): Promise<boolean> => {
     try {
       const identifier = String(emailOrPhone ?? "").trim();
       const pwd = String(password ?? "");
-      if (!identifier) throw new Error("Vui lòng nhập email hoặc số điện thoại");
+      if (!identifier)
+        throw new Error("Vui lòng nhập email hoặc số điện thoại");
       if (!pwd) throw new Error("Vui lòng nhập mật khẩu");
 
       // sẽ ném Error nếu 401/4xx/5xx
@@ -54,7 +60,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return true;
     } catch (err: any) {
       // NÉM LẠI để UI hiển thị
-      throw new Error(pickErrorMessage(err, "Tên đăng nhập hoặc mật khẩu không đúng"));
+      throw new Error(
+        pickErrorMessage(err, "Tên đăng nhập hoặc mật khẩu không đúng")
+      );
     }
   };
 
@@ -79,6 +87,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem("access_token");
   };
 
-  const value: AuthContextType = { user, login, register, logout, loading };
+  const value: AuthContextType = {
+    user,
+    login,
+    register,
+    logout,
+    loading,
+    isShopOwner,
+    getShopCode,
+  };
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
