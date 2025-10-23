@@ -378,26 +378,26 @@ const BookingPage: React.FC = () => {
   const [selectedQuantityID, setSelectedQuantityID] = useState<number>();
   const [availabilityRefreshKey, setAvailabilityRefreshKey] = useState(0);
   const [loadingQuantities, setLoadingQuantities] = useState(false);
-const [courtOptions, setCourtOptions] = useState<CourtAvailabilityOption[]>(
-  []
-);
-const [fieldQuantities, setFieldQuantities] = useState<Quantity[]>([]);
-const availabilityRefreshTimerRef = useRef<number | null>(null);
-const availabilityRefreshTargetRef = useRef<number | null>(null);
-const availabilityRefreshBackoffRef = useRef<number>(
-  MIN_AVAILABILITY_REFRESH_DELAY_MS
-);
-const availabilityLastObservedExpiryRef = useRef<number | null>(null);
+  const [courtOptions, setCourtOptions] = useState<CourtAvailabilityOption[]>(
+    []
+  );
+  const [fieldQuantities, setFieldQuantities] = useState<Quantity[]>([]);
+  const availabilityRefreshTimerRef = useRef<number | null>(null);
+  const availabilityRefreshTargetRef = useRef<number | null>(null);
+  const availabilityRefreshBackoffRef = useRef<number>(
+    MIN_AVAILABILITY_REFRESH_DELAY_MS
+  );
+  const availabilityLastObservedExpiryRef = useRef<number | null>(null);
 
-const [promotionCode, setPromotionCode] = useState("");
-const [promotionOptions, setPromotionOptions] = useState<ShopPromotion[]>([]);
-const [promotionLoading, setPromotionLoading] = useState(false);
-const [promotionError, setPromotionError] = useState("");
+  const [promotionCode, setPromotionCode] = useState("");
+  const [promotionOptions, setPromotionOptions] = useState<ShopPromotion[]>([]);
+  const [promotionLoading, setPromotionLoading] = useState(false);
+  const [promotionError, setPromotionError] = useState("");
 
-useEffect(() => {
-  if (!field?.field_code || !selectedDate) {
-    setSlots([]);
-    return;
+  useEffect(() => {
+    if (!field?.field_code || !selectedDate) {
+      setSlots([]);
+      return;
     }
     let ignore = false;
     setLoadingSlots(true);
@@ -433,93 +433,90 @@ useEffect(() => {
     };
   }, [field?.field_code, selectedDate, availabilityRefreshKey]);
 
-useEffect(() => {
-  const clearPendingRefresh = () => {
-    if (availabilityRefreshTimerRef.current !== null) {
-      clearTimeout(availabilityRefreshTimerRef.current);
-      availabilityRefreshTimerRef.current = null;
+  useEffect(() => {
+    const clearPendingRefresh = () => {
+      if (availabilityRefreshTimerRef.current !== null) {
+        clearTimeout(availabilityRefreshTimerRef.current);
+        availabilityRefreshTimerRef.current = null;
+      }
+      availabilityRefreshTargetRef.current = null;
+    };
+
+    if (!slots.length) {
+      clearPendingRefresh();
+      availabilityRefreshBackoffRef.current = MIN_AVAILABILITY_REFRESH_DELAY_MS;
+      availabilityLastObservedExpiryRef.current = null;
+      return;
     }
-    availabilityRefreshTargetRef.current = null;
-  };
 
-  if (!slots.length) {
-    clearPendingRefresh();
-    availabilityRefreshBackoffRef.current = MIN_AVAILABILITY_REFRESH_DELAY_MS;
-    availabilityLastObservedExpiryRef.current = null;
-    return;
-  }
-
-  const now = Date.now();
-  const nextExpiryMs = slots
-    .map((slot) =>
-      getHoldExpiryDate(
-        slot.hold_expires_at,
-        slot.hold_expires_at_ts ?? null
+    const now = Date.now();
+    const nextExpiryMs = slots
+      .map((slot) =>
+        getHoldExpiryDate(slot.hold_expires_at, slot.hold_expires_at_ts ?? null)
       )
-    )
-    .filter((date): date is Date => Boolean(date))
-    .map((date) => date.getTime())
-    .filter((time) => time > now)
-    .sort((a, b) => a - b)[0];
+      .filter((date): date is Date => Boolean(date))
+      .map((date) => date.getTime())
+      .filter((time) => time > now)
+      .sort((a, b) => a - b)[0];
 
-  if (!nextExpiryMs) {
-    clearPendingRefresh();
-    availabilityRefreshBackoffRef.current = MIN_AVAILABILITY_REFRESH_DELAY_MS;
-    availabilityLastObservedExpiryRef.current = null;
-    return;
-  }
-
-  const previousObservedExpiry = availabilityLastObservedExpiryRef.current;
-  if (
-    previousObservedExpiry !== null &&
-    Math.abs(previousObservedExpiry - nextExpiryMs) <= EXPIRY_MATCH_EPSILON_MS
-  ) {
-    availabilityRefreshBackoffRef.current = Math.min(
-      availabilityRefreshBackoffRef.current * 2,
-      MAX_AVAILABILITY_REFRESH_DELAY_MS
-    );
-  } else {
-    availabilityRefreshBackoffRef.current = MIN_AVAILABILITY_REFRESH_DELAY_MS;
-  }
-  availabilityLastObservedExpiryRef.current = nextExpiryMs;
-
-  const baseDelay = Math.max(500, nextExpiryMs - now + 200);
-  const delay = Math.min(
-    Math.max(availabilityRefreshBackoffRef.current, baseDelay),
-    MAX_TIMEOUT_MS
-  );
-  const scheduledTarget = now + delay;
-  const existingTarget = availabilityRefreshTargetRef.current;
-
-  if (
-    availabilityRefreshTimerRef.current !== null &&
-    existingTarget !== null &&
-    Math.abs(existingTarget - scheduledTarget) <= 250
-  ) {
-    return;
-  }
-
-  clearPendingRefresh();
-
-  availabilityRefreshTargetRef.current = scheduledTarget;
-  availabilityRefreshTimerRef.current = window.setTimeout(() => {
-    availabilityRefreshTimerRef.current = null;
-    availabilityRefreshTargetRef.current = null;
-    setAvailabilityRefreshKey((prev) => prev + 1);
-  }, delay);
-}, [slots]);
-
-useEffect(() => {
-  return () => {
-    if (availabilityRefreshTimerRef.current !== null) {
-      clearTimeout(availabilityRefreshTimerRef.current);
-      availabilityRefreshTimerRef.current = null;
+    if (!nextExpiryMs) {
+      clearPendingRefresh();
+      availabilityRefreshBackoffRef.current = MIN_AVAILABILITY_REFRESH_DELAY_MS;
+      availabilityLastObservedExpiryRef.current = null;
+      return;
     }
-    availabilityRefreshTargetRef.current = null;
-    availabilityRefreshBackoffRef.current = MIN_AVAILABILITY_REFRESH_DELAY_MS;
-    availabilityLastObservedExpiryRef.current = null;
-  };
-}, []);
+
+    const previousObservedExpiry = availabilityLastObservedExpiryRef.current;
+    if (
+      previousObservedExpiry !== null &&
+      Math.abs(previousObservedExpiry - nextExpiryMs) <= EXPIRY_MATCH_EPSILON_MS
+    ) {
+      availabilityRefreshBackoffRef.current = Math.min(
+        availabilityRefreshBackoffRef.current * 2,
+        MAX_AVAILABILITY_REFRESH_DELAY_MS
+      );
+    } else {
+      availabilityRefreshBackoffRef.current = MIN_AVAILABILITY_REFRESH_DELAY_MS;
+    }
+    availabilityLastObservedExpiryRef.current = nextExpiryMs;
+
+    const baseDelay = Math.max(500, nextExpiryMs - now + 200);
+    const delay = Math.min(
+      Math.max(availabilityRefreshBackoffRef.current, baseDelay),
+      MAX_TIMEOUT_MS
+    );
+    const scheduledTarget = now + delay;
+    const existingTarget = availabilityRefreshTargetRef.current;
+
+    if (
+      availabilityRefreshTimerRef.current !== null &&
+      existingTarget !== null &&
+      Math.abs(existingTarget - scheduledTarget) <= 250
+    ) {
+      return;
+    }
+
+    clearPendingRefresh();
+
+    availabilityRefreshTargetRef.current = scheduledTarget;
+    availabilityRefreshTimerRef.current = window.setTimeout(() => {
+      availabilityRefreshTimerRef.current = null;
+      availabilityRefreshTargetRef.current = null;
+      setAvailabilityRefreshKey((prev) => prev + 1);
+    }, delay);
+  }, [slots]);
+
+  useEffect(() => {
+    return () => {
+      if (availabilityRefreshTimerRef.current !== null) {
+        clearTimeout(availabilityRefreshTimerRef.current);
+        availabilityRefreshTimerRef.current = null;
+      }
+      availabilityRefreshTargetRef.current = null;
+      availabilityRefreshBackoffRef.current = MIN_AVAILABILITY_REFRESH_DELAY_MS;
+      availabilityLastObservedExpiryRef.current = null;
+    };
+  }, []);
 
   useEffect(() => {
     if (!field?.field_code) {
@@ -1065,6 +1062,7 @@ useEffect(() => {
         const nextOptions: CourtAvailabilityOption[] = Array.from(
           aggregated.values()
         )
+
           .map((item) => {
             const finalStatus = item.statuses.every(
               (status) => status === "available"
@@ -1245,8 +1243,7 @@ useEffect(() => {
     if (!meetsPromotionRequirement) return 0;
     let discount =
       selectedPromotion.discount_type === "percent"
-        ? (effectiveBooking.totalPrice * selectedPromotion.discount_value) /
-          100
+        ? (effectiveBooking.totalPrice * selectedPromotion.discount_value) / 100
         : selectedPromotion.discount_value;
     if (
       selectedPromotion.discount_type === "percent" &&
@@ -1285,7 +1282,13 @@ useEffect(() => {
     }
     if (promotionDiscount > 0) {
       if (selectedPromotion.discount_type === "percent") {
-        return `Đã giảm ${formatPrice(promotionDiscount)} (-${selectedPromotion.discount_value}%${selectedPromotion.max_discount_amount ? `, tối đa ${formatPrice(selectedPromotion.max_discount_amount)}` : ""}).`;
+        return `Đã giảm ${formatPrice(promotionDiscount)} (-${
+          selectedPromotion.discount_value
+        }%${
+          selectedPromotion.max_discount_amount
+            ? `, tối đa ${formatPrice(selectedPromotion.max_discount_amount)}`
+            : ""
+        }).`;
       }
       return `Đã giảm ${formatPrice(promotionDiscount)}.`;
     }
@@ -1533,8 +1536,7 @@ useEffect(() => {
 
     const amountBeforeDiscount =
       confirmation.amount_before_discount ?? effectiveBooking.totalPrice;
-    const computedFinalAmount =
-      confirmation.amount ?? amountBeforeDiscount;
+    const computedFinalAmount = confirmation.amount ?? amountBeforeDiscount;
     const discountApplied =
       confirmation.discount_amount ??
       Math.max(amountBeforeDiscount - computedFinalAmount, 0);
@@ -1625,21 +1627,18 @@ useEffect(() => {
                 {minutesToLabel(Math.round(effectiveBooking.duration * 60))})
               </div>
               <div>
-                <strong>Giá gốc:</strong>{" "}
-                {formatPrice(amountBeforeDiscount)}
+                <strong>Giá gốc:</strong> {formatPrice(amountBeforeDiscount)}
               </div>
               {discountApplied > 0 && (
                 <div className="text-emerald-600">
-                  <strong>Giảm:</strong>{" "}-
-                  {formatPrice(discountApplied)}
+                  <strong>Giảm:</strong> -{formatPrice(discountApplied)}
                   {confirmation.promotion_code
                     ? ` (Mã ${confirmation.promotion_code})`
                     : ""}
                 </div>
               )}
               <div>
-                <strong>Tổng tiền:</strong>{" "}
-                {formatPrice(computedFinalAmount)}
+                <strong>Tổng tiền:</strong> {formatPrice(computedFinalAmount)}
               </div>
               <div>
                 <strong>Địa chỉ:</strong> {field.address}
@@ -2459,9 +2458,7 @@ useEffect(() => {
                       <p className="text-xs text-red-600">{promotionError}</p>
                     )}
                     {promotionFeedback && (
-                      <p
-                        className={`text-xs ${promotionFeedbackClass}`}
-                      >
+                      <p className={`text-xs ${promotionFeedbackClass}`}>
                         {promotionFeedback}
                       </p>
                     )}

@@ -87,6 +87,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     localStorage.removeItem("access_token");
   };
 
+  const isShopOwner = () => {
+    return user?.level_type === "shop";
+  };
+
+  const getShopCode = () => {
+    return user?.shop_code ?? null;
+  };
+
   const value: AuthContextType = {
     user,
     login,

@@ -1,14 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import {
-  ArrowLeft,
-  Calendar,
-  Clock,
-  DollarSign,
-  AlertCircle,
-  CheckCircle,
-  FileText,
-} from "lucide-react";
+import { ArrowLeft, Clock, AlertCircle, FileText } from "lucide-react";
 import { extractErrorMessage } from "../models/api.helpers";
 import { getBookingDetailApi, type BookingDetail } from "../models/booking.api";
 

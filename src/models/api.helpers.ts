@@ -55,10 +55,6 @@ export const extractErrorMessage = (
   if (error instanceof Error) return error.message;
 
   const apiError = error as ErrorWithResponse;
-  return (
-    apiError.response?.data?.error?.message ||
-    apiError.response?.data?.message ||
-    apiError.message ||
-    fallback
-  );
+  const data = apiError.response?.data as any;
+  return data?.error?.message || data?.message || apiError.message || fallback;
 };

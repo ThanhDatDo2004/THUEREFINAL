@@ -12,7 +12,16 @@ import {
 import { extractErrorMessage } from "../models/api.helpers";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import Layout from "../components/layouts/Layout";
-import { Calendar, Clock, MapPin, DollarSign, Check, X, Eye, Copy } from "lucide-react";
+import {
+  Calendar,
+  Clock,
+  MapPin,
+  DollarSign,
+  Check,
+  X,
+  Eye,
+  Copy,
+} from "lucide-react";
 
 interface BookingManagementState {
   view: "list" | "detail";
@@ -77,8 +86,8 @@ const BookingManagementPage: React.FC = () => {
       if (response.success && response.data) {
         setState((prev) => ({
           ...prev,
-          bookings: response.data.data,
-          totalBookings: response.data.pagination.total,
+          bookings: response.data!.data,
+          totalBookings: response.data!.pagination.total,
           loading: false,
         }));
       }
@@ -102,7 +111,10 @@ const BookingManagementPage: React.FC = () => {
         }));
       }
     } catch (err: unknown) {
-      const errorMsg = extractErrorMessage(err, "Failed to load booking detail");
+      const errorMsg = extractErrorMessage(
+        err,
+        "Failed to load booking detail"
+      );
       setState((prev) => ({ ...prev, error: errorMsg, loading: false }));
     }
   };
@@ -115,7 +127,10 @@ const BookingManagementPage: React.FC = () => {
 
     try {
       setState((prev) => ({ ...prev, cancelingBooking: true }));
-      await cancelBookingApi(state.selectedBooking.BookingCode, reason || undefined);
+      await cancelBookingApi(
+        state.selectedBooking.BookingCode,
+        reason || undefined
+      );
 
       // Reload booking detail
       await loadBookingDetail(state.selectedBooking.BookingCode);
@@ -123,7 +138,11 @@ const BookingManagementPage: React.FC = () => {
       alert("Hủy đặt sân thành công");
     } catch (err: unknown) {
       const errorMsg = extractErrorMessage(err, "Failed to cancel booking");
-      setState((prev) => ({ ...prev, error: errorMsg, cancelingBooking: false }));
+      setState((prev) => ({
+        ...prev,
+        error: errorMsg,
+        cancelingBooking: false,
+      }));
       alert(errorMsg);
     }
   };
@@ -132,11 +151,13 @@ const BookingManagementPage: React.FC = () => {
     if (!state.selectedBooking) return;
 
     try {
-      const response = await getCheckinCodeApi(state.selectedBooking.BookingCode);
+      const response = await getCheckinCodeApi(
+        state.selectedBooking.BookingCode
+      );
       if (response.success && response.data) {
         setState((prev) => ({
           ...prev,
-          checkinCode: response.data.checkinCode,
+          checkinCode: response.data!.checkinCode,
           showCheckinModal: true,
         }));
       }
@@ -162,7 +183,10 @@ const BookingManagementPage: React.FC = () => {
 
     try {
       setState((prev) => ({ ...prev, verifyingCheckin: true }));
-      await verifyCheckinApi(state.selectedBooking.BookingCode, state.checkinCode);
+      await verifyCheckinApi(
+        state.selectedBooking.BookingCode,
+        state.checkinCode
+      );
       setState((prev) => ({
         ...prev,
         showCheckinModal: false,
@@ -232,7 +256,9 @@ const BookingManagementPage: React.FC = () => {
             <div className="flex items-center justify-between mb-6">
               <div>
                 <button
-                  onClick={() => setState((prev) => ({ ...prev, view: "list" }))}
+                  onClick={() =>
+                    setState((prev) => ({ ...prev, view: "list" }))
+                  }
                   className="text-blue-600 hover:text-blue-800 font-semibold mb-2"
                 >
                   ← Quay Lại
@@ -287,7 +313,9 @@ const BookingManagementPage: React.FC = () => {
 
             {/* Booking Details */}
             <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Thông Tin Chi Tiết</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                Thông Tin Chi Tiết
+              </h2>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Left Column */}
@@ -330,7 +358,9 @@ const BookingManagementPage: React.FC = () => {
 
             {/* Customer Information */}
             <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Thông Tin Khách Hàng</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                Thông Tin Khách Hàng
+              </h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <p className="text-gray-600 text-sm">Tên Khách Hàng</p>
@@ -367,13 +397,15 @@ const BookingManagementPage: React.FC = () => {
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Phí Nền Tảng (5%)</span>
                   <span className="font-semibold text-red-600">
-                    -{booking.PlatformFee.toLocaleString("vi-VN")}₫
+                    {(booking.PlatformFee ?? 0).toLocaleString("vi-VN")}₫{" "}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Số Tiền Cho Cửa Hàng (95%)</span>
+                  <span className="text-gray-600">
+                    Số Tiền Cho Cửa Hàng (95%)
+                  </span>
                   <span className="font-semibold text-green-600">
-                    {booking.NetToShop.toLocaleString("vi-VN")}₫
+                    {(booking.NetToShop ?? 0).toLocaleString("vi-VN")}₫{" "}
                   </span>
                 </div>
               </div>
@@ -478,7 +510,9 @@ const BookingManagementPage: React.FC = () => {
             <h1 className="text-4xl font-bold text-gray-900 mb-2">
               Quản Lý Đặt Sân
             </h1>
-            <p className="text-gray-600">Xem và quản lý tất cả các đặt sân của bạn</p>
+            <p className="text-gray-600">
+              Xem và quản lý tất cả các đặt sân của bạn
+            </p>
           </div>
 
           {/* Error */}
@@ -524,7 +558,9 @@ const BookingManagementPage: React.FC = () => {
                         <h3 className="font-bold text-gray-900">
                           {booking.FieldName}
                         </h3>
-                        <p className="text-sm text-gray-600">{booking.ShopName}</p>
+                        <p className="text-sm text-gray-600">
+                          {booking.ShopName}
+                        </p>
                       </div>
                       <span
                         className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusBadgeColor(
@@ -543,7 +579,10 @@ const BookingManagementPage: React.FC = () => {
                       <div className="flex items-center gap-2 text-gray-700">
                         <Calendar className="w-4 h-4" />
                         <span className="text-sm">
-                          {new Date(booking.PlayDate).toLocaleDateString("vi-VN")}
+                          {booking.PlayDate &&
+                            new Date(booking.PlayDate).toLocaleDateString(
+                              "vi-VN"
+                            )}
                         </span>
                       </div>
                       <div className="flex items-center gap-2 text-gray-700">
@@ -570,7 +609,8 @@ const BookingManagementPage: React.FC = () => {
                           booking.PaymentStatus
                         )}`}
                       >
-                        {booking.PaymentStatus === "pending" && "Chưa Thanh Toán"}
+                        {booking.PaymentStatus === "pending" &&
+                          "Chưa Thanh Toán"}
                         {booking.PaymentStatus === "paid" && "Đã Thanh Toán"}
                         {booking.PaymentStatus === "failed" && "Thất Bại"}
                         {booking.PaymentStatus === "refunded" && "Đã Hoàn Tiền"}
@@ -579,7 +619,9 @@ const BookingManagementPage: React.FC = () => {
 
                     {/* Action Button */}
                     <button
-                      onClick={() => navigate(`/bookings/${booking.BookingCode}`)}
+                      onClick={() =>
+                        navigate(`/bookings/${booking.BookingCode}`)
+                      }
                       className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition"
                     >
                       <Eye className="w-5 h-5" />

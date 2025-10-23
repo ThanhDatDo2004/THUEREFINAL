@@ -93,6 +93,8 @@ export interface BookingListResponse {
 export interface BookingDetail {
   BookingCode: string;
   TotalPrice: number;
+  PlatformFee?: number;
+  NetToShop?: number;
   BookingStatus: "pending" | "confirmed" | "cancelled" | "completed";
   PaymentStatus: "pending" | "paid" | "failed" | "refunded";
   slots: BookingSlot[];
