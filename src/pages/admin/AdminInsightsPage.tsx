@@ -17,12 +17,7 @@ import {
   fetchAdminShopRequests,
   fetchAdminRevenue,
 } from "../../models/admin.api";
-import type {
-  Users,
-  Shops,
-  ShopRequests,
-  ShopRevenue,
-} from "../../types";
+import type { Users, Shops, ShopRequests, ShopRevenue } from "../../types";
 import {
   Users as UsersIcon,
   Store,
@@ -189,10 +184,12 @@ const AdminInsightsPage: React.FC = () => {
           <div className="stat-value">{insightStats.totalShops}</div>
           <div className="stat-label">Shop đã tạo</div>
           <div className="stat-sub">
-            {insightStats.approvedShops} shop đã duyệt ({Math.round(
+            {insightStats.approvedShops} shop đã duyệt (
+            {Math.round(
               insightStats.approvedShops === 0
                 ? 0
-                : (insightStats.approvedShops / Math.max(insightStats.totalShops, 1)) *
+                : (insightStats.approvedShops /
+                    Math.max(insightStats.totalShops, 1)) *
                     100
             )}
             %)
@@ -276,7 +273,9 @@ const AdminInsightsPage: React.FC = () => {
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="month" />
-                  <YAxis tickFormatter={(v) => `${Math.round(v / 1_000_000)}tr`} />
+                  <YAxis
+                    tickFormatter={(v) => `${Math.round(v / 1_000_000)}tr`}
+                  />
                   <Tooltip />
                   <Legend />
                   <Area
@@ -318,7 +317,10 @@ const AdminInsightsPage: React.FC = () => {
           </h3>
           <div className="divide-y divide-gray-100">
             {topShops.map((shop) => (
-              <div key={shop.shop_code} className="py-3 flex items-center gap-3">
+              <div
+                key={shop.shop_code}
+                className="py-3 flex items-center gap-3"
+              >
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-700 font-semibold">
                   {shop.shop_name?.charAt(0).toUpperCase() ?? "S"}
                 </div>
@@ -332,7 +334,9 @@ const AdminInsightsPage: React.FC = () => {
                 </div>
                 <span
                   className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ${
-                    shop.isapproved ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
+                    shop.isapproved
+                      ? "bg-emerald-100 text-emerald-700"
+                      : "bg-amber-100 text-amber-700"
                   }`}
                 >
                   {shop.isapproved ? (
@@ -343,7 +347,7 @@ const AdminInsightsPage: React.FC = () => {
                   ) : (
                     <>
                       <Clock className="h-3.5 w-3.5" />
-                      Chờ duyệt
+                      Đang khoá
                     </>
                   )}
                 </span>

@@ -13,7 +13,18 @@ import {
   getPayoutRequestsApi,
   type PayoutRequest,
 } from "../../models/wallet.api";
-import { Send, Calendar, Clock, DollarSign, TrendingUp, History, X, AlertCircle, CheckCircle, Clock as ClockIcon } from "lucide-react";
+import {
+  Send,
+  Calendar,
+  Clock,
+  DollarSign,
+  TrendingUp,
+  History,
+  X,
+  AlertCircle,
+  CheckCircle,
+  Clock as ClockIcon,
+} from "lucide-react";
 
 const ShopRevenuePage: React.FC = () => {
   const { user } = useAuth();
@@ -637,16 +648,15 @@ const ShopRevenuePage: React.FC = () => {
                                     )}
                                   </td>
                                   <td className="px-4 py-3 text-sm text-gray-600">
-                                    {new Date(payout.CreateAt).toLocaleDateString(
-                                      "vi-VN",
-                                      {
-                                        year: "numeric",
-                                        month: "2-digit",
-                                        day: "2-digit",
-                                        hour: "2-digit",
-                                        minute: "2-digit",
-                                      }
-                                    )}
+                                    {new Date(
+                                      payout.CreateAt
+                                    ).toLocaleDateString("vi-VN", {
+                                      year: "numeric",
+                                      month: "2-digit",
+                                      day: "2-digit",
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    })}
                                   </td>
                                 </tr>
                               );

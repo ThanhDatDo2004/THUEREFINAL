@@ -122,15 +122,7 @@ function AdminLayout() {
               <CreditCard className="h-4 w-4" />
               {!collapsed && <span>Yêu Cầu Rút Tiền</span>}
             </NavLink>
-
           </nav>
-
-          {/* Footer note */}
-          <div className="px-4 pb-4 pt-2 text-xs text-gray-400">
-            {!collapsed && (
-              <span>© {new Date().getFullYear()} SportBooking</span>
-            )}
-          </div>
         </aside>
 
         {/* CONTENT */}

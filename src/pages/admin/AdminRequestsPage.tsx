@@ -93,18 +93,18 @@ const AdminRequestsPage: React.FC = () => {
     const base =
       "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold";
     if (status === "approved") {
-      return <span className={`${base} bg-emerald-100 text-emerald-700`}>Approved</span>;
+      return <span className={`${base} bg-emerald-100 text-emerald-700`}>Đang mở</span>;
     }
     if (status === "rejected") {
-      return <span className={`${base} bg-rose-100 text-rose-700`}>Rejected</span>;
+      return <span className={`${base} bg-rose-100 text-rose-700`}>Từ chối</span>;
     }
     if (status === "reviewed") {
       return (
-        <span className={`${base} bg-blue-100 text-blue-700`}>Reviewed</span>
+        <span className={`${base} bg-blue-100 text-blue-700`}>Đang xét</span>
       );
     }
     return (
-      <span className={`${base} bg-amber-100 text-amber-700`}>Pending</span>
+      <span className={`${base} bg-amber-100 text-amber-700`}>Đang chờ</span>
     );
   };
 
