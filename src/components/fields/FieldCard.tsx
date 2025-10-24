@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { MapPin, TrendingUp, Clock } from "lucide-react";
+import { MapPin, TrendingUp, Clock, Calendar } from "lucide-react";
 import type { FieldWithImages } from "../../types";
 import { Link } from "react-router-dom";
 import {
@@ -30,9 +30,8 @@ const FieldCard: React.FC<FieldCardProps> = ({ field }) => {
   const isBookable = ["active", "available", "open", "trống"].includes(
     normalizedStatus
   );
-  const actionLabel = isBookable ? "Xem sân" : statusLabel;
+  const actionLabel = isBookable ? "Đặt sân" : statusLabel;
 
-  // Fetch field stats to get booking count
   useEffect(() => {
     const loadStats = async () => {
       try {
@@ -41,7 +40,6 @@ const FieldCard: React.FC<FieldCardProps> = ({ field }) => {
         setBookingCount(stats.booking_count || 0);
       } catch (error) {
         console.error("Error loading field stats:", error);
-        // Fallback to field data if available
         setBookingCount((field as any)?.booking_count || 0);
       } finally {
         setStatsLoading(false);
@@ -63,58 +61,135 @@ const FieldCard: React.FC<FieldCardProps> = ({ field }) => {
   const img = resolveImageUrl(primaryImage?.image_url, primaryImage?.storage);
   const price = resolveFieldPrice(field);
 
+  const getStatusBadgeStyle = (className: string) => {
+    if (
+      className.includes("available") ||
+      className.includes("active") ||
+      className.includes("open")
+    ) {
+      return "bg-green-100 text-green-700 border border-green-200";
+    } else if (className.includes("busy") || className.includes("occupied")) {
+      return "bg-orange-100 text-orange-700 border border-orange-200";
+    } else {
+      return "bg-gray-100 text-gray-700 border border-gray-200";
+    }
+  };
+
   return (
-    <div className="card field-card flex flex-col">
-      {/* Image */}
-      <div className="img-wrap">
+    <div className="group relative bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2">
+      {/* Image Section with Overlay */}
+      <div className="relative h-56 overflow-hidden bg-gradient-to-br from-green-50 to-green-100">
         {img ? (
-          <img src={img} alt={field.field_name} />
+          <img
+            src={img}
+            alt={field.field_name}
+            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+          />
         ) : (
-          <div className="img-fallback" />
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-green-100 to-green-200">
+            <Calendar className="w-20 h-20 text-green-300" />
+          </div>
         )}
-        <div className="badge-bl">
-          <span className={statusClassName}>{statusLabel}</span>
-        </div>
-        <div className="badge-tr">
-          <span className="badge bg-white/90 backdrop-blur-sm text-gray-800">
+
+        {/* Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+        {/* Sport Type Badge */}
+        <div className="absolute top-4 left-4">
+          <span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-white/95 backdrop-blur-sm text-green-700 shadow-lg">
             {sportLabel}
           </span>
         </div>
-      </div>
 
-      {/* Content */}
-      <div className="card-body flex flex-col flex-grow p-4">
-        <div className="flex-grow">
-          <h3 className="card-title">{field.field_name}</h3>
-          <div className="rating">
-            <TrendingUp className="rating-icon text-green-500" />
-            <span className="rating-text">
+        {/* Status Badge */}
+        <div className="absolute top-4 right-4">
+          <span
+            className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold ${getStatusBadgeStyle(
+              statusClassName
+            )} backdrop-blur-sm shadow-lg`}
+          >
+            <span
+              className={`w-2 h-2 rounded-full ${
+                isBookable ? "bg-green-500" : "bg-gray-400"
+              } animate-pulse`}
+            />
+            {statusLabel}
+          </span>
+        </div>
+
+        {/* Booking Stats Overlay */}
+        {bookingCount > 0 && (
+          <div className="absolute bottom-4 left-4 flex items-center gap-2 px-3 py-2 rounded-lg bg-white/95 backdrop-blur-sm shadow-lg">
+            <TrendingUp className="w-4 h-4 text-green-600" />
+            <span className="text-sm font-semibold text-gray-800">
               {statsLoading ? "..." : `${bookingCount} lượt đặt`}
             </span>
           </div>
+        )}
+      </div>
 
-          <div className="field-meta mt-2">
-            <MapPin className="w-4 h-4" />
-            <span>{field.address}</span>
+      {/* Content Section */}
+      <div className="p-6 space-y-4">
+        {/* Title */}
+        <h3 className="text-xl font-bold text-gray-900 line-clamp-1 group-hover:text-green-600 transition-colors duration-300">
+          {field.field_name}
+        </h3>
+
+        {/* Info Items */}
+        <div className="space-y-3">
+          {/* Address */}
+          <div className="flex items-start gap-3 text-gray-600">
+            <MapPin className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+            <span className="text-sm leading-relaxed line-clamp-2">
+              {field.address}
+            </span>
           </div>
 
-          <div className="field-meta">
-            <Clock className="w-4 h-4" />
-            <span>Giờ mở cửa: 6:00 - 22:00</span>
+          {/* Opening Hours */}
+          <div className="flex items-center gap-3 text-gray-600">
+            <Clock className="w-5 h-5 text-green-500 flex-shrink-0" />
+            <span className="text-sm">
+              Giờ mở cửa:{" "}
+              <span className="font-semibold text-gray-800">6:00 - 22:00</span>
+            </span>
           </div>
         </div>
 
-        <div className="field-footer mt-4 flex items-center justify-between">
-          <div className="price">{formatPrice(price)}/giờ</div>
+        {/* Divider */}
+        <div className="h-px bg-gradient-to-r from-transparent via-green-200 to-transparent" />
+
+        {/* Footer */}
+        <div className="flex items-center justify-between pt-2">
+          {/* Price */}
+          <div className="flex flex-col">
+            <span className="text-sm text-gray-500">Giá thuê</span>
+            <span className="text-2xl font-bold bg-gradient-to-r from-green-600 to-green-500 bg-clip-text text-transparent">
+              {formatPrice(price)}
+              <span className="text-sm font-normal text-gray-600">/giờ</span>
+            </span>
+          </div>
+
+          {/* Action Button */}
           <Link
             to={`/fields/${field.field_code}`}
-            className="btn btn-primary"
+            className={`
+              relative px-6 py-3 rounded-xl font-semibold text-sm
+              transition-all duration-300 transform
+              ${
+                isBookable
+                  ? "bg-gradient-to-r from-green-500 to-green-600 text-white shadow-lg shadow-green-500/30 hover:shadow-xl hover:shadow-green-500/40 hover:scale-105 active:scale-95"
+                  : "bg-gray-200 text-gray-500 cursor-not-allowed pointer-events-none"
+              }
+            `}
             aria-disabled={!isBookable}
           >
             {actionLabel}
           </Link>
         </div>
       </div>
+
+      {/* Decorative Corner Element */}
+      <div className="absolute bottom-0 right-0 w-32 h-32 bg-gradient-to-tl from-green-50 to-transparent opacity-50 rounded-tl-full transform translate-x-16 translate-y-16 group-hover:scale-150 transition-transform duration-700" />
     </div>
   );
 };

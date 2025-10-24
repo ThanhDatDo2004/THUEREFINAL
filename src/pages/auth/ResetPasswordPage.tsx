@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import { Lock, Eye, EyeOff, CheckCircle2 } from "lucide-react";
+import { Lock, Eye, EyeOff, CheckCircle2, ArrowLeft } from "lucide-react"; // Thêm ArrowLeft
 import { resetPassword } from "../../models/auth.api";
 
 type FormValues = { password: string; confirmPassword: string };
@@ -50,16 +50,21 @@ const ResetPasswordPage: React.FC = () => {
 
   if (done) {
     return (
-      <div className="page bg-gradient-to-br from-emerald-50 to-blue-50 flex items-center justify-center py-12 px-4">
-        <div className="max-w-md w-full">
-          <div className="section auth-center">
-            <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
-              <CheckCircle2 className="w-8 h-8 text-white" />
+      // [NEW UI] Sử dụng .hero cho màn hình thành công
+      <div className="hero min-h-screen flex items-center justify-center py-12 px-4">
+        <div className="hero-pattern" /> {/* Hiệu ứng nền */}
+        <div className="max-w-md w-full relative">
+          {/* [NEW UI] Sử dụng .hero-card cho thông báo */}
+          <div className="hero-card text-center p-8">
+            <div className="shop-brand justify-center mb-4">
+              <div className="shop-brand-logo bg-[var(--brand-500)] text-white">
+                <CheckCircle2 className="w-8 h-8" />
+              </div>
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            <h2 className="hero-card-title mb-2">
               Thành công!
             </h2>
-            <p className="text-gray-600">
+            <p className="hero-card-subtitle">
               Đang chuyển hướng đến trang đăng nhập…
             </p>
           </div>
@@ -69,21 +74,37 @@ const ResetPasswordPage: React.FC = () => {
   }
 
   return (
-    <div className="page bg-gradient-to-br from-emerald-50 to-blue-50 flex items-center justify-center py-12 px-4">
-      <div className="max-w-md w-full space-y-6">
-        <div className="section">
-          <div className="header-center">
-            <h2 className="text-2xl font-bold text-gray-900">
-              Đặt lại mật khẩu
-            </h2>
+    // [NEW UI] 1. Sử dụng .hero và .hero-pattern (từ home.css) làm nền
+    <div className="hero min-h-screen flex items-center justify-center py-12 px-4">
+      <div className="hero-pattern" />
+      
+      {/* Thêm 'relative' để nội dung nổi lên trên 'hero-pattern' */}
+      <div className="max-w-md w-full relative space-y-6">
+        
+        {/* [NEW UI] 2. Sử dụng .hero-card (từ home.css) làm thẻ form (hiệu ứng kính mờ) */}
+        <div className="hero-card p-8">
+          
+          {/* [NEW UI] 3. Sử dụng .shop-brand (shop.css) + .hero-card-title (home.css) cho header */}
+          <div className="hero-card-header mb-6">
+            <div className="shop-brand mb-4">
+              <div className="shop-brand-logo bg-[var(--brand-600)] text-white">
+                 <Lock className="w-6 h-6" />
+              </div>
+              <div>
+                 <h2 className="hero-card-title">Đặt lại mật khẩu</h2>
+                 <p className="hero-card-subtitle">Nhập mật khẩu mới của bạn</p>
+              </div>
+            </div>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             <div>
-              <label className="label">
+              {/* [NEW UI] 4. Đổi màu label sang trắng để đọc được trên nền tối */}
+              <label className="label text-white/80">
                 <Lock className="w-4 h-4 inline mr-2" /> Mật khẩu mới
               </label>
               <div className="relative">
+                {/* Giữ .input (từ skin.css) vì nó đã được thiết kế đẹp */}
                 <input
                   type={showPassword ? "text" : "password"}
                   {...register("password", {
@@ -106,14 +127,15 @@ const ResetPasswordPage: React.FC = () => {
                 </button>
               </div>
               {errors.password && (
-                <p className="text-red-500 text-sm mt-1">
+                // [NEW UI] 5. Đổi màu lỗi sang đỏ sáng
+                <p className="text-red-400 text-sm mt-1">
                   {errors.password.message}
                 </p>
               )}
             </div>
 
             <div>
-              <label className="label">
+              <label className="label text-white/80">
                 <Lock className="w-4 h-4 inline mr-2" /> Xác nhận mật khẩu
               </label>
               <div className="relative">
@@ -140,36 +162,47 @@ const ResetPasswordPage: React.FC = () => {
                 </button>
               </div>
               {errors.confirmPassword && (
-                <p className="text-red-500 text-sm mt-1">
+                <p className="text-red-400 text-sm mt-1">
                   {errors.confirmPassword.message}
                 </p>
               )}
             </div>
 
             {!!serverMsg && (
-              <p className="text-sm mt-1 {serverMsg.includes('thành công') ? 'text-emerald-700' : 'text-red-600'}">
+              // [NEW UI] 6. Đổi màu thông báo cho phù hợp nền tối
+              <p
+                className={`text-sm mt-1 ${
+                  serverMsg.includes("thành công")
+                    ? "text-emerald-300" // Xanh lá sáng
+                    : "text-red-400"      // Đỏ sáng
+                }`}
+              >
                 {serverMsg}
               </p>
             )}
 
+            {/* Giữ .btn-primary (từ skin.css) vì nó là nút CTA chính */}
             <button
               type="submit"
               disabled={loading}
-              className="input btn-primary"
+              className="btn-primary w-full"
             >
               {loading ? "Đang đổi..." : "Đổi mật khẩu"}
             </button>
           </form>
-
-          <div className="text-center mt-4">
-            <Link
-              to="/login"
-              className="text-emerald-600 hover:text-emerald-700 font-medium"
-            >
-              Quay lại đăng nhập
-            </Link>
-          </div>
         </div>
+
+        {/* [NEW UI] 7. Sử dụng .hero-shortcut (từ home.css) cho liên kết quay lại */}
+        <Link to="/login" className="hero-shortcut">
+          <div className="hero-shortcut-icon">
+            <ArrowLeft className="w-5 h-5" />
+          </div>
+          <div>
+            <span className="font-semibold text-white">Quay lại đăng nhập</span>
+            <span className="text-sm text-white/70">Bỏ qua và đăng nhập</span>
+          </div>
+        </Link>
+        
       </div>
     </div>
   );

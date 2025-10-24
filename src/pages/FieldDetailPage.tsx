@@ -23,7 +23,7 @@ import { fetchFieldStats } from "../models/fields.api";
 import { getFieldUtilities, AVAILABLE_UTILITIES } from "../models/utilities.api";
 import type { FieldWithImages } from "../types";
 import {
-  getFieldStatusClass,
+  // getFieldStatusClass, // Không dùng class tiện ích nữa
   getFieldStatusLabel,
   getSportLabel,
   resolveFieldPrice,
@@ -41,6 +41,18 @@ type AnyImage = {
     key?: string;
     region?: string;
   };
+};
+
+// Helper mới để map status với các class trong skin.css
+// Thay thế cho getFieldStatusClass
+const getSkinStatusClass = (status: string) => {
+  if (status === "TRONG") {
+    return "status-trong";
+  }
+  if (status === "BAO_TRI") {
+    return "status-bao-tri";
+  }
+  return "status-khac";
 };
 
 const FieldDetailPage: React.FC = () => {
@@ -190,9 +202,10 @@ const FieldDetailPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
+      // Sử dụng class từ spinner.css
+      <div className="page loading-wrap">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
+          <div className="spinner" />
           <p className="mt-4 text-gray-600">Đang tải dữ liệu...</p>
         </div>
       </div>
@@ -201,12 +214,15 @@ const FieldDetailPage: React.FC = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-        <div className="max-w-4xl mx-auto px-4 py-12">
-          <Link to="/fields" className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-8">
+      <div className="page">
+        {/* Sử dụng class từ layout.css */}
+        <div className="container max-w-4xl">
+          {/* Sử dụng class từ buttons.css */}
+          <Link to="/fields" className="btn-link inline-flex items-center mb-8">
             <ChevronLeft className="w-4 h-4 mr-1" /> Quay lại danh sách sân
           </Link>
-          <div className="bg-white rounded-xl shadow-lg p-12 text-center">
+          {/* Sử dụng class từ skin.css */}
+          <div className="card p-12 text-center">
             <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Không thể tải dữ liệu</h2>
             <p className="text-gray-600 mb-6">{error}</p>
@@ -230,7 +246,8 @@ const FieldDetailPage: React.FC = () => {
                   }
                 })();
               }}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+              // Sử dụng class từ skin.css
+              className="btn-primary"
             >
               Thử lại
             </button>
@@ -242,12 +259,13 @@ const FieldDetailPage: React.FC = () => {
 
   if (!field) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-        <div className="max-w-4xl mx-auto px-4 py-12">
-          <Link to="/fields" className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-8">
+      <div className="page">
+        <div className="container max-w-4xl">
+          <Link to="/fields" className="btn-link inline-flex items-center mb-8">
             <ChevronLeft className="w-4 h-4 mr-1" /> Quay lại danh sách sân
           </Link>
-          <div className="bg-white rounded-xl shadow-lg p-12 text-center">
+          {/* Sử dụng class từ skin.css */}
+          <div className="card p-12 text-center">
             <AlertCircle className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
             <h2 className="text-xl font-semibold text-gray-900">Không tìm thấy sân</h2>
             <p className="text-gray-600 mt-2">Sân bạn yêu cầu không tồn tại hoặc đã bị xóa.</p>
@@ -262,33 +280,37 @@ const FieldDetailPage: React.FC = () => {
     resolveImageUrl(activeImage?.image_url, activeImage?.storage) ??
     activeImage?.image_url;
   const price = resolveFieldPrice(field);
+  const brandColor = "var(--brand-600)";
+  const brandLightBg = "var(--brand-50)";
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      {/* Header Navigation */}
-      <div className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-          <Link to="/fields" className="inline-flex items-center text-blue-600 hover:text-blue-700 transition">
+    // Sử dụng class từ layout.css
+    <div className="page">
+      {/* Header Navigation - Sử dụng class từ nav.css */}
+      <div className="navbar sticky top-0 z-40">
+        <div className="navbar-inner">
+          <Link to="/fields" className="nav-link inline-flex items-center" style={{ color: brandColor }}>
             <ChevronLeft className="w-5 h-5 mr-1" /> Danh sách sân
           </Link>
           <div className="flex gap-2">
-            <button className="p-2 hover:bg-gray-100 rounded-lg transition" onClick={() => setLiked(!liked)}>
+            {/* Sử dụng class từ skin.css */}
+            <button className="btn-ghost p-2" onClick={() => setLiked(!liked)}>
               <Heart className={`w-5 h-5 ${liked ? "fill-red-500 text-red-500" : "text-gray-600"}`} />
             </button>
-            <button className="p-2 hover:bg-gray-100 rounded-lg transition">
+            <button className="btn-ghost p-2">
               <Share2 className="w-5 h-5 text-gray-600" />
             </button>
           </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      {/* Main Content - Sử dụng class từ layout.css */}
+      <div className="container">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column - Gallery & Info */}
           <div className="lg:col-span-2">
-            {/* Image Gallery */}
-            <div className="relative rounded-xl overflow-hidden mb-6 bg-gray-200 h-96 md:h-96 group">
+            {/* Image Gallery - Cập nhật bo góc và màu sắc */}
+            <div className="relative rounded-2xl overflow-hidden mb-6 bg-gray-200 h-96 md:h-96 group">
               {activeSrc ? (
                 <img
                   src={activeSrc}
@@ -319,19 +341,18 @@ const FieldDetailPage: React.FC = () => {
                     <ChevronRight className="w-6 h-6 text-gray-900" />
                   </button>
 
-                  {/* Image Counter */}
                   <div className="absolute bottom-4 right-4 bg-black/60 text-white px-3 py-1 rounded-full text-sm font-medium">
                     {currentIndex + 1}/{images.length}
                   </div>
 
-                  {/* Thumbnail Gallery */}
+                  {/* Thumbnail Gallery - Cập nhật màu active */}
                   <div className="absolute bottom-4 left-4 flex gap-2">
                     {images.slice(0, 5).map((_, idx) => (
                       <button
                         key={idx}
                         onClick={() => setCurrentIndex(idx)}
-                        className={`w-12 h-12 rounded border-2 transition ${
-                          idx === currentIndex ? "border-white" : "border-gray-300 opacity-60 hover:opacity-100"
+                        className={`w-12 h-12 rounded-lg border-2 transition ${
+                          idx === currentIndex ? "border-[var(--brand-600)]" : "border-gray-300 opacity-60 hover:opacity-100"
                         }`}
                         style={{
                           backgroundImage: `url(${images[idx]?.image_url})`,
@@ -345,8 +366,8 @@ const FieldDetailPage: React.FC = () => {
               )}
             </div>
 
-            {/* Field Title & Basic Info */}
-            <div className="bg-white rounded-xl p-6 mb-6">
+            {/* Field Title & Basic Info - Sử dụng class .section */}
+            <div className="section mb-6">
               <div className="flex items-start justify-between mb-4">
                 <div>
                   <h1 className="text-3xl font-bold text-gray-900">{field.field_name}</h1>
@@ -355,28 +376,30 @@ const FieldDetailPage: React.FC = () => {
                   </p>
                 </div>
                 <div className="text-right">
-                  <div className="flex items-center gap-2 text-green-600 font-semibold">
+                  {/* Cập nhật màu xanh lá tối */}
+                  <div className="flex items-center gap-2 text-[var(--brand-600)] font-semibold">
                     <TrendingUp className="w-5 h-5" />
                     <span>{bookingCount} đặt</span>
                   </div>
                 </div>
               </div>
 
-              {/* Status Badge */}
+              {/* Status Badge - Sử dụng class từ skin.css */}
               <div className="inline-block">
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${getFieldStatusClass(field.status)}`}>
+                <span className={`status-chip ${getSkinStatusClass(field.status)}`}>
                   {getFieldStatusLabel(field.status)}
                 </span>
               </div>
             </div>
 
-            {/* Details Section */}
-            <div className="bg-white rounded-xl p-6 mb-6">
+            {/* Details Section - Sử dụng class .section */}
+            <div className="section mb-6">
               <h2 className="text-xl font-bold text-gray-900 mb-4">Thông tin sân</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <MapPin className="w-5 h-5 text-blue-600" />
+                  {/* Cập nhật màu theo skin */}
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: brandLightBg }}>
+                    <MapPin className="w-5 h-5" style={{ color: brandColor }} />
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Địa điểm</p>
@@ -385,8 +408,8 @@ const FieldDetailPage: React.FC = () => {
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <Award className="w-5 h-5 text-purple-600" />
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: brandLightBg }}>
+                    <Award className="w-5 h-5" style={{ color: brandColor }} />
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Loại hình</p>
@@ -395,8 +418,8 @@ const FieldDetailPage: React.FC = () => {
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                    <Clock className="w-5 h-5 text-orange-600" />
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: brandLightBg }}>
+                    <Clock className="w-5 h-5" style={{ color: brandColor }} />
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Giờ mở cửa</p>
@@ -405,8 +428,8 @@ const FieldDetailPage: React.FC = () => {
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                    <DollarSign className="w-5 h-5 text-green-600" />
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: brandLightBg }}>
+                    <DollarSign className="w-5 h-5" style={{ color: brandColor }} />
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Giá</p>
@@ -416,8 +439,8 @@ const FieldDetailPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Amenities Section */}
-            <div className="bg-white rounded-xl p-6">
+            {/* Amenities Section - Sử dụng class .section */}
+            <div className="section">
               <h2 className="text-xl font-bold text-gray-900 mb-4">Tiện ích</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {AVAILABLE_UTILITIES.map((utility) => {
@@ -425,10 +448,10 @@ const FieldDetailPage: React.FC = () => {
                   return (
                     <div key={utility.id} className="flex items-center gap-2">
                       {isAvailable ? (
-                        <Check className="w-5 h-5 text-green-600 flex-shrink-0" />
+                        <Check className="w-5 h-5 text-[var(--brand-600)] flex-shrink-0" />
                       ) : (
-                        <div className="w-5 h-5 flex items-center justify-center text-red-500 font-bold flex-shrink-0">
-                          ✕
+                        <div className="w-5 h-5 flex items-center justify-center text-gray-400 font-medium flex-shrink-0">
+                          X
                         </div>
                       )}
                       <span className={`text-gray-700 ${!isAvailable ? "line-through text-gray-400" : ""}`}>
@@ -443,22 +466,32 @@ const FieldDetailPage: React.FC = () => {
 
           {/* Right Column - Booking Card */}
           <div className="lg:col-span-1">
-            {/* Price Card */}
-            <div className="bg-white rounded-xl shadow-lg p-6 sticky top-24">
+            {/* Price Card - Sử dụng class .card từ skin.css */}
+            <div className="card p-6 sticky top-24">
               <div className="mb-6">
                 <p className="text-sm text-gray-600 mb-1">Giá mỗi giờ</p>
                 <p className="text-3xl font-bold text-gray-900">{formatVND(price)}</p>
               </div>
 
+              {/* Sử dụng class .btn-primary từ skin.css */}
               <Link
                 to={`/booking/${field.field_code}`}
                 state={{ field }}
-                className="w-full py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg font-semibold hover:shadow-lg transition mb-3 text-center inline-block"
+                className="btn-primary w-full text-center mb-3"
               >
                 Đặt sân ngay
               </Link>
 
-              <button className="w-full py-3 border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:border-gray-400 transition mb-6">
+              {/* Sử dụng class .btn-ghost từ skin.css, tùy biến lại màu */}
+              <button 
+                className="btn-ghost w-full mb-6"
+                style={{
+                  borderColor: 'var(--brand-600)', 
+                  color: 'var(--brand-600)'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'var(--brand-50)'}
+                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#fff'}
+              >
                 Liên hệ chủ sân
               </button>
 
@@ -466,7 +499,11 @@ const FieldDetailPage: React.FC = () => {
               <div className="border-t pt-6">
                 <h3 className="font-bold text-gray-900 mb-4">Thông tin chủ sân</h3>
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white font-bold">
+                  {/* Cập nhật gradient theo skin */}
+                  <div 
+                    className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold"
+                    style={{ backgroundImage: 'linear-gradient(135deg, var(--brand-500), var(--brand-600))' }}
+                  >
                     {field.shop?.shop_name?.charAt(0) || "S"}
                   </div>
                   <div>
@@ -477,23 +514,30 @@ const FieldDetailPage: React.FC = () => {
 
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center gap-2 text-gray-700">
-                    <Phone className="w-4 h-4 text-blue-600" />
+                    <Phone className="w-4 h-4" style={{ color: brandColor }} />
                     <span>0987 654 321</span>
                   </div>
                   <div className="flex items-center gap-2 text-gray-700">
-                    <Mail className="w-4 h-4 text-blue-600" />
+                    <Mail className="w-4 h-4" style={{ color: brandColor }} />
                     <span>contact@field.vn</span>
                   </div>
                   <div className="flex items-center gap-2 text-gray-700">
-                    <Users className="w-4 h-4 text-blue-600" />
+                    <Users className="w-4 h-4" style={{ color: brandColor }} />
                     <span>{bookingCount} lượt đặt</span>
                   </div>
                 </div>
               </div>
 
-              {/* Guarantee Badge */}
-              <div className="mt-6 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                <p className="text-xs text-blue-900 font-medium">
+              {/* Guarantee Badge - Cập nhật màu theo skin */}
+              <div 
+                className="mt-6 p-3 rounded-lg border"
+                style={{ 
+                  backgroundColor: 'var(--brand-50)', 
+                  borderColor: 'var(--brand-200)',
+                  color: 'var(--brand-600)'
+                }}
+              >
+                <p className="text-xs font-medium">
                   ✓ Đặt ngay - Thanh toán an toàn - Hoàn tiền nếu hủy
                 </p>
               </div>

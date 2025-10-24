@@ -17,6 +17,13 @@ import {
   XCircle,
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
+import { usePriceCalculation } from "../hooks/usePriceCalculation";
+import {
+  isHeldStatus,
+  getHoldExpiryDate,
+  isHoldStillActive,
+  normalizeCourtStatus,
+} from "../utils/slotStatusUtils";
 import {
   fetchFieldAvailability,
   fetchFieldById,
@@ -75,7 +82,7 @@ type TimeGroup = {
 };
 
 type BookingLocationState = {
-  field?: FieldWithImages;
+  field?: FieldWithQuantity;
   bookingDetails?: BookingStatePayload;
 };
 
@@ -108,6 +115,9 @@ const minutesToLabel = (minutes: number) => {
   return `${minutes} phút`;
 };
 
+// Utility functions imported from slotStatusUtils.ts
+const normalizeCourtStatusValue = normalizeCourtStatus;
+
 const formatHoldExpiresAt = (
   value: string | null,
   epochSeconds?: number | null
@@ -129,95 +139,6 @@ const formatHoldExpiresAt = (
     hour: "2-digit",
     minute: "2-digit",
   });
-};
-
-const HELD_STATUS_SET = new Set([
-  "held",
-  "holding",
-  "on_hold",
-  "pending",
-  "pending_hold",
-  "pending_booking",
-  "pending_payment",
-  "pending_confirmation",
-  "pending_confirm",
-]);
-
-const BOOKED_STATUS_SET = new Set([
-  "booked",
-  "confirmed",
-  "reserved",
-  "paid",
-  "success",
-  "completed",
-  "done",
-  "inactive",
-  "maintenance",
-  "blocked",
-  "cancelled",
-  "cancel",
-]);
-
-const isHeldStatus = (value: string | null | undefined) =>
-  HELD_STATUS_SET.has(String(value ?? "").toLowerCase());
-
-const isBookedStatus = (value: string | null | undefined) =>
-  BOOKED_STATUS_SET.has(String(value ?? "").toLowerCase());
-
-const parseDateTime = (value: string | null | undefined): Date | null => {
-  if (!value) return null;
-  const normalized = value.includes("T") ? value : value.replace(" ", "T");
-  const parsed = new Date(normalized);
-  if (Number.isNaN(parsed.getTime())) {
-    return null;
-  }
-  return parsed;
-};
-
-const getHoldExpiryDate = (
-  holdExpiresAt?: string | null,
-  holdExpiresAtTs?: number | null
-): Date | null => {
-  if (typeof holdExpiresAtTs === "number" && !Number.isNaN(holdExpiresAtTs)) {
-    const normalizedMs =
-      holdExpiresAtTs > 1_000_000_000_000
-        ? holdExpiresAtTs
-        : holdExpiresAtTs * 1000;
-    const date = new Date(normalizedMs);
-    if (!Number.isNaN(date.getTime())) {
-      return date;
-    }
-  }
-  return parseDateTime(holdExpiresAt);
-};
-
-const isHoldStillActive = (
-  holdExpiresAt?: string | null,
-  holdExpiresAtTs?: number | null
-): boolean => {
-  const parsed = getHoldExpiryDate(holdExpiresAt, holdExpiresAtTs);
-  if (!parsed) return true;
-  return parsed.getTime() > Date.now();
-};
-
-const normalizeCourtStatusValue = (
-  value: string | null | undefined,
-  holdExpiresAt?: string | null,
-  holdExpiresAtTs?: number | null
-): CourtAvailabilityStatus => {
-  const normalized = String(value ?? "").toLowerCase();
-  if (isHeldStatus(normalized)) {
-    return isHoldStillActive(holdExpiresAt, holdExpiresAtTs)
-      ? "held"
-      : "available";
-  }
-  if (isBookedStatus(normalized)) {
-    return "booked";
-  }
-  if (normalized === "available") {
-    return "available";
-  }
-  return "booked";
 };
 
 const getErrorMessage = (error: unknown, fallback: string) => {
@@ -1081,7 +1002,7 @@ const BookingPage: React.FC = () => {
             return {
               quantity_id: item.quantity_id,
               quantity_number: item.quantity_number,
-              status: finalStatus,
+              status: finalStatus as CourtAvailabilityStatus,
               holdExpiresAt,
               holdExpiresAtTs,
             };
@@ -1231,86 +1152,20 @@ const BookingPage: React.FC = () => {
     );
   }, [promotionOptions, normalizedPromotionCode]);
 
-  const meetsPromotionRequirement = useMemo(() => {
-    if (!selectedPromotion || !effectiveBooking) return false;
-    const minOrder = selectedPromotion.min_order_amount ?? 0;
-    return effectiveBooking.totalPrice >= minOrder;
-  }, [selectedPromotion, effectiveBooking]);
-
-  const promotionDiscount = useMemo(() => {
-    if (!isAuthenticated) return 0;
-    if (!selectedPromotion || !effectiveBooking) return 0;
-    if (!meetsPromotionRequirement) return 0;
-    let discount =
-      selectedPromotion.discount_type === "percent"
-        ? (effectiveBooking.totalPrice * selectedPromotion.discount_value) / 100
-        : selectedPromotion.discount_value;
-    if (
-      selectedPromotion.discount_type === "percent" &&
-      selectedPromotion.max_discount_amount !== null &&
-      selectedPromotion.max_discount_amount >= 0
-    ) {
-      discount = Math.min(discount, selectedPromotion.max_discount_amount);
-    }
-    discount = Math.min(discount, effectiveBooking.totalPrice);
-    return Math.round(discount * 100) / 100;
-  }, [selectedPromotion, effectiveBooking, meetsPromotionRequirement]);
-
-  const finalPreviewTotal = useMemo(() => {
-    if (!effectiveBooking) return 0;
-    return Math.max(effectiveBooking.totalPrice - promotionDiscount, 0);
-  }, [effectiveBooking, promotionDiscount]);
-
-  const promotionFeedback = useMemo(() => {
-    if (!promotionCode.trim()) return "";
-    if (!isAuthenticated) {
-      return "Hãy đăng ký để được áp dụng khuyến mãi.";
-    }
-    if (!selectedPromotion) {
-      if (promotionOptions.length === 0) {
-        return "Mã sẽ được kiểm tra khi xác nhận. Vui lòng nhập chính xác.";
-      }
-      return "Không tìm thấy khuyến mãi tương ứng. Mã sẽ được kiểm tra khi xác nhận.";
-    }
-    if (!effectiveBooking) return "";
-    if (!meetsPromotionRequirement) {
-      const minOrder = selectedPromotion.min_order_amount ?? 0;
-      if (minOrder > 0) {
-        return `Áp dụng cho đơn từ ${formatPrice(minOrder)}.`;
-      }
-      return "Khuyến mãi chưa đáp ứng điều kiện áp dụng.";
-    }
-    if (promotionDiscount > 0) {
-      if (selectedPromotion.discount_type === "percent") {
-        return `Đã giảm ${formatPrice(promotionDiscount)} (-${
-          selectedPromotion.discount_value
-        }%${
-          selectedPromotion.max_discount_amount
-            ? `, tối đa ${formatPrice(selectedPromotion.max_discount_amount)}`
-            : ""
-        }).`;
-      }
-      return `Đã giảm ${formatPrice(promotionDiscount)}.`;
-    }
-    return "Khuyến mãi chưa áp dụng được.";
-  }, [
-    promotionCode,
-    selectedPromotion,
-    promotionOptions.length,
-    promotionDiscount,
-    meetsPromotionRequirement,
+  // Use consolidated price calculation hook
+  const priceCalc = usePriceCalculation(
     effectiveBooking,
+    selectedPromotion,
     isAuthenticated,
-  ]);
+    promotionCode
+  );
+
+  const promotionDiscount = priceCalc.discount;
+  const finalPreviewTotal = priceCalc.final;
+  const promotionFeedback = priceCalc.feedback;
+  const promotionFeedbackClass = priceCalc.feedbackClass;
 
   const hasPromotionApplied = promotionDiscount > 0;
-
-  const promotionFeedbackClass = useMemo(() => {
-    if (!promotionFeedback) return "text-gray-600";
-    if (!isAuthenticated && promotionCode.trim()) return "text-red-600";
-    if (hasPromotionApplied) return "text-emerald-600";
-    return "text-gray-600";
-  }, [promotionFeedback, isAuthenticated, promotionCode, hasPromotionApplied]);
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);

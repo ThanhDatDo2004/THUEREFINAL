@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import { Mail, Send, ArrowLeft, Check } from "lucide-react";
+import { Mail, Send, ArrowLeft, Check, CheckCircle2 } from "lucide-react"; // Thêm CheckCircle2
 import { forgotPassword } from "../../models/auth.api";
 
 type Form = { email: string };
@@ -43,75 +43,104 @@ const ForgotPasswordPage: React.FC = () => {
   });
 
   return (
-    <div className="page bg-gradient-to-br from-emerald-50 to-blue-50 flex items-center justify-center py-12 px-4">
-      <div className="max-w-md w-full space-y-6">
-        <div className="section">
-          <div className="header-center">
-            <div className="w-16 h-16 bg-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Send className="w-8 h-8 text-white" />
+    // [NEW UI] 1. Sử dụng .hero và .hero-pattern (từ home.css) làm nền
+    <div className="hero min-h-screen flex items-center justify-center py-12 px-4">
+      <div className="hero-pattern" />
+      
+      {/* Thêm 'relative' để nội dung nổi lên trên 'hero-pattern' */}
+      <div className="max-w-md w-full relative space-y-6">
+
+        {/* [NEW UX] 2. Tách biệt trạng thái UI khi thành công */}
+        {feedback?.type === 'success' ? (
+          
+          // [NEW UI] 3. Thẻ "Thành công" (dùng .hero-card)
+          <div className="hero-card text-center p-8">
+            <div className="shop-brand justify-center mb-4">
+              <div className="shop-brand-logo bg-[var(--brand-500)] text-white">
+                <CheckCircle2 className="w-8 h-8" />
+              </div>
             </div>
-            <h2 className="text-2xl font-bold text-gray-900">Quên mật khẩu</h2>
-            <p className="mt-2 text-gray-600">
-              Nhập email để nhận liên kết đặt lại.
-            </p>
+            <h2 className="hero-card-title mb-2">Đã gửi liên kết!</h2>
+            <p className="hero-card-subtitle">{feedback.message}</p>
           </div>
 
-          <form onSubmit={onSubmit} className="space-y-5">
-            <div>
-              <label className="label">
-                <Mail className="w-4 h-4 inline mr-2" />
-                Email
-              </label>
-              <input
-                type="email"
-                {...register("email", {
-                  required: "Vui lòng nhập email",
-                  pattern: {
-                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                    message: "Email không hợp lệ",
-                  },
-                })}
-                className="input"
-                placeholder="nhap@email.com"
-              />
-              {errors.email && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.email.message}
-                </p>
-              )}
-              {feedback && (
-                <div
-                  className={`text-sm mt-2 inline-flex items-center gap-1 ${
-                    feedback.type === "success"
-                      ? "text-emerald-700"
-                      : "text-red-500"
-                  }`}
-                >
-                  {feedback.type === "success" && <Check className="w-4 h-4" />}
-                  {feedback.message}
+        ) : (
+
+          // [NEW UI] 4. Thẻ Form (dùng .hero-card) khi chưa gửi
+          <div className="hero-card p-8">
+            <div className="hero-card-header mb-6">
+              {/* [NEW UI] 5. Dùng .shop-brand (shop.css) cho header */}
+              <div className="shop-brand mb-4">
+                <div className="shop-brand-logo bg-[var(--brand-600)] text-white">
+                  <Send className="w-6 h-6" />
                 </div>
-              )}
+                <div>
+                  <h2 className="hero-card-title">Quên mật khẩu</h2>
+                  <p className="hero-card-subtitle">
+                    Nhập email để nhận liên kết đặt lại.
+                  </p>
+                </div>
+              </div>
             </div>
 
-            <button
-              type="submit"
-              disabled={submitting}
-              className="px-4 py-2 rounded-lg bg-emerald-600 text-white disabled:opacity-60"
-              title={submitting ? "Đang xử lý" : "Gửi liên kết đặt lại"}
-            >
-              {submitting ? "Đang xử lý..." : "Gửi liên kết"}
-            </button>
-          </form>
+            <form onSubmit={onSubmit} className="space-y-5">
+              <div>
+                {/* [NEW UI] 6. Đổi màu label sang trắng */}
+                <label className="label text-white/80">
+                  <Mail className="w-4 h-4 inline mr-2" />
+                  Email
+                </label>
+                {/* Giữ .input (từ skin.css) */}
+                <input
+                  type="email"
+                  {...register("email", {
+                    required: "Vui lòng nhập email",
+                    pattern: {
+                      value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                      message: "Email không hợp lệ",
+                    },
+                  })}
+                  className="input"
+                  placeholder="nhap@email.com"
+                />
+                {errors.email && (
+                  // [NEW UI] 7. Đổi màu lỗi sang đỏ sáng
+                  <p className="text-red-400 text-sm mt-1">
+                    {errors.email.message}
+                  </p>
+                )}
+                {/* [NEW UI] 8. Chỉ hiển thị lỗi (error), vì success đã có thẻ riêng */}
+                {feedback?.type === 'error' && (
+                  <p className="text-red-400 text-sm mt-1">
+                    {feedback.message}
+                  </p>
+                )}
+              </div>
 
-          <div className="text-center">
-            <Link
-              to="/login"
-              className="inline-flex items-center gap-2 text-emerald-700 hover:underline"
-            >
-              <ArrowLeft className="w-4 h-4" /> Quay lại đăng nhập
-            </Link>
+              {/* Giữ .btn-primary (từ skin.css) */}
+              <button
+                type="submit"
+                disabled={submitting}
+                className="btn-primary w-full"
+                title={submitting ? "Đang xử lý" : "Gửi liên kết đặt lại"}
+              >
+                {submitting ? "Đang xử lý..." : "Gửi liên kết"}
+              </button>
+            </form>
           </div>
-        </div>
+        )}
+
+        {/* [NEW UI] 9. Sử dụng .hero-shortcut (từ home.css) cho liên kết quay lại */}
+        <Link to="/login" className="hero-shortcut">
+          <div className="hero-shortcut-icon">
+            <ArrowLeft className="w-5 h-5" />
+          </div>
+          <div>
+            <span className="font-semibold text-white">Quay lại đăng nhập</span>
+            <span className="text-sm text-white/70">Bỏ qua và đăng nhập</span>
+          </div>
+        </Link>
+        
       </div>
     </div>
   );

@@ -419,9 +419,8 @@ const PaymentPage: React.FC = () => {
               <button
                 onClick={() => {
                   alert(
-                    "Vui lòng liên hệ với chúng tôi để được hỗ trợ. Số điện thoại: 090.123.4567"
+                    "Vui lòng liên hệ với chúng tôi để được hỗ trợ. Số điện thoại: 0866 845 867"
                   );
-                  window.location.href = "tel:+84901234567";
                 }}
                 className="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition text-sm flex items-center justify-center"
               >

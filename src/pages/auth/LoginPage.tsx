@@ -1,7 +1,15 @@
 import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import { Mail, Lock, Eye, EyeOff, LogIn } from "lucide-react";
+import { 
+  Mail, 
+  Lock, 
+  Eye, 
+  EyeOff, 
+  LogIn, 
+  UserPlus, // [NEW] Thêm icon
+  KeyRound  // [NEW] Thêm icon
+} from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { LoginData } from "../../types";
 
@@ -33,20 +41,34 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="page bg-gradient-to-br from-emerald-50 to-blue-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div className="section">
-          <div className="header-center">
-            <div className="w-16 h-16 bg-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
-              <LogIn className="w-8 h-8 text-white" />
+    // [NEW UI] 1. Sử dụng .hero và .hero-pattern (từ home.css) làm nền
+    <div className="hero min-h-screen flex items-center justify-center py-12 px-4">
+      <div className="hero-pattern" />
+      
+      {/* Thêm 'relative' để nội dung nổi lên trên 'hero-pattern' */}
+      <div className="max-w-md w-full relative space-y-6">
+
+        {/* [NEW UI] 2. Sử dụng .hero-card (từ home.css) làm thẻ form */}
+        <div className="hero-card p-8">
+          
+          {/* [NEW UI] 3. Sử dụng .shop-brand (shop.css) cho header */}
+          <div className="hero-card-header mb-6">
+            <div className="shop-brand mb-4">
+              <div className="shop-brand-logo bg-[var(--brand-600)] text-white">
+                 <LogIn className="w-6 h-6" />
+              </div>
+              <div>
+                 <h2 className="hero-card-title">Đăng nhập</h2>
+                 <p className="hero-card-subtitle">Chào mừng trở lại</p>
+              </div>
             </div>
-            <h2 className="text-3xl font-bold text-gray-900">Đăng nhập</h2>
-            <p className="mt-2 text-gray-600">Chào mừng trở lại với SportBooking</p>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div>
-              <label className="label"><Mail className="w-4 h-4 inline mr-2" />Email</label>
+              {/* [NEW UI] 4. Đổi màu label sang trắng */}
+              <label className="label text-white/80"><Mail className="w-4 h-4 inline mr-2" />Email</label>
+              {/* Giữ .input (từ skin.css) */}
               <input
                 type="email"
                 {...register("email", {
@@ -57,11 +79,12 @@ const LoginPage: React.FC = () => {
                 placeholder="Nhập email của bạn"
                 autoComplete="username"
               />
-              {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>}
+              {/* [NEW UI] 5. Đổi màu lỗi sang đỏ sáng */}
+              {errors.email && <p className="text-red-400 text-sm mt-1">{errors.email.message}</p>}
             </div>
 
             <div>
-              <label className="label"><Lock className="w-4 h-4 inline mr-2" />Mật khẩu</label>
+              <label className="label text-white/80"><Lock className="w-4 h-4 inline mr-2" />Mật khẩu</label>
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
@@ -81,20 +104,20 @@ const LoginPage: React.FC = () => {
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
-              {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>}
+              {errors.password && <p className="text-red-400 text-sm mt-1">{errors.password.message}</p>}
             </div>
 
-            <div className="text-right -mt-2 mb-2">
-              <Link to="/forgot" className="text-sm text-emerald-700 hover:underline">Quên mật khẩu?</Link>
-            </div>
+            {/* [NEW UI] 6. Di chuyển link Quên mật khẩu ra ngoài làm .hero-shortcut */}
+            {/* <div className="text-right -mt-2 mb-2"> ... </div> */}
 
             {loginError && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                <p className="text-red-800 text-sm">{loginError}</p>
+              <div className="bg-red-900/30 border border-red-500/50 rounded-lg p-3">
+                <p className="text-red-300 text-sm">{loginError}</p>
               </div>
             )}
-
-            <button type="submit" disabled={submitting} className="input btn-primary">
+            
+            {/* [NEW UI] 7. Sửa lỗi class (bỏ .input) và thêm w-full (từ skin.css) */}
+            <button type="submit" disabled={submitting} className="btn-primary w-full">
               {submitting ? (
                 <>
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -109,13 +132,33 @@ const LoginPage: React.FC = () => {
             </button>
           </form>
 
-          <div className="mt-6 text-center">
-            <p className="text-gray-600">
-              Chưa có tài khoản?{" "}
-              <Link to="/register" className="text-emerald-600 hover:text-emerald-700 font-medium">Đăng ký ngay</Link>
-            </p>
-          </div>
+          {/* [NEW UI] 8. Xóa link Đăng ký cũ */}
+          {/* <div className="mt-6 text-center"> ... </div> */}
         </div>
+        
+        {/* [NEW UI] 9. Sử dụng .hero-shortcut (home.css) cho các link phụ */}
+        <div className="space-y-3">
+          <Link to="/forgot" className="hero-shortcut">
+            <div className="hero-shortcut-icon">
+              <KeyRound className="w-5 h-5" />
+            </div>
+            <div>
+              <span className="font-semibold text-white">Quên mật khẩu?</span>
+              <span className="text-sm text-white/70">Nhấn để đặt lại</span>
+            </div>
+          </Link>
+          
+          <Link to="/register" className="hero-shortcut">
+            <div className="hero-shortcut-icon">
+              <UserPlus className="w-5 h-5" />
+            </div>
+            <div>
+              <span className="font-semibold text-white">Chưa có tài khoản?</span>
+              <span className="text-sm text-white/70">Đăng ký ngay</span>
+            </div>
+          </Link>
+        </div>
+
       </div>
     </div>
   );

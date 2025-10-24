@@ -9,10 +9,10 @@ import type {
  * @returns {boolean} True if the response is an IApiSuccessResponse.
  */
 export function isApiSuccess<T>(
-  response: IApiSuccessResponse<T> | IApiErrorResponse
+  response: IApiSuccessResponse<T> | IApiErrorResponse | any
 ): response is IApiSuccessResponse<T> {
   return response && response.success === true && "data" in response;
-}
+};
 
 /**
  * Ensures a successful API response, returning data or throwing an error.
@@ -23,17 +23,14 @@ export function isApiSuccess<T>(
  * @throws {Error} If the API response indicates an error.
  */
 export const ensureSuccess = <T>(
-  payload: IApiSuccessResponse<T> | IApiErrorResponse,
+  payload: IApiSuccessResponse<T> | IApiErrorResponse | any,
   fallbackMessage: string
 ): T => {
   if (isApiSuccess(payload)) {
-    // `data` can be `null`, which might be a valid success state.
-    // The caller should handle the case where `null` is returned.
     return payload.data as T;
   }
 
-  // If it's an error, the payload is IApiErrorResponse
-  const message = payload?.error?.message || fallbackMessage;
+  const message = payload?.error?.message || payload?.message || fallbackMessage;
   throw new Error(message);
 };
 
@@ -57,4 +54,10 @@ export const extractErrorMessage = (
   const apiError = error as ErrorWithResponse;
   const data = apiError.response?.data as any;
   return data?.error?.message || data?.message || apiError.message || fallback;
+};
+
+export default {
+  isApiSuccess,
+  ensureSuccess,
+  extractErrorMessage,
 };
