@@ -1,4 +1,3 @@
-// src/pages/BookingPage.tsx
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -115,7 +114,6 @@ const minutesToLabel = (minutes: number) => {
   return `${minutes} phút`;
 };
 
-// Utility functions imported from slotStatusUtils.ts
 const normalizeCourtStatusValue = normalizeCourtStatus;
 
 const formatHoldExpiresAt = (
@@ -1214,36 +1212,38 @@ const BookingPage: React.FC = () => {
           ? Number(user.user_code)
           : undefined;
 
+      const slotsPayload = selectedSlots.map((slot) => {
+        const slotQuantityId =
+          typeof slot.quantity_id === "number" ? slot.quantity_id : undefined;
+        const slotQuantityNumber =
+          typeof slot.quantity_number === "number"
+            ? slot.quantity_number
+            : undefined;
+
+        const effectiveQuantityId = selectedRequiresCourtSelection
+          ? selectedQuantityID
+          : slotQuantityId;
+
+        const effectiveQuantityNumber = selectedRequiresCourtSelection
+          ? selectedCourt?.quantity_number
+          : slotQuantityNumber;
+
+        return {
+          slot_id: Number(slot.slot_id),
+          play_date: slot.play_date,
+          start_time: slot.start_time,
+          end_time: slot.end_time,
+          ...(typeof effectiveQuantityId === "number"
+            ? { quantity_id: effectiveQuantityId }
+            : {}),
+          ...(typeof effectiveQuantityNumber === "number"
+            ? { quantity_number: effectiveQuantityNumber }
+            : {}),
+        };
+      });
+
       const payload: ConfirmBookingPayload = {
-        slots: selectedSlots.map((slot) => {
-          const slotQuantityId =
-            typeof slot.quantity_id === "number" ? slot.quantity_id : undefined;
-          const slotQuantityNumber =
-            typeof slot.quantity_number === "number"
-              ? slot.quantity_number
-              : undefined;
-
-          const effectiveQuantityId = selectedRequiresCourtSelection
-            ? selectedQuantityID
-            : slotQuantityId;
-
-          const effectiveQuantityNumber = selectedRequiresCourtSelection
-            ? selectedCourt?.quantity_number
-            : slotQuantityNumber;
-
-          return {
-            slot_id: Number(slot.slot_id),
-            play_date: slot.play_date,
-            start_time: slot.start_time,
-            end_time: slot.end_time,
-            ...(typeof effectiveQuantityId === "number"
-              ? { quantity_id: effectiveQuantityId }
-              : {}),
-            ...(typeof effectiveQuantityNumber === "number"
-              ? { quantity_number: effectiveQuantityNumber }
-              : {}),
-          };
-        }),
+        slots: slotsPayload,
         payment_method: formData.payment_method,
         total_price: finalPreviewTotal,
         customer: {
@@ -1251,9 +1251,6 @@ const BookingPage: React.FC = () => {
           email: formData.customer_email,
           phone: formData.customer_phone,
         },
-        quantity_id: selectedRequiresCourtSelection
-          ? selectedQuantityID
-          : undefined,
         notes: formData.notes,
       };
 
@@ -1265,6 +1262,13 @@ const BookingPage: React.FC = () => {
         payload.created_by = createdBy;
       }
 
+      if (
+        selectedRequiresCourtSelection &&
+        typeof selectedQuantityID === "number"
+      ) {
+        payload.quantity_id = selectedQuantityID;
+      }
+
       if (isAuthenticated && normalizedPromotionCode) {
         payload.promotion_code = normalizedPromotionCode;
       }
@@ -1274,19 +1278,10 @@ const BookingPage: React.FC = () => {
       }
 
       const response = await confirmFieldBooking(field.field_code, payload);
-
-      console.log("✅ Booking confirmation response:", response);
-      console.log("📝 Booking code:", response?.booking_code);
-      console.log("💳 Payment ID:", response?.paymentID);
-      console.log("💰 Amount:", response?.amount);
       setConfirmation(response);
       setIsSuccess(true);
 
-      // After successful booking, redirect to payment page with the booking code + QR info
       if (response?.booking_code) {
-        console.log(
-          `🔄 Redirecting to payment page: /payment/${response.booking_code}/transfer`
-        );
         navigate(`/payment/${response.booking_code}/transfer`, {
           state: {
             qrCode: response.qr_code,
