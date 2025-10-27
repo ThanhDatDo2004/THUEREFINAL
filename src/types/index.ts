@@ -184,15 +184,6 @@ export interface AdminFinanceSummary {
   last_create_at: string | null;
 }
 
-export interface Reviews {
-  review_code: number;
-  field_code: number;
-  customer_name: string;
-  rating: number;
-  comment: string;
-  created_at: string;
-}
-
 export interface ShopRequests {
   request_id: number;
   full_name: string;
@@ -208,9 +199,6 @@ export interface ShopRequests {
 export interface FieldWithImages extends Fields {
   images: FieldImages[];
   shop: Shops;
-  reviews: Reviews[];
-  avg_rating: number;
-  averageRating?: number;
 }
 
 export type FieldsQuery = {

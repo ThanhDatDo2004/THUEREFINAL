@@ -24,6 +24,7 @@ export interface ConfirmBookingPayload {
   notes?: string;
   created_by?: number;
   promotion_code?: string;
+  isLoggedInCustomer?: boolean;
 }
 
 export interface ConfirmBookingResponse {
@@ -40,6 +41,7 @@ export interface ConfirmBookingResponse {
   discount_amount?: number;
   promotion_code?: string | null;
   promotion_title?: string | null;
+  hold_expires_at?: string | null;
 }
 
 // New booking types for API v2

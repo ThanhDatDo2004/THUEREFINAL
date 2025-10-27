@@ -1,6 +1,6 @@
 // src/pages/BookingPage.tsx
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import {
   User,
@@ -1269,6 +1269,10 @@ const BookingPage: React.FC = () => {
         payload.promotion_code = normalizedPromotionCode;
       }
 
+      if (isAuthenticated) {
+        payload.isLoggedInCustomer = true;
+      }
+
       const response = await confirmFieldBooking(field.field_code, payload);
 
       console.log("✅ Booking confirmation response:", response);
@@ -1401,6 +1405,11 @@ const BookingPage: React.FC = () => {
         ? confirmation.transaction_id
         : "Đang chờ cấp";
 
+    const holdExpiresAt =
+      confirmation.hold_expires_at && confirmation.hold_expires_at.trim()
+        ? new Date(confirmation.hold_expires_at)
+        : null;
+
     return (
       <div className="page">
         <div className="container">
@@ -1498,7 +1507,28 @@ const BookingPage: React.FC = () => {
               <div>
                 <strong>Địa chỉ:</strong> {field.address}
               </div>
+              {holdExpiresAt && !Number.isNaN(holdExpiresAt.getTime()) && (
+                <div>
+                  <strong>Giữ chỗ đến:</strong>{" "}
+                  {holdExpiresAt.toLocaleString("vi-VN")}
+                </div>
+              )}
             </div>
+
+            {holdExpiresAt &&
+              !Number.isNaN(holdExpiresAt.getTime()) &&
+              isAuthenticated && (
+                <p className="text-sm text-gray-600 mb-6">
+                  Bạn có thể tiếp tục thanh toán sau trong{" "}
+                  <Link
+                    to="/cart"
+                    className="font-medium text-emerald-600 hover:text-emerald-700"
+                  >
+                    Giỏ hàng
+                  </Link>{" "}
+                  miễn là thời gian giữ chỗ còn hiệu lực.
+                </p>
+              )}
 
             <div className="space-y-3">
               <button
@@ -1738,7 +1768,7 @@ const BookingPage: React.FC = () => {
                   <div>
                     <label className="label inline-flex items-center gap-2">
                       <Calendar className="h-4 w-4" />
-                      Ngày thi đấu
+                      Ngày đặt
                     </label>
                     <input
                       type="date"

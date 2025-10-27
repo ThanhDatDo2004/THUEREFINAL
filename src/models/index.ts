@@ -14,6 +14,5 @@ export * from "./fieldImages.api";
 // New payment & wallet APIs
 export * from "./payment.api";
 export * from "./wallet.api";
-export * from "./review.api";
-export * from "./notification.api";
+export * from "./cart.api";
 export * from "./promotions.api";

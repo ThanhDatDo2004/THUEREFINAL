@@ -188,14 +188,3 @@ export const resolveFieldPrice = (
 ): number => {
   return field?.price_per_hour ?? field?.default_price_per_hour ?? 0;
 };
-
-/**
- * Safely resolves the rating for a field from multiple possible properties.
- * @param field A field-like object with rating properties.
- * @returns The resolved rating, or 0 if not found.
- */
-export const resolveFieldRating = (
-  field: { avg_rating?: number | null; averageRating?: number | null } | null | undefined
-): number => {
-  return field?.avg_rating ?? field?.averageRating ?? 0;
-};

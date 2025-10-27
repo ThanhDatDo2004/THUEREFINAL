@@ -70,7 +70,7 @@ function AdminLayout() {
               }
             >
               <LayoutDashboard className="h-4 w-4" />
-              {!collapsed && <span>Dashboard</span>}
+              {!collapsed && <span>Tổng quan</span>}
             </NavLink>
 
             <NavLink
@@ -80,7 +80,7 @@ function AdminLayout() {
               }
             >
               <Users className="h-4 w-4" />
-              {!collapsed && <span>Users</span>}
+              {!collapsed && <span>Quản lý người dùng</span>}
             </NavLink>
 
             <NavLink
@@ -90,7 +90,7 @@ function AdminLayout() {
               }
             >
               <Store className="h-4 w-4" />
-              {!collapsed && <span>Shops</span>}
+              {!collapsed && <span>Chủ sân</span>}
             </NavLink>
 
             <NavLink
@@ -100,7 +100,7 @@ function AdminLayout() {
               }
             >
               <FileClock className="h-4 w-4" />
-              {!collapsed && <span>Shop Requests</span>}
+              {!collapsed && <span>Yêu cầu mở sân</span>}
             </NavLink>
 
             <NavLink

@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { User, LogOut, Trophy } from "lucide-react";
+import { User, LogOut, Trophy, ShoppingCart } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 
 const Header: React.FC = () => {
@@ -38,6 +38,14 @@ const Header: React.FC = () => {
             >
               Danh sách sân
             </Link>
+            {user?.level_type === "cus" && (
+              <Link
+                to="/cart"
+                className="text-gray-700 hover:text-emerald-600 transition-colors duration-200 font-medium"
+              >
+                Giỏ hàng
+              </Link>
+            )}
             {user?.level_type === "shop" && (
               <Link
                 to="/shop/dashboard"
@@ -65,11 +73,20 @@ const Header: React.FC = () => {
                   <span className="text-gray-700 font-medium">
                     {user.user_name}
                   </span>
-                  <span className="px-2 py-1 text-xs bg-emerald-100 text-emerald-600 rounded-full">
-                    {user.level_type}
-                  </span>
-                </div>
-                <button
+              <span className="px-2 py-1 text-xs bg-emerald-100 text-emerald-600 rounded-full">
+                {user.level_type}
+              </span>
+            </div>
+            {user.level_type === "cus" && (
+              <Link
+                to="/cart"
+                className="inline-flex items-center gap-1 rounded-lg border border-emerald-200 px-3 py-1 text-sm font-medium text-emerald-700 transition-colors duration-200 hover:bg-emerald-50 md:hidden"
+              >
+                <ShoppingCart className="h-4 w-4" />
+                <span>Giỏ hàng</span>
+              </Link>
+            )}
+            <button
                   onClick={handleLogout}
                   className="flex items-center space-x-1 text-gray-600 hover:text-red-600 transition-colors duration-200"
                 >

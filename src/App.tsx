@@ -13,6 +13,7 @@ import FieldDetailPage from "./pages/FieldDetailPage";
 import BookingPage from "./pages/BookingPage";
 import BookingDetailPage from "./pages/BookingDetailPage";
 import CheckinCodePage from "./pages/CheckinCodePage";
+import CartPage from "./pages/CartPage";
 import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
 
@@ -83,7 +84,17 @@ function App() {
             }
           />
 
-          {/* Booking Detail Pages */}
+          {/* Customer Pages */}
+          <Route
+            path="/cart"
+            element={
+              <PrivateRoute>
+                <Layout showFooter={false}>
+                  <CartPage />
+                </Layout>
+              </PrivateRoute>
+            }
+          />
           <Route
             path="/bookings/:bookingCode"
             element={

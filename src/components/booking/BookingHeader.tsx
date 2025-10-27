@@ -33,10 +33,6 @@ export const BookingHeader: React.FC<BookingHeaderProps> = ({ field, loading }) 
         <h1>{field.FieldName}</h1>
         <p className="sport-type">{field.SportType}</p>
         <p className="location">{field.Location}</p>
-        <div className="rating">
-          <span className="stars">★★★★★</span>
-          <span className="review-count">(42 reviews)</span>
-        </div>
       </div>
 
       {field.images && field.images.length > 0 && (
