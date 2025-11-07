@@ -55,26 +55,26 @@ const HomePage: React.FC = () => {
     };
   }, []);
 
-  const quickShortcuts = [
-    {
-      icon: MapPin,
-      title: "Sân bóng đá 7 người",
-      description: "Lịch trống cuối tuần luôn sẵn",
-      to: "/fields?sportType=football",
-    },
-    {
-      icon: Clock,
-      title: "Slot giờ vàng",
-      description: "Sau 17:00 mỗi ngày",
-      to: "/fields?sortBy=price&sortDir=asc",
-    },
-    {
-      icon: Calendar,
-      title: "Đặt liền tay",
-      description: "Xác nhận chỉ trong 60s",
-      to: "/fields?sortBy=rating&sortDir=desc",
-    },
-  ];
+  // const quickShortcuts = [
+  //   {
+  //     icon: MapPin,
+  //     title: "Sân bóng đá 7 người",
+  //     description: "Lịch trống cuối tuần luôn sẵn",
+  //     to: "/fields?sportType=football",
+  //   },
+  //   {
+  //     icon: Clock,
+  //     title: "Slot giờ vàng",
+  //     description: "Sau 17:00 mỗi ngày",
+  //     to: "/fields?sortBy=price&sortDir=asc",
+  //   },
+  //   {
+  //     icon: Calendar,
+  //     title: "Đặt liền tay",
+  //     description: "Xác nhận chỉ trong 60s",
+  //     to: "/fields?sortBy=rating&sortDir=desc",
+  //   },
+  // ];
 
   const featureHighlights = [
     {
@@ -189,7 +189,7 @@ const HomePage: React.FC = () => {
             </div>
           </div>
 
-          <div className="hero-card">
+          {/* <div className="hero-card">
             <div className="hero-card-header">
               <span className="hero-card-pill">Gợi ý nhanh</span>
               <h3 className="hero-card-title">Bạn muốn chơi môn gì hôm nay?</h3>
@@ -221,7 +221,7 @@ const HomePage: React.FC = () => {
                 Giá hiển thị đã bao gồm phí sân và có thể áp dụng khuyến mãi.
               </p>
             </div>
-          </div>
+          </div> */}
         </div>
       </section>
 
