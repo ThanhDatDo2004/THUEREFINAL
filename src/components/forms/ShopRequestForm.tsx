@@ -9,6 +9,12 @@ import {
   MapPin,
   MessageSquare,
   AlertCircle,
+  Sparkles,
+  CheckCircle2,
+  Clock3,
+  Users,
+  TrendingUp,
+  PhoneCall,
 } from "lucide-react";
 import { submitShopRequest } from "../../models/shop.api";
 
@@ -19,6 +25,64 @@ interface ShopRequestFormData {
   address: string;
   message: string;
 }
+
+const highlights = [
+  {
+    icon: Users,
+    label: "Đối tác đang hoạt động",
+    value: "250+",
+  },
+  {
+    icon: TrendingUp,
+    label: "Lượt đặt sân trung bình/tháng",
+    value: "1.8K",
+  },
+  {
+    icon: Clock3,
+    label: "Thời gian duyệt nhanh nhất",
+    value: "12h",
+  },
+];
+
+const benefits = [
+  {
+    icon: Sparkles,
+    title: "Tối ưu tỷ lệ lấp sân",
+    description: "Thu hút khách hàng mới nhờ công cụ marketing tích hợp.",
+  },
+  {
+    icon: CheckCircle2,
+    title: "Quy trình minh bạch",
+    description: "Theo dõi trạng thái duyệt hồ sơ ngay trên dashboard.",
+  },
+  {
+    icon: Building,
+    title: "Quản lý tập trung",
+    description: "Đồng bộ lịch sân, báo cáo doanh thu, chiết khấu rõ ràng.",
+  },
+];
+
+const contactChannels = [
+  {
+    icon: PhoneCall,
+    label: "Hotline",
+    value: "1900 6868",
+    hint: "08:00 - 22:00 (T2-T7)",
+  },
+  {
+    icon: Mail,
+    label: "Email hỗ trợ",
+    value: "partner@thuere.vn",
+    hint: "Phản hồi trong 24h",
+  },
+];
+
+const processSteps = [
+  "Gửi form đăng ký và mô tả thông tin sân",
+  "Đội ngũ kiểm duyệt liên hệ xác thực",
+  "Bàn giao tài khoản quản lý và hướng dẫn",
+  "Bắt đầu nhận đơn đặt sân trên hệ thống",
+];
 
 const ShopRequestForm: React.FC = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -53,210 +117,298 @@ const ShopRequestForm: React.FC = () => {
   };
 
   return (
-    <div className="bg-gradient-to-br from-emerald-50 to-blue-50 py-16">
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-2xl shadow-xl p-8">
-          <div className="header-center">
-            <div className="w-16 h-16 bg-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Building className="w-8 h-8 text-white" />
-            </div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">
-              Đăng ký mở Shop
-            </h2>
-            <p className="text-gray-600">
-              Tham gia cùng ThueRe để mở rộng kinh doanh sân thể thao của bạn
-            </p>
-          </div>
+    <div className="relative isolate overflow-hidden bg-slate-950 py-16 sm:py-20">
+      <div className="absolute inset-0 -z-10 opacity-60">
+        <div className="absolute inset-y-0 left-1/2 w-[140%] -translate-x-1/2 bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.35),_transparent_60%)] blur-3xl" />
+        <div className="absolute inset-y-0 right-1/3 w-[80%] bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.25),_transparent_55%)] blur-3xl" />
+      </div>
 
-          {isSubmitted && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-              <div className="flex items-center">
-                <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center mr-3">
-                  <svg
-                    className="w-4 h-4 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center text-white mb-10">
+          <p className="inline-flex items-center gap-2 rounded-full border border-white/20 px-4 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-white/90">
+            <Sparkles className="w-4 h-4 text-emerald-300" />
+            Đối tác sân thể thao
+          </p>
+          <h2 className="mt-6 text-4xl font-bold tracking-tight sm:text-5xl">
+            Đăng ký mở Shop và bắt đầu nhận đơn trong vài bước
+          </h2>
+          <p className="mt-4 text-base text-white/70 max-w-3xl mx-auto">
+            Điền thông tin cơ bản, đội ngũ ThueRe sẽ đồng hành cùng bạn trong suốt hành
+            trình số hóa quản lý sân và tối ưu hiệu suất hoạt động.
+          </p>
+        </div>
+
+        <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
+          <section className="rounded-3xl border border-white/10 bg-white/5 p-8 text-white shadow-[0_25px_80px_rgba(15,23,42,0.4)] backdrop-blur-xl">
+            <div className="flex flex-wrap gap-4 text-left">
+              {highlights.map(({ icon: Icon, label, value }) => (
+                <div
+                  key={label}
+                  className="flex-1 min-w-[140px] rounded-2xl border border-white/10 bg-white/5 px-5 py-4 shadow-inner shadow-black/20"
+                >
+                  <p className="text-3xl font-semibold text-white">{value}</p>
+                  <p className="mt-1 text-sm text-white/70">{label}</p>
+                  <Icon className="mt-4 h-5 w-5 text-emerald-300" />
                 </div>
-                <p className="text-green-800 font-medium">
-                  Yêu cầu đã được gửi thành công! Chúng tôi sẽ liên hệ với bạn
-                  trong vòng 24h.
-                </p>
+              ))}
+            </div>
+
+            <div className="mt-10 space-y-5">
+              {benefits.map(({ icon: Icon, title, description }) => (
+                <div
+                  key={title}
+                  className="flex gap-4 rounded-2xl border border-white/10 bg-white/5 px-5 py-4"
+                >
+                  <div className="mt-1 rounded-xl bg-emerald-400/20 p-2 text-emerald-200">
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-lg">{title}</p>
+                    <p className="text-sm text-white/70">{description}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-10 rounded-2xl border border-white/10 bg-white/5 p-6">
+              <h4 className="text-lg font-semibold text-white">
+                Quy trình duyệt chi tiết
+              </h4>
+              <ol className="mt-4 space-y-4 text-sm text-white/80">
+                {processSteps.map((step, index) => (
+                  <li key={step} className="flex items-start gap-3">
+                    <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-emerald-400/20 text-sm font-semibold text-emerald-200">
+                      {index + 1}
+                    </span>
+                    <p>{step}</p>
+                  </li>
+                ))}
+              </ol>
+
+              <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                {contactChannels.map(({ icon: Icon, label, value, hint }) => (
+                  <div
+                    key={label}
+                    className="rounded-xl border border-white/10 bg-slate-900/40 p-4"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="rounded-lg bg-slate-800/70 p-2">
+                        <Icon className="h-4 w-4 text-emerald-200" />
+                      </span>
+                      <div>
+                        <p className="text-sm text-white/70">{label}</p>
+                        <p className="text-base font-semibold text-white">
+                          {value}
+                        </p>
+                      </div>
+                    </div>
+                    <p className="mt-3 text-xs uppercase tracking-widest text-white/40">
+                      {hint}
+                    </p>
+                  </div>
+                ))}
               </div>
             </div>
-          )}
+          </section>
 
-          {!!submitError && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 text-red-700 flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 mt-0.5 shrink-0" />
+          <section className="relative rounded-3xl bg-white p-8 shadow-2xl shadow-emerald-900/20">
+            <div className="absolute inset-x-10 -top-8 z-10 flex justify-center">
+              <div className="inline-flex items-center gap-3 rounded-2xl border border-emerald-100 bg-gradient-to-r from-emerald-50 to-white px-6 py-3 text-sm font-medium text-emerald-700 shadow-lg shadow-emerald-100/60">
+                <Building className="h-5 w-5 text-emerald-500" />
+                Đối tác mới đăng ký mỗi ngày
+              </div>
+            </div>
+            <div className="pt-6">
+              <p className="text-xs font-semibold uppercase tracking-[0.4em] text-emerald-500">
+                Bắt đầu ngay
+              </p>
+              <h3 className="mt-3 text-3xl font-bold text-slate-900">
+                Form đăng ký mở Shop
+              </h3>
+              <p className="mt-2 text-sm text-slate-500">
+                Chúng tôi sẽ liên hệ trong 24h để xác nhận và hướng dẫn các bước tiếp theo.
+              </p>
+            </div>
+
+            {isSubmitted && (
+              <div className="mt-6 rounded-2xl border border-emerald-100 bg-emerald-50/70 p-4 text-emerald-900 shadow-inner">
+                <div className="flex items-start gap-3">
+                  <div className="rounded-full bg-emerald-500 p-1 text-white">
+                    <CheckCircle2 className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="font-semibold">
+                      Gửi yêu cầu thành công
+                    </p>
+                    <p className="text-sm">
+                      Đội ngũ hỗ trợ sẽ phản hồi qua email hoặc điện thoại trong vòng 24 giờ làm việc.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {!!submitError && (
+              <div className="mt-6 flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-red-700">
+                <AlertCircle className="h-5 w-5 mt-0.5" />
+                <div>
+                  <p className="font-medium">Không thể gửi yêu cầu</p>
+                  <p className="text-sm">{submitError}</p>
+                </div>
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit(onSubmit)} className="mt-6 space-y-5">
+              <div className="grid gap-5 sm:grid-cols-2">
+                <div>
+                  <label className="label text-slate-700">
+                    <User className="mr-2 inline h-4 w-4 text-emerald-500" />
+                    Họ và tên
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      {...register("full_name", {
+                        required: "Vui lòng nhập họ và tên",
+                        minLength: {
+                          value: 2,
+                          message: "Họ tên phải có ít nhất 2 ký tự",
+                        },
+                      })}
+                      className="input pr-12"
+                      placeholder="Nguyễn Văn A"
+                    />
+                    <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-xs text-slate-400">
+                      Bắt buộc
+                    </span>
+                  </div>
+                  {errors.full_name && (
+                    <p className="mt-1 text-sm text-red-500">
+                      {errors.full_name.message}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="label text-slate-700">
+                    <Mail className="mr-2 inline h-4 w-4 text-emerald-500" />
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    {...register("email", {
+                      required: "Vui lòng nhập email",
+                      pattern: {
+                        value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                        message: "Email không hợp lệ",
+                      },
+                    })}
+                    className="input"
+                    placeholder="email@thuere.vn"
+                  />
+                  {errors.email && (
+                    <p className="mt-1 text-sm text-red-500">
+                      {errors.email.message}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid gap-5 sm:grid-cols-2">
+                <div>
+                  <label className="label text-slate-700">
+                    <Phone className="mr-2 inline h-4 w-4 text-emerald-500" />
+                    Số điện thoại
+                  </label>
+                  <input
+                    type="tel"
+                    {...register("phone_number", {
+                      required: "Vui lòng nhập số điện thoại",
+                      pattern: {
+                        value: /^[0-9]{10,11}$/,
+                        message: "Số điện thoại phải có 10-11 chữ số",
+                      },
+                    })}
+                    className="input"
+                    placeholder="09xx xxx xxx"
+                  />
+                  {errors.phone_number && (
+                    <p className="mt-1 text-sm text-red-500">
+                      {errors.phone_number.message}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="label text-slate-700">
+                    <MapPin className="mr-2 inline h-4 w-4 text-emerald-500" />
+                    Địa chỉ sân
+                  </label>
+                  <input
+                    type="text"
+                    {...register("address", {
+                      required: "Vui lòng nhập địa chỉ",
+                      minLength: {
+                        value: 10,
+                        message: "Địa chỉ phải có ít nhất 10 ký tự",
+                      },
+                    })}
+                    className="input"
+                    placeholder="Số nhà, đường, quận/huyện..."
+                  />
+                  {errors.address && (
+                    <p className="mt-1 text-sm text-red-500">
+                      {errors.address.message}
+                    </p>
+                  )}
+                </div>
+              </div>
+
               <div>
-                <p className="font-medium">Không thể gửi yêu cầu</p>
-                <p className="text-sm">{submitError}</p>
+                <label className="label text-slate-700">
+                  <MessageSquare className="mr-2 inline h-4 w-4 text-emerald-500" />
+                  Giới thiệu ngắn gọn về sân
+                </label>
+                <textarea
+                  rows={5}
+                  {...register("message", {
+                    minLength: {
+                      value: 20,
+                      message: "Tin nhắn phải có ít nhất 20 ký tự",
+                    },
+                  })}
+                  className="input"
+                  placeholder="Loại sân, số lượng sân, tình trạng đặt sân hiện tại, các khung giờ trống..."
+                />
+                <p className="mt-1 text-xs text-slate-400">
+                  Càng mô tả chi tiết, đội ngũ càng dễ tư vấn mức hoa hồng phù hợp.
+                </p>
+                {errors.message && (
+                  <p className="mt-1 text-sm text-red-500">
+                    {errors.message.message}
+                  </p>
+                )}
               </div>
-            </div>
-          )}
 
-          <form onSubmit={handleSubmit(onSubmit)} className="">
-            {/* Full Name */}
-            <div>
-              <label className="label">
-                <User className="w-4 h-4 inline mr-2" />
-                Họ và tên
-              </label>
-              <input
-                type="text"
-                {...register("full_name", {
-                  required: "Vui lòng nhập họ và tên",
-                  minLength: {
-                    value: 2,
-                    message: "Họ tên phải có ít nhất 2 ký tự",
-                  },
-                })}
-                className="input"
-                placeholder="Nhập họ và tên của bạn"
-              />
-              {errors.full_name && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.full_name.message}
-                </p>
-              )}
-            </div>
-
-            {/* Email */}
-            <div>
-              <label className="label">
-                <Mail className="w-4 h-4 inline mr-2" />
-                Email
-              </label>
-              <input
-                type="email"
-                {...register("email", {
-                  required: "Vui lòng nhập email",
-                  pattern: {
-                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                    message: "Email không hợp lệ",
-                  },
-                })}
-                className="input"
-                placeholder="Nhập địa chỉ email của bạn"
-              />
-              {errors.email && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.email.message}
-                </p>
-              )}
-            </div>
-
-            {/* Phone */}
-            <div>
-              <label className="label">
-                <Phone className="w-4 h-4 inline mr-2" />
-                Số điện thoại
-              </label>
-              <input
-                type="tel"
-                {...register("phone_number", {
-                  required: "Vui lòng nhập số điện thoại",
-                  pattern: {
-                    value: /^[0-9]{10,11}$/,
-                    message: "Số điện thoại phải có 10-11 chữ số",
-                  },
-                })}
-                className="input"
-                placeholder="Nhập số điện thoại của bạn"
-              />
-              {errors.phone_number && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.phone_number.message}
-                </p>
-              )}
-            </div>
-
-            {/* Address */}
-            <div>
-              <label className="label">
-                <MapPin className="w-4 h-4 inline mr-2" />
-                Địa chỉ
-              </label>
-              <input
-                type="text"
-                {...register("address", {
-                  required: "Vui lòng nhập địa chỉ",
-                  minLength: {
-                    value: 10,
-                    message: "Địa chỉ phải có ít nhất 10 ký tự",
-                  },
-                })}
-                className="input"
-                placeholder="Nhập địa chỉ shop của bạn"
-              />
-              {errors.address && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.address.message}
-                </p>
-              )}
-            </div>
-
-            {/* Message */}
-            <div>
-              <label className="label">
-                <MessageSquare className="w-4 h-4 inline mr-2" />
-                Tin nhắn
-              </label>
-              <textarea
-                rows={4}
-                {...register("message", {
-                  minLength: {
-                    value: 20,
-                    message: "Tin nhắn phải có ít nhất 20 ký tự",
-                  },
-                })}
-                className="input"
-                placeholder="Mô tả về shop và các loại sân bạn muốn cho thuê..."
-              />
-              {errors.message && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.message.message}
-                </p>
-              )}
-            </div>
-
-            {/* Submit Button */}
-            <button type="submit" disabled={isSubmitting} className="input btn-primary">
-              {isSubmitting ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span>Đang gửi...</span>
-                </>
-              ) : (
-                <>
-                  <Send className="w-5 h-5" />
-                  <span>Gửi yêu cầu</span>
-                </>
-              )}
-            </button>
-          </form>
-
-          <div className="mt-8 p-4 bg-blue-50 rounded-lg">
-            <h4 className="font-medium text-blue-900 mb-2">
-              Quy trình duyệt Shop:
-            </h4>
-            <ol className="text-sm text-blue-800 space-y-1">
-              <li>1. Gửi form đăng ký</li>
-              <li>2. Admin xem xét thông tin (24-48h)</li>
-              <li>3. Liên hệ xác nhận qua email/phone</li>
-              <li>4. Kích hoạt tài khoản Shop</li>
-              <li>5. Bắt đầu quản lý sân trên hệ thống</li>
-            </ol>
-          </div>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="btn-primary input bg-gradient-to-r from-emerald-500 to-blue-500 text-base font-semibold text-white shadow-lg shadow-emerald-200/60 transition hover:from-emerald-600 hover:to-blue-600 disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {isSubmitting ? (
+                  <>
+                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    <span>Đang gửi...</span>
+                  </>
+                ) : (
+                  <>
+                    <Send className="h-5 w-5" />
+                    <span>Gửi yêu cầu hợp tác</span>
+                  </>
+                )}
+              </button>
+            </form>
+          </section>
         </div>
       </div>
     </div>
