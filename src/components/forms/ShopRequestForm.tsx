@@ -1,21 +1,5 @@
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
-import {
-  Send,
-  Building,
-  User,
-  Mail,
-  Phone,
-  MapPin,
-  MessageSquare,
-  AlertCircle,
-  Sparkles,
-  CheckCircle2,
-  Clock3,
-  Users,
-  TrendingUp,
-  PhoneCall,
-} from "lucide-react";
 import { submitShopRequest } from "../../models/shop.api";
 
 interface ShopRequestFormData {
@@ -28,35 +12,32 @@ interface ShopRequestFormData {
 
 const highlights = [
   {
-    icon: Users,
     label: "Đối tác đang hoạt động",
     value: "250+",
+    helper: "toàn quốc",
   },
   {
-    icon: TrendingUp,
-    label: "Lượt đặt sân trung bình/tháng",
+    label: "Lượt đặt sân / tháng",
     value: "1.8K",
+    helper: "trung bình",
   },
   {
-    icon: Clock3,
     label: "Thời gian duyệt nhanh nhất",
     value: "12h",
+    helper: "kể từ lúc gửi",
   },
 ];
 
 const benefits = [
   {
-    icon: Sparkles,
     title: "Tối ưu tỷ lệ lấp sân",
-    description: "Thu hút khách hàng mới nhờ công cụ marketing tích hợp.",
+    description: "Thu hút khách mới nhờ chiến dịch marketing có sẵn.",
   },
   {
-    icon: CheckCircle2,
     title: "Quy trình minh bạch",
     description: "Theo dõi trạng thái duyệt hồ sơ ngay trên dashboard.",
   },
   {
-    icon: Building,
     title: "Quản lý tập trung",
     description: "Đồng bộ lịch sân, báo cáo doanh thu, chiết khấu rõ ràng.",
   },
@@ -64,13 +45,11 @@ const benefits = [
 
 const contactChannels = [
   {
-    icon: PhoneCall,
     label: "Hotline",
     value: "1900 6868",
     hint: "08:00 - 22:00 (T2-T7)",
   },
   {
-    icon: Mail,
     label: "Email hỗ trợ",
     value: "partner@thuere.vn",
     hint: "Phản hồi trong 24h",
@@ -126,7 +105,7 @@ const ShopRequestForm: React.FC = () => {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center text-white mb-10">
           <p className="inline-flex items-center gap-2 rounded-full border border-white/20 px-4 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-white/90">
-            <Sparkles className="w-4 h-4 text-emerald-300" />
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
             Đối tác sân thể thao
           </p>
           <h2 className="mt-6 text-4xl font-bold tracking-tight sm:text-5xl">
@@ -141,26 +120,28 @@ const ShopRequestForm: React.FC = () => {
         <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
           <section className="rounded-3xl border border-white/10 bg-white/5 p-8 text-white shadow-[0_25px_80px_rgba(15,23,42,0.4)] backdrop-blur-xl">
             <div className="flex flex-wrap gap-4 text-left">
-              {highlights.map(({ icon: Icon, label, value }) => (
+              {highlights.map(({ label, value, helper }) => (
                 <div
                   key={label}
                   className="flex-1 min-w-[140px] rounded-2xl border border-white/10 bg-white/5 px-5 py-4 shadow-inner shadow-black/20"
                 >
                   <p className="text-3xl font-semibold text-white">{value}</p>
                   <p className="mt-1 text-sm text-white/70">{label}</p>
-                  <Icon className="mt-4 h-5 w-5 text-emerald-300" />
+                  <p className="mt-3 text-xs uppercase tracking-widest text-white/40">
+                    {helper}
+                  </p>
                 </div>
               ))}
             </div>
 
             <div className="mt-10 space-y-5">
-              {benefits.map(({ icon: Icon, title, description }) => (
+              {benefits.map(({ title, description }, index) => (
                 <div
                   key={title}
                   className="flex gap-4 rounded-2xl border border-white/10 bg-white/5 px-5 py-4"
                 >
-                  <div className="mt-1 rounded-xl bg-emerald-400/20 p-2 text-emerald-200">
-                    <Icon className="h-5 w-5" />
+                  <div className="mt-1 flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-slate-900/50 text-sm font-semibold uppercase tracking-widest text-white/70">
+                    {index + 1}
                   </div>
                   <div>
                     <p className="font-semibold text-lg">{title}</p>
@@ -186,14 +167,18 @@ const ShopRequestForm: React.FC = () => {
               </ol>
 
               <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                {contactChannels.map(({ icon: Icon, label, value, hint }) => (
+                {contactChannels.map(({ label, value, hint }) => (
                   <div
                     key={label}
                     className="rounded-xl border border-white/10 bg-slate-900/40 p-4"
                   >
                     <div className="flex items-center gap-3">
-                      <span className="rounded-lg bg-slate-800/70 p-2">
-                        <Icon className="h-4 w-4 text-emerald-200" />
+                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-800/70 text-sm font-semibold uppercase tracking-wide text-white/80">
+                        {label
+                          .split(" ")
+                          .map((part) => part[0])
+                          .join("")
+                          .slice(0, 2)}
                       </span>
                       <div>
                         <p className="text-sm text-white/70">{label}</p>
@@ -214,7 +199,9 @@ const ShopRequestForm: React.FC = () => {
           <section className="relative rounded-3xl bg-white p-8 shadow-2xl shadow-emerald-900/20">
             <div className="absolute inset-x-10 -top-8 z-10 flex justify-center">
               <div className="inline-flex items-center gap-3 rounded-2xl border border-emerald-100 bg-gradient-to-r from-emerald-50 to-white px-6 py-3 text-sm font-medium text-emerald-700 shadow-lg shadow-emerald-100/60">
-                <Building className="h-5 w-5 text-emerald-500" />
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-600/10 text-xs font-semibold uppercase tracking-widest text-emerald-600">
+                  TR
+                </span>
                 Đối tác mới đăng ký mỗi ngày
               </div>
             </div>
@@ -233,13 +220,11 @@ const ShopRequestForm: React.FC = () => {
             {isSubmitted && (
               <div className="mt-6 rounded-2xl border border-emerald-100 bg-emerald-50/70 p-4 text-emerald-900 shadow-inner">
                 <div className="flex items-start gap-3">
-                  <div className="rounded-full bg-emerald-500 p-1 text-white">
-                    <CheckCircle2 className="h-4 w-4" />
-                  </div>
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500 text-sm font-semibold text-white">
+                    ✓
+                  </span>
                   <div>
-                    <p className="font-semibold">
-                      Gửi yêu cầu thành công
-                    </p>
+                    <p className="font-semibold">Gửi yêu cầu thành công</p>
                     <p className="text-sm">
                       Đội ngũ hỗ trợ sẽ phản hồi qua email hoặc điện thoại trong vòng 24 giờ làm việc.
                     </p>
@@ -250,7 +235,9 @@ const ShopRequestForm: React.FC = () => {
 
             {!!submitError && (
               <div className="mt-6 flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-red-700">
-                <AlertCircle className="h-5 w-5 mt-0.5" />
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-red-100 text-base font-semibold text-red-600">
+                  !
+                </span>
                 <div>
                   <p className="font-medium">Không thể gửi yêu cầu</p>
                   <p className="text-sm">{submitError}</p>
@@ -261,10 +248,7 @@ const ShopRequestForm: React.FC = () => {
             <form onSubmit={handleSubmit(onSubmit)} className="mt-6 space-y-5">
               <div className="grid gap-5 sm:grid-cols-2">
                 <div>
-                  <label className="label text-slate-700">
-                    <User className="mr-2 inline h-4 w-4 text-emerald-500" />
-                    Họ và tên
-                  </label>
+                  <label className="label text-slate-700">Họ và tên</label>
                   <div className="relative">
                     <input
                       type="text"
@@ -290,10 +274,7 @@ const ShopRequestForm: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="label text-slate-700">
-                    <Mail className="mr-2 inline h-4 w-4 text-emerald-500" />
-                    Email
-                  </label>
+                  <label className="label text-slate-700">Email</label>
                   <input
                     type="email"
                     {...register("email", {
@@ -316,10 +297,7 @@ const ShopRequestForm: React.FC = () => {
 
               <div className="grid gap-5 sm:grid-cols-2">
                 <div>
-                  <label className="label text-slate-700">
-                    <Phone className="mr-2 inline h-4 w-4 text-emerald-500" />
-                    Số điện thoại
-                  </label>
+                  <label className="label text-slate-700">Số điện thoại</label>
                   <input
                     type="tel"
                     {...register("phone_number", {
@@ -340,10 +318,7 @@ const ShopRequestForm: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="label text-slate-700">
-                    <MapPin className="mr-2 inline h-4 w-4 text-emerald-500" />
-                    Địa chỉ sân
-                  </label>
+                  <label className="label text-slate-700">Địa chỉ sân</label>
                   <input
                     type="text"
                     {...register("address", {
@@ -366,7 +341,6 @@ const ShopRequestForm: React.FC = () => {
 
               <div>
                 <label className="label text-slate-700">
-                  <MessageSquare className="mr-2 inline h-4 w-4 text-emerald-500" />
                   Giới thiệu ngắn gọn về sân
                 </label>
                 <textarea
@@ -401,10 +375,7 @@ const ShopRequestForm: React.FC = () => {
                     <span>Đang gửi...</span>
                   </>
                 ) : (
-                  <>
-                    <Send className="h-5 w-5" />
-                    <span>Gửi yêu cầu hợp tác</span>
-                  </>
+                  <span>Gửi yêu cầu hợp tác</span>
                 )}
               </button>
             </form>

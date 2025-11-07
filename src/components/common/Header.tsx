@@ -1,6 +1,5 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { User, LogOut, Trophy, ShoppingCart } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 
 const Header: React.FC = () => {
@@ -18,8 +17,8 @@ const Header: React.FC = () => {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center">
-              <Trophy className="w-5 h-5 text-white" />
+            <div className="w-9 h-9 bg-emerald-600 rounded-lg flex items-center justify-center text-sm font-semibold text-white tracking-widest">
+              TR
             </div>
             <span className="text-xl font-bold text-gray-900">ThueRe</span>
           </Link>
@@ -68,30 +67,35 @@ const Header: React.FC = () => {
           <div className="flex items-center">
             {user ? (
               <div className="flex items-center space-x-3">
-                <div className="flex items-center space-x-2">
-                  <User className="w-5 h-5 text-gray-600" />
-                  <span className="text-gray-700 font-medium">
-                    {user.user_name}
+                <div className="flex items-center gap-3">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-50 text-sm font-semibold uppercase text-emerald-700">
+                    {user.user_name?.slice(0, 2) ?? "TR"}
                   </span>
-              <span className="px-2 py-1 text-xs bg-emerald-100 text-emerald-600 rounded-full">
-                {user.level_type}
-              </span>
-            </div>
-            {user.level_type === "cus" && (
-              <Link
-                to="/cart"
-                className="inline-flex items-center gap-1 rounded-lg border border-emerald-200 px-3 py-1 text-sm font-medium text-emerald-700 transition-colors duration-200 hover:bg-emerald-50 md:hidden"
-              >
-                <ShoppingCart className="h-4 w-4" />
-                <span>Giỏ hàng</span>
-              </Link>
-            )}
-            <button
+                  <div className="flex flex-col leading-tight">
+                    <span className="text-gray-700 font-medium">
+                      {user.user_name}
+                    </span>
+                    <span className="text-xs uppercase tracking-wide text-gray-400">
+                      ID {user.level_type}
+                    </span>
+                  </div>
+                  <span className="px-2 py-1 text-xs bg-emerald-100 text-emerald-600 rounded-full capitalize">
+                    {user.level_type}
+                  </span>
+                </div>
+                {user.level_type === "cus" && (
+                  <Link
+                    to="/cart"
+                    className="inline-flex rounded-lg border border-emerald-200 px-3 py-1 text-sm font-medium text-emerald-700 transition-colors duration-200 hover:bg-emerald-50 md:hidden"
+                  >
+                    Giỏ hàng
+                  </Link>
+                )}
+                <button
                   onClick={handleLogout}
-                  className="flex items-center space-x-1 text-gray-600 hover:text-red-600 transition-colors duration-200"
+                  className="rounded-lg border border-transparent px-3 py-1 text-sm font-semibold text-gray-600 transition hover:border-red-100 hover:text-red-600"
                 >
-                  <LogOut className="w-4 h-4" />
-                  <span>Đăng xuất</span>
+                  Đăng xuất
                 </button>
               </div>
             ) : (

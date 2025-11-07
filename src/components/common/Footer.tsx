@@ -1,7 +1,17 @@
 import React from "react";
-import { MapPin, Phone, Mail, Clock } from "lucide-react";
 
 const Footer: React.FC = () => {
+  const contactItems = [
+    {
+      label: "Địa chỉ",
+      value: "615 Âu Cơ, Phường Tân Phú, TP. Hồ Chí Minh",
+      prefix: "VP",
+    },
+    { label: "Hotline", value: "0866 845 867", prefix: "HL" },
+    { label: "Email", value: "thuere2004@gmail.com", prefix: "EM" },
+    { label: "Hỗ trợ", value: "24/7 Hỗ trợ khách hàng", prefix: "24" },
+  ];
+
   return (
     <footer className="footer">
       <div className="footer-inner">
@@ -80,26 +90,19 @@ const Footer: React.FC = () => {
           <div className="space-y-4">
             <h3 className="footer-title">Liên hệ</h3>
             <div className="space-y-3">
-              <div className="flex items-center space-x-2">
-                <MapPin className="w-4 h-4 text-emerald-400" />
-                <span className="text-gray-300 text-sm">
-                  615 Âu Cơ, Phường Tân Phú, TP. Hồ Chí Minh
-                </span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Phone className="w-4 h-4 text-emerald-400" />
-                <span className="text-gray-300 text-sm">0866 845 867</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Mail className="w-4 h-4 text-emerald-400" />
-                <span className="text-gray-300 text-sm">thuere2004@gmail.com</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Clock className="w-4 h-4 text-emerald-400" />
-                <span className="text-gray-300 text-sm">
-                  24/7 Hỗ trợ khách hàng
-                </span>
-              </div>
+              {contactItems.map(({ label, value, prefix }) => (
+                <div key={label} className="flex items-center gap-3">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-xs font-semibold uppercase tracking-wide text-emerald-200">
+                    {prefix}
+                  </span>
+                  <div>
+                    <p className="text-[11px] uppercase tracking-[0.3em] text-emerald-200/60">
+                      {label}
+                    </p>
+                    <p className="text-gray-300 text-sm">{value}</p>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
