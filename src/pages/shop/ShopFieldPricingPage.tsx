@@ -1,17 +1,18 @@
 import React, { useEffect, useState } from "react";
-import { Plus, Edit, Trash2, Save, X, Clock, DollarSign, AlertCircle } from "lucide-react";
+import { Plus, Edit, Trash2, Save, X, Clock, AlertCircle } from "lucide-react";
 import {
   fetchShopFields,
   fetchFieldOperatingHours,
   createFieldOperatingHours,
   updateFieldOperatingHours,
   deleteFieldOperatingHours,
+  fetchMyShop,
 } from "../../models/shop.api";
 import type {
-  Fields,
   FieldWithImages,
   FieldOperatingHours,
   FieldOperatingHoursPayload,
+  Shops,
 } from "../../types";
 
 // Day names in Vietnamese
@@ -24,6 +25,36 @@ const DAY_NAMES = [
   "Thứ sáu",
   "Thứ bảy",
 ];
+
+const normalizeTime = (value?: string | null) => {
+  if (!value) return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  if (/^\d{2}:\d{2}:\d{2}$/.test(trimmed)) {
+    return trimmed.slice(0, 5);
+  }
+  return trimmed;
+};
+
+const timeToMinutes = (time: string) => {
+  const [hours, minutes] = time.split(":").map((part) => Number(part));
+  return hours * 60 + minutes;
+};
+
+type ShopOperatingWindow = {
+  isOpen24h: boolean;
+  openingTime: string | null;
+  closingTime: string | null;
+};
+
+const buildShopWindow = (shop?: Shops | null): ShopOperatingWindow | null => {
+  if (!shop) return null;
+  return {
+    isOpen24h: Boolean(shop.is_open_24h),
+    openingTime: normalizeTime(shop.opening_time),
+    closingTime: normalizeTime(shop.closing_time),
+  };
+};
 
 interface OperatingHoursRowProps {
   operatingHours: FieldOperatingHours;
@@ -75,6 +106,7 @@ interface EditOperatingHoursModalProps {
   onSave: (data: FieldOperatingHoursPayload) => void;
   operatingHours?: FieldOperatingHours;
   fieldCode: number;
+  shopWindow: ShopOperatingWindow | null;
 }
 
 const EditOperatingHoursModal: React.FC<EditOperatingHoursModalProps> = ({
@@ -83,6 +115,7 @@ const EditOperatingHoursModal: React.FC<EditOperatingHoursModalProps> = ({
   onSave,
   operatingHours,
   fieldCode,
+  shopWindow,
 }) => {
   const [formData, setFormData] = useState<FieldOperatingHoursPayload>({
     field_code: fieldCode,
@@ -92,6 +125,13 @@ const EditOperatingHoursModal: React.FC<EditOperatingHoursModalProps> = ({
   });
 
   useEffect(() => {
+    const defaultStart = shopWindow?.isOpen24h
+      ? "00:00"
+      : shopWindow?.openingTime || "08:00";
+    const defaultEnd = shopWindow?.isOpen24h
+      ? "23:59"
+      : shopWindow?.closingTime || "22:00";
+
     if (operatingHours) {
       setFormData({
         field_code: operatingHours.field_code,
@@ -103,11 +143,11 @@ const EditOperatingHoursModal: React.FC<EditOperatingHoursModalProps> = ({
       setFormData({
         field_code: fieldCode,
         day_of_week: 1,
-        start_time: "08:00",
-        end_time: "22:00",
+        start_time: defaultStart,
+        end_time: defaultEnd,
       });
     }
-  }, [operatingHours, fieldCode]);
+  }, [operatingHours, fieldCode, shopWindow]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -128,6 +168,27 @@ const EditOperatingHoursModal: React.FC<EditOperatingHoursModalProps> = ({
     if (!start || !end) {
       return;
     }
+
+    if (shopWindow && !shopWindow.isOpen24h) {
+      const open = shopWindow.openingTime;
+      const close = shopWindow.closingTime;
+      if (!open || !close) {
+        alert(
+          "Vui lòng thiết lập giờ mở/đóng cửa của shop tại trang Cài đặt trước khi thêm khung giờ."
+        );
+        return;
+      }
+      const startMinutes = timeToMinutes(start);
+      const endMinutes = timeToMinutes(end);
+      if (
+        startMinutes < timeToMinutes(open) ||
+        endMinutes > timeToMinutes(close)
+      ) {
+        alert(`Khung giờ phải nằm trong khoảng ${open} - ${close}.`);
+        return;
+      }
+    }
+
     const normalizedPayload = {
       field_code: normalizedFieldCode,
       day_of_week: normalizedDay,
@@ -211,6 +272,17 @@ const EditOperatingHoursModal: React.FC<EditOperatingHoursModalProps> = ({
             </div>
           </div>
 
+          {shopWindow && !shopWindow.isOpen24h && shopWindow.openingTime && shopWindow.closingTime && (
+            <p className="text-xs text-gray-500">
+              Khung giờ phải nằm trong khoảng {shopWindow.openingTime} - {shopWindow.closingTime}.
+            </p>
+          )}
+          {shopWindow && !shopWindow.isOpen24h && (!shopWindow.openingTime || !shopWindow.closingTime) && (
+            <p className="text-xs text-rose-600">
+              Shop chưa thiết lập giờ mở cửa. Vui lòng cập nhật tại trang Cài đặt shop.
+            </p>
+          )}
+
           <div className="flex gap-3 pt-4">
             <button
               type="button"
@@ -240,6 +312,7 @@ interface FieldOperatingHoursSectionProps {
   onEditOperatingHours: (operatingHours: FieldOperatingHours) => void;
   onDeleteOperatingHours: (pricingId: number) => void;
   isLoading?: boolean;
+  disabled?: boolean;
 }
 
 const FieldOperatingHoursSection: React.FC<FieldOperatingHoursSectionProps> = ({
@@ -249,6 +322,7 @@ const FieldOperatingHoursSection: React.FC<FieldOperatingHoursSectionProps> = ({
   onEditOperatingHours,
   onDeleteOperatingHours,
   isLoading = false,
+  disabled = false,
 }) => {
   const fieldOperatingHours = operatingHoursList.filter(
     (h) => h.field_code === field.field_code
@@ -284,9 +358,15 @@ const FieldOperatingHoursSection: React.FC<FieldOperatingHoursSectionProps> = ({
               e.stopPropagation();
               onAddOperatingHours(field.field_code);
             }}
-            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors flex-shrink-0"
-            title="Thêm giờ hoạt động"
-            disabled={isLoading}
+            className={`p-2 text-blue-600 rounded-lg transition-colors flex-shrink-0 ${
+              isLoading || disabled ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-50"
+            }`}
+            title={
+              disabled
+                ? "Vui lòng thiết lập giờ mở/đóng cửa trong mục Cài đặt shop"
+                : "Thêm giờ hoạt động"
+            }
+            disabled={isLoading || disabled}
           >
             <Plus className="h-5 w-5" />
           </button>
@@ -307,7 +387,12 @@ const FieldOperatingHoursSection: React.FC<FieldOperatingHoursSectionProps> = ({
                 <p className="text-gray-600 font-medium mb-4">Chưa có giờ hoạt động</p>
                 <button
                   onClick={() => onAddOperatingHours(field.field_code)}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm"
+                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm ${
+                    disabled
+                      ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                      : "bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                  }`}
+                  disabled={disabled}
                 >
                   <Plus className="h-4 w-4" />
                   Thêm giờ hoạt động đầu tiên
@@ -335,6 +420,8 @@ const ShopFieldOperatingHoursPage: React.FC = () => {
   const [operatingHoursData, setOperatingHoursData] = useState<
     FieldOperatingHours[]
   >([]);
+  const [shopWindow, setShopWindow] = useState<ShopOperatingWindow | null>(null);
+  const [shopWindowLoading, setShopWindowLoading] = useState(true);
   const [loading, setLoading] = useState(true);
   const [operatingHoursLoading, setOperatingHoursLoading] = useState<{
     [fieldCode: number]: boolean;
@@ -348,7 +435,21 @@ const ShopFieldOperatingHoursPage: React.FC = () => {
 
   useEffect(() => {
     loadFields();
+    loadShopInfo();
   }, []);
+
+  const loadShopInfo = async () => {
+    try {
+      setShopWindowLoading(true);
+      const info = await fetchMyShop();
+      setShopWindow(buildShopWindow(info ?? null));
+    } catch (error) {
+      console.error("Lỗi khi tải thông tin shop:", error);
+      setShopWindow(null);
+    } finally {
+      setShopWindowLoading(false);
+    }
+  };
 
   const loadFields = async () => {
     try {
@@ -411,13 +512,29 @@ const ShopFieldOperatingHoursPage: React.FC = () => {
     }
   };
 
+  const canModifyOperatingHours = Boolean(
+    shopWindow?.isOpen24h ||
+      (shopWindow?.openingTime && shopWindow?.closingTime)
+  );
+
+  const requireConfiguredWindow = () => {
+    if (canModifyOperatingHours) return true;
+    alert(
+      "Vui lòng thiết lập giờ mở và đóng cửa của shop trong trang Cài đặt trước khi thao tác."
+    );
+    return false;
+  };
+
   const handleAddOperatingHours = (fieldCode: number) => {
+    if (!requireConfiguredWindow()) return;
     setSelectedField(fieldCode);
     setEditingOperatingHours(undefined);
     setIsModalOpen(true);
   };
 
   const handleEditOperatingHours = (operatingHours: FieldOperatingHours) => {
+    if (!requireConfiguredWindow()) return;
+    setSelectedField(operatingHours.field_code);
     setEditingOperatingHours(operatingHours);
     setIsModalOpen(true);
   };
@@ -517,6 +634,48 @@ const ShopFieldOperatingHoursPage: React.FC = () => {
           </div>
         )}
 
+        {/* Shop operating window info */}
+        <div className="mb-6">
+          {shopWindowLoading ? (
+            <div className="p-4 bg-white border border-gray-200 rounded-lg text-sm text-gray-600">
+              Đang tải thông tin giờ hoạt động của shop...
+            </div>
+          ) : shopWindow ? (
+            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div>
+                <p className="font-semibold text-blue-900">
+                  {shopWindow.isOpen24h
+                    ? "Shop đang mở cửa 24/24."
+                    : `Shop hoạt động từ ${shopWindow.openingTime ?? "--:--"} đến ${shopWindow.closingTime ?? "--:--"}.`}
+                </p>
+                {!shopWindow.isOpen24h &&
+                  shopWindow.openingTime &&
+                  shopWindow.closingTime && (
+                    <p className="text-sm text-blue-700 mt-1">
+                      Chỉ được thêm khung giờ nằm trong khoảng này.
+                    </p>
+                  )}
+                {!shopWindow.isOpen24h &&
+                  (!shopWindow.openingTime || !shopWindow.closingTime) && (
+                    <p className="text-sm text-amber-700 mt-1">
+                      Shop chưa thiết lập đầy đủ giờ hoạt động. Vui lòng cập nhật trong mục Cài đặt shop.
+                    </p>
+                  )}
+              </div>
+              <a
+                href="/shop/settings"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+              >
+                Cập nhật giờ mở cửa
+              </a>
+            </div>
+          ) : (
+            <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
+              Không thể tải thông tin giờ hoạt động của shop. Vui lòng kiểm tra lại trong mục Cài đặt shop.
+            </div>
+          )}
+        </div>
+
         {/* Stats */}
         {fields.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
@@ -565,6 +724,7 @@ const ShopFieldOperatingHoursPage: React.FC = () => {
                 onEditOperatingHours={handleEditOperatingHours}
                 onDeleteOperatingHours={handleDeleteOperatingHours}
                 isLoading={operatingHoursLoading[field.field_code] || false}
+                disabled={!canModifyOperatingHours}
               />
             ))}
           </div>
@@ -581,6 +741,7 @@ const ShopFieldOperatingHoursPage: React.FC = () => {
         onSave={handleSaveOperatingHours}
         operatingHours={editingOperatingHours}
         fieldCode={selectedField || 0}
+        shopWindow={shopWindow}
       />
     </div>
   );

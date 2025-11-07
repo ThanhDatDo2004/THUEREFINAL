@@ -20,6 +20,9 @@ export interface Shops {
   user_code: number;
   shop_name: string;
   address: string;
+  opening_time?: string | null;
+  closing_time?: string | null;
+  is_open_24h?: boolean | 0 | 1 | null;
   bank_account_number: string;
   bank_name: string;
   isapproved: 0 | 1;

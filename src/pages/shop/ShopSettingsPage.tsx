@@ -4,6 +4,23 @@ import { useAuth } from "../../contexts/AuthContext";
 import { fetchMyShop, updateMyShop } from "../../models/shop.api";
 import type { Shops } from "../../types";
 
+const TIME_REGEX = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+const normalizeTimeForInput = (value?: string | null) => {
+  if (!value) return "";
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+  if (/^\d{2}:\d{2}:\d{2}$/.test(trimmed)) {
+    return trimmed.slice(0, 5);
+  }
+  return trimmed;
+};
+
+const timeToMinutes = (time: string) => {
+  const [hours, minutes] = time.split(":").map((part) => Number(part));
+  return hours * 60 + minutes;
+};
+
 const ShopSettingsPage: React.FC = () => {
   const { user } = useAuth();
   const [shop, setShop] = useState<Shops | null>(null);
@@ -11,6 +28,9 @@ const ShopSettingsPage: React.FC = () => {
   const [address, setAddress] = useState("");
   const [bankName, setBankName] = useState("");
   const [bankAccount, setBankAccount] = useState("");
+  const [openingTime, setOpeningTime] = useState("");
+  const [closingTime, setClosingTime] = useState("");
+  const [isOpen24h, setIsOpen24h] = useState(false);
   // Không bắt buộc hiển thị, nhưng FE sẽ gửi mặc định = shop_name nếu trống
   const getBankAccountHolder = () => {
     const holder = (shop?.shop_name || shopName || "").trim();
@@ -48,6 +68,9 @@ const ShopSettingsPage: React.FC = () => {
     setAddress(shop.address || "");
     setBankName(shop.bank_name || "");
     setBankAccount(shop.bank_account_number || "");
+    setIsOpen24h(Boolean(shop.is_open_24h));
+    setOpeningTime(normalizeTimeForInput(shop.opening_time));
+    setClosingTime(normalizeTimeForInput(shop.closing_time));
   }, [shop]);
 
   const validate = () => {
@@ -55,6 +78,19 @@ const ShopSettingsPage: React.FC = () => {
     const addr = address.trim();
     if (name.length < 2) return "Tên shop phải có ít nhất 2 ký tự.";
     if (addr.length < 5) return "Địa chỉ phải có ít nhất 5 ký tự.";
+    if (!isOpen24h) {
+      const open = openingTime.trim();
+      const close = closingTime.trim();
+      if (!open || !close) {
+        return "Vui lòng nhập giờ mở và đóng cửa.";
+      }
+      if (!TIME_REGEX.test(open) || !TIME_REGEX.test(close)) {
+        return "Giờ mở/đóng cửa phải có định dạng HH:MM.";
+      }
+      if (timeToMinutes(open) >= timeToMinutes(close)) {
+        return "Giờ mở cửa phải nhỏ hơn giờ đóng cửa.";
+      }
+    }
     return "";
   };
 
@@ -74,6 +110,9 @@ const ShopSettingsPage: React.FC = () => {
         bank_account_number: bankAccount.trim() || undefined,
         bank_name: bankName.trim() || undefined,
         bank_account_holder: getBankAccountHolder(),
+        opening_time: isOpen24h ? null : openingTime.trim(),
+        closing_time: isOpen24h ? null : closingTime.trim(),
+        is_open_24h: isOpen24h,
       });
       // Đồng bộ lại từ GET để đảm bảo cùng format với backend
       try {
@@ -102,6 +141,18 @@ const ShopSettingsPage: React.FC = () => {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleResetOperatingHours = () => {
+    if (!shop) {
+      setIsOpen24h(false);
+      setOpeningTime("");
+      setClosingTime("");
+      return;
+    }
+    setIsOpen24h(Boolean(shop.is_open_24h));
+    setOpeningTime(normalizeTimeForInput(shop.opening_time));
+    setClosingTime(normalizeTimeForInput(shop.closing_time));
   };
 
   return (
@@ -161,18 +212,61 @@ const ShopSettingsPage: React.FC = () => {
         </div>
 
         <div className="section">
-          <h3 className="text-lg font-bold mb-4">Tuỳ chọn khác</h3>
+          <h3 className="text-lg font-bold mb-4">Giờ hoạt động</h3>
           <div className="form-group">
-            <label className="label">Giờ mở cửa</label>
-            <input className="input" placeholder="06:00" defaultValue="06:00" />
+            <label className="label flex items-center justify-between">
+              <span>Giờ mở cửa</span>
+              <label className="flex items-center gap-2 text-sm text-gray-600">
+                <input
+                  type="checkbox"
+                  checked={isOpen24h}
+                  onChange={(e) => setIsOpen24h(e.target.checked)}
+                />
+                Mở cửa 24/24
+              </label>
+            </label>
+            <input
+              className="input"
+              type="time"
+              placeholder="06:00"
+              value={openingTime}
+              onChange={(e) => setOpeningTime(e.target.value)}
+              disabled={isOpen24h}
+            />
           </div>
           <div className="form-group">
             <label className="label">Giờ đóng cửa</label>
-            <input className="input" placeholder="22:00" defaultValue="22:00" />
+            <input
+              className="input"
+              type="time"
+              placeholder="22:00"
+              value={closingTime}
+              onChange={(e) => setClosingTime(e.target.value)}
+              disabled={isOpen24h}
+            />
           </div>
-          <button className="btn-ghost" type="button">
-            Đặt lại
-          </button>
+          {!isOpen24h && (
+            <p className="text-xs text-gray-500 mb-3">
+              Chỉ được tạo khung giờ trong khoảng {openingTime || "HH:MM"} -{" "}
+              {closingTime || "HH:MM"} ở mục Giá thuê sân.
+            </p>
+          )}
+          <div className="flex gap-3">
+            <button className="btn-ghost" type="button" onClick={handleResetOperatingHours}>
+              Đặt lại
+            </button>
+            <button
+              className="btn-outline"
+              type="button"
+              onClick={() => {
+                setIsOpen24h(false);
+                setOpeningTime("");
+                setClosingTime("");
+              }}
+            >
+              Xoá giờ hoạt động
+            </button>
+          </div>
         </div>
       </div>
     </>

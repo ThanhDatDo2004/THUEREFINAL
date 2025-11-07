@@ -45,3 +45,20 @@ export async function resetPassword(token: string, new_password: string) {
   const { data } = await api.post("/auth/reset-password", { token, new_password });
   return data;
 }
+
+export async function getGuestTokenApi() {
+  try {
+    const { data } = await api.get("/auth/guest-token");
+    if (!data?.success || !data?.data?.token) {
+      throw new Error(data?.error?.message || data?.message || "Không thể lấy guest token");
+    }
+    return data;
+  } catch (error: any) {
+    const message =
+      error?.response?.data?.error?.message ||
+      error?.response?.data?.message ||
+      error?.message ||
+      "Không thể lấy guest token";
+    throw new Error(message);
+  }
+}

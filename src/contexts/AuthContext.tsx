@@ -1,6 +1,12 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
 import { AuthContextType, AuthUser, RegisterData } from "../types";
-import { loginApi, registerApi } from "../models/auth.api";
+import { getGuestTokenApi, loginApi, registerApi } from "../models/auth.api";
 import { mapApiUserToAuthUser } from "../utils/mapUser";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -27,17 +33,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true); // chỉ dùng để hydrate ban đầu
 
-  useEffect(() => {
-    const raw = localStorage.getItem("user");
-    if (raw) {
-      try {
-        setUser(JSON.parse(raw));
-      } catch {
-        localStorage.removeItem("user");
-      }
+  const ensureGuestToken = useCallback(async () => {
+    const existingToken = localStorage.getItem("access_token");
+    if (existingToken) {
+      return;
     }
-    setLoading(false);
+
+    try {
+      const response = await getGuestTokenApi();
+      const token = response?.data?.token;
+      if (token) {
+        localStorage.setItem("access_token", token);
+      }
+    } catch (error) {
+      console.error("Không thể lấy guest token:", error);
+    }
   }, []);
+
+  useEffect(() => {
+    const init = async () => {
+      const raw = localStorage.getItem("user");
+      if (raw) {
+        try {
+          setUser(JSON.parse(raw));
+        } catch {
+          localStorage.removeItem("user");
+        }
+      }
+
+      await ensureGuestToken();
+      setLoading(false);
+    };
+
+    init();
+  }, [ensureGuestToken]);
 
   const login = async (
     emailOrPhone: string,
@@ -85,6 +114,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     setUser(null);
     localStorage.removeItem("user");
     localStorage.removeItem("access_token");
+    ensureGuestToken();
   };
 
   const isShopOwner = () => {

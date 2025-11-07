@@ -149,15 +149,29 @@ export interface UpdateMyShopPayload {
   bank_account_number?: string;
   bank_name?: string;
   bank_account_holder?: string;
+  opening_time?: string | null;
+  closing_time?: string | null;
+  is_open_24h?: boolean;
 }
 
 export async function updateMyShop(
   payload: UpdateMyShopPayload
 ): Promise<Shops> {
   try {
+    const body: Record<string, unknown> = { ...payload };
+    if (body.opening_time === undefined) {
+      delete body.opening_time;
+    }
+    if (body.closing_time === undefined) {
+      delete body.closing_time;
+    }
+    if (body.is_open_24h === undefined) {
+      delete body.is_open_24h;
+    }
+
     const { data } = await api.put<
       ApiSuccess<MaybeArrayResult<Shops>> | ApiError
-    >("/shops/me", payload);
+    >("/shops/me", body);
     const payloadData = ensureSuccess(
       data,
       "Không thể cập nhật thông tin shop."
