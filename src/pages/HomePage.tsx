@@ -2,18 +2,13 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowRight,
-  Calendar,
   CheckCircle,
-  Clock,
   Compass,
-  MapPin,
   Quote,
-  ShieldCheck,
   Sparkles,
   Star,
   Timer,
   Users,
-  Zap,
 } from "lucide-react";
 import FieldCard from "../components/fields/FieldCard";
 import ShopRequestForm from "../components/forms/ShopRequestForm";
@@ -55,45 +50,26 @@ const HomePage: React.FC = () => {
     };
   }, []);
 
-  // const quickShortcuts = [
-  //   {
-  //     icon: MapPin,
-  //     title: "Sân bóng đá 7 người",
-  //     description: "Lịch trống cuối tuần luôn sẵn",
-  //     to: "/fields?sportType=football",
-  //   },
-  //   {
-  //     icon: Clock,
-  //     title: "Slot giờ vàng",
-  //     description: "Sau 17:00 mỗi ngày",
-  //     to: "/fields?sortBy=price&sortDir=asc",
-  //   },
-  //   {
-  //     icon: Calendar,
-  //     title: "Đặt liền tay",
-  //     description: "Xác nhận chỉ trong 60s",
-  //     to: "/fields?sortBy=rating&sortDir=desc",
-  //   },
-  // ];
-
   const featureHighlights = [
     {
-      icon: ShieldCheck,
       title: "Đối tác uy tín",
       description:
         "100% sân đã được đội ngũ kiểm duyệt chất lượng, cơ sở vật chất, phòng thay đồ và hệ thống chiếu sáng.",
+      image:
+        "https://images.pexels.com/photos/46798/the-ball-stadion-football-the-pitch-46798.jpeg",
     },
     {
-      icon: Sparkles,
       title: "Trải nghiệm liền mạch",
       description:
         "Tra cứu lịch trống, đặt sân, thanh toán – tất cả trong một giao diện thống nhất.",
+      image: "https://images.pexels.com/photos/358042/pexels-photo-358042.jpeg",
     },
     {
-      icon: Zap,
       title: "Ưu đãi độc quyền",
       description:
         "Combo giờ thấp điểm, mã giảm giá hàng tuần và chương trình thân thiết giúp đội bạn tối ưu chi phí.",
+      image:
+        "https://images.pexels.com/photos/1103829/pexels-photo-1103829.jpeg",
     },
   ];
 
@@ -188,40 +164,6 @@ const HomePage: React.FC = () => {
               </div>
             </div>
           </div>
-
-          {/* <div className="hero-card">
-            <div className="hero-card-header">
-              <span className="hero-card-pill">Gợi ý nhanh</span>
-              <h3 className="hero-card-title">Bạn muốn chơi môn gì hôm nay?</h3>
-              <p className="hero-card-subtitle">
-                Lựa chọn một gợi ý để xem lịch trống và khuyến mãi phù hợp nhất.
-              </p>
-            </div>
-
-            <div className="hero-shortcuts">
-              {quickShortcuts.map((item) => (
-                <Link key={item.title} to={item.to} className="hero-shortcut">
-                  <div className="hero-shortcut-icon">
-                    <item.icon className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <div className="font-semibold text-gray-900">
-                      {item.title}
-                    </div>
-                    <p className="text-sm text-gray-500">{item.description}</p>
-                  </div>
-                  <ArrowRight className="w-4 h-4 text-emerald-600 ml-auto" />
-                </Link>
-              ))}
-            </div>
-
-            <div className="hero-card-footer">
-              <ShieldCheck className="w-4 h-4 text-emerald-500" />
-              <p className="text-xs text-gray-500">
-                Giá hiển thị đã bao gồm phí sân và có thể áp dụng khuyến mãi.
-              </p>
-            </div>
-          </div> */}
         </div>
       </section>
 
@@ -236,10 +178,12 @@ const HomePage: React.FC = () => {
         </div>
         <div className="feature-grid">
           {featureHighlights.map((item) => (
-            <article key={item.title} className="feature-card">
-              <div className="feature-icon">
-                <item.icon className="w-5 h-5" />
-              </div>
+            <article
+              key={item.title}
+              className="feature-card"
+              style={{ backgroundImage: `url(${item.image})` }}
+            >
+              <div className="feature-icon" aria-hidden="true" />
               <div>
                 <h3 className="feature-title">{item.title}</h3>
                 <p className="feature-description">{item.description}</p>
