@@ -5,10 +5,12 @@ import {
   CheckCircle,
   Compass,
   Quote,
+  ShieldCheck,
   Sparkles,
   Star,
   Timer,
   Users,
+  Zap,
 } from "lucide-react";
 import FieldCard from "../components/fields/FieldCard";
 import ShopRequestForm from "../components/forms/ShopRequestForm";
@@ -52,6 +54,7 @@ const HomePage: React.FC = () => {
 
   const featureHighlights = [
     {
+      icon: ShieldCheck,
       title: "Đối tác uy tín",
       description:
         "100% sân đã được đội ngũ kiểm duyệt chất lượng, cơ sở vật chất, phòng thay đồ và hệ thống chiếu sáng.",
@@ -59,12 +62,14 @@ const HomePage: React.FC = () => {
         "https://images.pexels.com/photos/46798/the-ball-stadion-football-the-pitch-46798.jpeg",
     },
     {
+      icon: Sparkles,
       title: "Trải nghiệm liền mạch",
       description:
         "Tra cứu lịch trống, đặt sân, thanh toán – tất cả trong một giao diện thống nhất.",
       image: "https://images.pexels.com/photos/358042/pexels-photo-358042.jpeg",
     },
     {
+      icon: Zap,
       title: "Ưu đãi độc quyền",
       description:
         "Combo giờ thấp điểm, mã giảm giá hàng tuần và chương trình thân thiết giúp đội bạn tối ưu chi phí.",
@@ -183,7 +188,9 @@ const HomePage: React.FC = () => {
               className="feature-card"
               style={{ backgroundImage: `url(${item.image})` }}
             >
-              <div className="feature-icon" aria-hidden="true" />
+              <div className="feature-icon">
+                {item.icon ? <item.icon className="w-5 h-5" /> : null}
+              </div>
               <div>
                 <h3 className="feature-title">{item.title}</h3>
                 <p className="feature-description">{item.description}</p>

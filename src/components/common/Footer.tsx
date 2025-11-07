@@ -1,15 +1,16 @@
 import React from "react";
+import { Clock, Mail, MapPin, Phone } from "lucide-react";
 
 const Footer: React.FC = () => {
   const contactItems = [
     {
+      icon: MapPin,
       label: "Địa chỉ",
       value: "615 Âu Cơ, Phường Tân Phú, TP. Hồ Chí Minh",
-      prefix: "VP",
     },
-    { label: "Hotline", value: "0866 845 867", prefix: "HL" },
-    { label: "Email", value: "thuere2004@gmail.com", prefix: "EM" },
-    { label: "Hỗ trợ", value: "24/7 Hỗ trợ khách hàng", prefix: "24" },
+    { icon: Phone, label: "Hotline", value: "0866 845 867" },
+    { icon: Mail, label: "Email", value: "thuere2004@gmail.com" },
+    { icon: Clock, label: "Hỗ trợ", value: "24/7 Hỗ trợ khách hàng" },
   ];
 
   return (
@@ -90,10 +91,10 @@ const Footer: React.FC = () => {
           <div className="space-y-4">
             <h3 className="footer-title">Liên hệ</h3>
             <div className="space-y-3">
-              {contactItems.map(({ label, value, prefix }) => (
+              {contactItems.map(({ icon: Icon, label, value }) => (
                 <div key={label} className="flex items-center gap-3">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-xs font-semibold uppercase tracking-wide text-emerald-200">
-                    {prefix}
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-emerald-200">
+                    <Icon className="h-4 w-4" />
                   </span>
                   <div>
                     <p className="text-[11px] uppercase tracking-[0.3em] text-emerald-200/60">
