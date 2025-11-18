@@ -149,6 +149,7 @@ export interface UpdateMyShopPayload {
   bank_account_number?: string;
   bank_name?: string;
   bank_account_holder?: string;
+  phone_number?: string;
   opening_time?: string | null;
   closing_time?: string | null;
   is_open_24h?: boolean;

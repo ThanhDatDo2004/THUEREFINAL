@@ -1,4 +1,4 @@
-import type { Fields, FieldSportType, FieldStatus } from "../types";
+import type { Fields, FieldSportType, FieldStatus, Shops } from "../types";
 
 // --- Normalization ---
 
@@ -187,4 +187,38 @@ export const resolveFieldPrice = (
   field: Pick<Fields, "price_per_hour" | "default_price_per_hour"> | null | undefined
 ): number => {
   return field?.price_per_hour ?? field?.default_price_per_hour ?? 0;
+};
+
+const TIME_WITH_SECONDS = /^\d{2}:\d{2}:\d{2}$/;
+
+const normalizeTimeForDisplay = (value?: string | null) => {
+  if (!value) return "";
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+  if (TIME_WITH_SECONDS.test(trimmed)) {
+    return trimmed.slice(0, 5);
+  }
+  return trimmed;
+};
+
+const toBooleanFlexible = (value: Shops["is_open_24h"]): boolean | undefined => {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "number") return value !== 0;
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    if (["1", "true", "y", "yes"].includes(normalized)) return true;
+    if (["0", "false", "n", "no"].includes(normalized)) return false;
+  }
+  return undefined;
+};
+
+export const formatShopOperatingHours = (shop?: Shops | null): string => {
+  if (!shop) return "Chưa cập nhật";
+  const isOpen24h = toBooleanFlexible(shop.is_open_24h);
+  if (isOpen24h) return "Mở cửa 24/24";
+  const opening = normalizeTimeForDisplay(shop.opening_time);
+  const closing = normalizeTimeForDisplay(shop.closing_time);
+  if (opening && closing) return `${opening} - ${closing}`;
+  if (opening || closing) return opening || closing;
+  return "Chưa cập nhật";
 };

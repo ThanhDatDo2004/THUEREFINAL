@@ -19,6 +19,7 @@ export interface Shops {
   shop_code: number;
   user_code: number;
   shop_name: string;
+  phone_number: string;
   address: string;
   opening_time?: string | null;
   closing_time?: string | null;

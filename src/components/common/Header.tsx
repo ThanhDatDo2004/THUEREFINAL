@@ -1,11 +1,6 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
-import {
-  LogOut,
-  ShoppingCart,
-  Trophy,
-  User as UserIcon,
-} from "lucide-react";
+import { LogOut, ShoppingCart, Trophy, User as UserIcon } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 
 const Header: React.FC = () => {
@@ -80,9 +75,6 @@ const Header: React.FC = () => {
                   <div className="flex flex-col leading-tight">
                     <span className="text-gray-700 font-medium">
                       {user.user_name}
-                    </span>
-                    <span className="text-xs uppercase tracking-wide text-gray-400">
-                      ID {user.level_type}
                     </span>
                   </div>
                   <span className="px-2 py-1 text-xs bg-emerald-100 text-emerald-600 rounded-full capitalize">

@@ -4,7 +4,6 @@ import {
   AlertCircle,
   Building,
   CheckCircle2,
-  Clock3,
   Mail,
   MapPin,
   MessageSquare,
@@ -12,9 +11,7 @@ import {
   PhoneCall,
   Send,
   Sparkles,
-  TrendingUp,
   User,
-  Users,
 } from "lucide-react";
 import { submitShopRequest } from "../../models/shop.api";
 
@@ -27,32 +24,6 @@ interface ShopRequestFormData {
 }
 
 type IconComponent = React.ComponentType<React.SVGProps<SVGSVGElement>>;
-
-const highlights: Array<{
-  icon: IconComponent;
-  label: string;
-  value: string;
-  helper: string;
-}> = [
-  {
-    icon: Users,
-    label: "Đối tác đang hoạt động",
-    value: "250+",
-    helper: "toàn quốc",
-  },
-  {
-    icon: TrendingUp,
-    label: "Lượt đặt sân / tháng",
-    value: "1.8K",
-    helper: "trung bình",
-  },
-  {
-    icon: Clock3,
-    label: "Thời gian duyệt nhanh nhất",
-    value: "12h",
-    helper: "kể từ lúc gửi",
-  },
-];
 
 const benefits: Array<{
   icon: IconComponent;
@@ -85,13 +56,13 @@ const contactChannels: Array<{
   {
     icon: PhoneCall,
     label: "Hotline",
-    value: "1900 6868",
+    value: "0866 845 867",
     hint: "08:00 - 22:00 (T2-T7)",
   },
   {
     icon: Mail,
     label: "Email hỗ trợ",
-    value: "partner@thuere.vn",
+    value: "thuere2004",
     hint: "Phản hồi trong 24h",
   },
 ];
@@ -152,31 +123,13 @@ const ShopRequestForm: React.FC = () => {
             Đăng ký mở Shop và bắt đầu nhận đơn trong vài bước
           </h2>
           <p className="mt-4 text-base text-white/70 max-w-3xl mx-auto">
-            Điền thông tin cơ bản, đội ngũ ThueRe sẽ đồng hành cùng bạn trong suốt hành
-            trình số hóa quản lý sân và tối ưu hiệu suất hoạt động.
+            Điền thông tin cơ bản, đội ngũ ThueRe sẽ đồng hành cùng bạn trong
+            suốt hành trình số hóa quản lý sân và tối ưu hiệu suất hoạt động.
           </p>
         </div>
 
         <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
           <section className="rounded-3xl border border-white/10 bg-white/5 p-8 text-white shadow-[0_25px_80px_rgba(15,23,42,0.4)] backdrop-blur-xl">
-            <div className="flex flex-wrap gap-4 text-left">
-              {highlights.map(({ icon: Icon, label, value, helper }) => (
-                <div
-                  key={label}
-                  className="flex-1 min-w-[140px] rounded-2xl border border-white/10 bg-white/5 px-5 py-4 shadow-inner shadow-black/20"
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-3xl font-semibold text-white">{value}</p>
-                    <Icon className="h-5 w-5 text-emerald-300" />
-                  </div>
-                  <p className="mt-1 text-sm text-white/70">{label}</p>
-                  <p className="mt-3 text-xs uppercase tracking-widest text-white/40">
-                    {helper}
-                  </p>
-                </div>
-              ))}
-            </div>
-
             <div className="mt-10 space-y-5">
               {benefits.map(({ icon: Icon, title, description }, index) => (
                 <div
@@ -255,7 +208,8 @@ const ShopRequestForm: React.FC = () => {
                 Form đăng ký mở Shop
               </h3>
               <p className="mt-2 text-sm text-slate-500">
-                Chúng tôi sẽ liên hệ trong 24h để xác nhận và hướng dẫn các bước tiếp theo.
+                Chúng tôi sẽ liên hệ trong 24h để xác nhận và hướng dẫn các bước
+                tiếp theo.
               </p>
             </div>
 
@@ -268,7 +222,8 @@ const ShopRequestForm: React.FC = () => {
                   <div>
                     <p className="font-semibold">Gửi yêu cầu thành công</p>
                     <p className="text-sm">
-                      Đội ngũ hỗ trợ sẽ phản hồi qua email hoặc điện thoại trong vòng 24 giờ làm việc.
+                      Đội ngũ hỗ trợ sẽ phản hồi qua email hoặc điện thoại trong
+                      vòng 24 giờ làm việc.
                     </p>
                   </div>
                 </div>
@@ -309,9 +264,6 @@ const ShopRequestForm: React.FC = () => {
                       className="input pr-12"
                       placeholder="Nguyễn Văn A"
                     />
-                    <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-xs text-slate-400">
-                      Bắt buộc
-                    </span>
                   </div>
                   {errors.full_name && (
                     <p className="mt-1 text-sm text-red-500">
@@ -337,7 +289,7 @@ const ShopRequestForm: React.FC = () => {
                       },
                     })}
                     className="input"
-                    placeholder="email@thuere.vn"
+                    placeholder="thuere2004@gmail.com"
                   />
                   {errors.email && (
                     <p className="mt-1 text-sm text-red-500">
@@ -391,7 +343,7 @@ const ShopRequestForm: React.FC = () => {
                       },
                     })}
                     className="input"
-                    placeholder="Số nhà, đường, quận/huyện..."
+                    placeholder="Đường, quận/huyện..."
                   />
                   {errors.address && (
                     <p className="mt-1 text-sm text-red-500">
@@ -417,9 +369,6 @@ const ShopRequestForm: React.FC = () => {
                   className="input"
                   placeholder="Loại sân, số lượng sân, tình trạng đặt sân hiện tại, các khung giờ trống..."
                 />
-                <p className="mt-1 text-xs text-slate-400">
-                  Càng mô tả chi tiết, đội ngũ càng dễ tư vấn mức hoa hồng phù hợp.
-                </p>
                 {errors.message && (
                   <p className="mt-1 text-sm text-red-500">
                     {errors.message.message}

@@ -5,6 +5,7 @@ import { fetchMyShop, updateMyShop } from "../../models/shop.api";
 import type { Shops } from "../../types";
 
 const TIME_REGEX = /^([01]\d|2[0-3]):[0-5]\d$/;
+const PHONE_REGEX = /^[0-9]{10,11}$/;
 
 const normalizeTimeForInput = (value?: string | null) => {
   if (!value) return "";
@@ -28,6 +29,7 @@ const ShopSettingsPage: React.FC = () => {
   const [address, setAddress] = useState("");
   const [bankName, setBankName] = useState("");
   const [bankAccount, setBankAccount] = useState("");
+  const [phoneNumber, setNumber] = useState("");
   const [openingTime, setOpeningTime] = useState("");
   const [closingTime, setClosingTime] = useState("");
   const [isOpen24h, setIsOpen24h] = useState(false);
@@ -68,6 +70,7 @@ const ShopSettingsPage: React.FC = () => {
     setAddress(shop.address || "");
     setBankName(shop.bank_name || "");
     setBankAccount(shop.bank_account_number || "");
+    setNumber(shop.phone_number || "");
     setIsOpen24h(Boolean(shop.is_open_24h));
     setOpeningTime(normalizeTimeForInput(shop.opening_time));
     setClosingTime(normalizeTimeForInput(shop.closing_time));
@@ -76,8 +79,12 @@ const ShopSettingsPage: React.FC = () => {
   const validate = () => {
     const name = shopName.trim();
     const addr = address.trim();
+    const phone = phoneNumber.trim();
     if (name.length < 2) return "Tên shop phải có ít nhất 2 ký tự.";
     if (addr.length < 5) return "Địa chỉ phải có ít nhất 5 ký tự.";
+    if (phone && !PHONE_REGEX.test(phone)) {
+      return "Số điện thoại phải có 10-11 chữ số.";
+    }
     if (!isOpen24h) {
       const open = openingTime.trim();
       const close = closingTime.trim();
@@ -110,6 +117,7 @@ const ShopSettingsPage: React.FC = () => {
         bank_account_number: bankAccount.trim() || undefined,
         bank_name: bankName.trim() || undefined,
         bank_account_holder: getBankAccountHolder(),
+        phone_number: phoneNumber.trim() || undefined,
         opening_time: isOpen24h ? null : openingTime.trim(),
         closing_time: isOpen24h ? null : closingTime.trim(),
         is_open_24h: isOpen24h,
@@ -206,6 +214,14 @@ const ShopSettingsPage: React.FC = () => {
               onChange={(e) => setBankAccount(e.target.value)}
             />
           </div>
+          <div className="form-group">
+            <label className="label">Số điện thoại</label>
+            <input
+              className="input"
+              value={phoneNumber}
+              onChange={(e) => setNumber(e.target.value)}
+            />
+          </div>
           <button className="btn-primary" onClick={onSave} disabled={saving}>
             {saving ? "Đang lưu..." : "Lưu thay đổi"}
           </button>
@@ -252,7 +268,11 @@ const ShopSettingsPage: React.FC = () => {
             </p>
           )}
           <div className="flex gap-3">
-            <button className="btn-ghost" type="button" onClick={handleResetOperatingHours}>
+            <button
+              className="btn-ghost"
+              type="button"
+              onClick={handleResetOperatingHours}
+            >
               Đặt lại
             </button>
             <button

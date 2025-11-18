@@ -3,6 +3,7 @@ import { MapPin, TrendingUp, Clock, Calendar } from "lucide-react";
 import type { FieldWithImages } from "../../types";
 import { Link } from "react-router-dom";
 import {
+  formatShopOperatingHours,
   getFieldStatusClass,
   getFieldStatusLabel,
   getSportLabel,
@@ -60,6 +61,7 @@ const FieldCard: React.FC<FieldCardProps> = ({ field }) => {
   const primaryImage = field.images?.[0];
   const img = resolveImageUrl(primaryImage?.image_url, primaryImage?.storage);
   const price = resolveFieldPrice(field);
+  const shopHours = formatShopOperatingHours(field.shop);
 
   const getStatusBadgeStyle = (className: string) => {
     if (
@@ -150,7 +152,7 @@ const FieldCard: React.FC<FieldCardProps> = ({ field }) => {
             <Clock className="w-5 h-5 text-green-500 flex-shrink-0" />
             <span className="text-sm">
               Giờ mở cửa:{" "}
-              <span className="font-semibold text-gray-800">6:00 - 22:00</span>
+              <span className="font-semibold text-gray-800">{shopHours}</span>
             </span>
           </div>
         </div>
