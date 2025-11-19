@@ -62,6 +62,7 @@ export interface Fields {
   default_price_per_hour?: number;
   address: string;
   status: FieldStatus;
+  quantityCount?: number;
 }
 
 export interface FieldImages {

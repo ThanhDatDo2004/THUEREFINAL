@@ -209,6 +209,7 @@ export interface UpsertShopFieldPayload {
   status?: Fields["status"];
   // Frontend passes list of image IDs to delete; backend may choose to honor it
   deleted_images?: number[];
+  quantity_count?: number;
 }
 
 export interface ShopFieldsQuery {

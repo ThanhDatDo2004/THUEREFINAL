@@ -538,6 +538,12 @@ const ShopFieldsPage: React.FC = () => {
       if (!Number.isFinite(price) || price < 0) {
         errors.price_per_hour = "Giá mỗi giờ phải lớn hơn hoặc bằng 0.";
       }
+      if (state.quantityCount !== undefined) {
+        const qty = Number(state.quantityCount);
+        if (!Number.isFinite(qty) || qty <= 0) {
+          errors.quantityCount = "Số lượng sân phải lớn hơn 0.";
+        }
+      }
       return errors;
     },
     [provinces.length]
@@ -560,6 +566,11 @@ const ShopFieldsPage: React.FC = () => {
       districtCode: location.districtCode,
       wardCode: location.wardCode,
       street: location.street,
+      quantityCount:
+        f.quantityCount ??
+        (Array.isArray((f as any)?.quantities)
+          ? (f as any).quantities.length
+          : undefined),
     });
     setEditFormErrors({});
     setEditImageError("");
@@ -599,15 +610,19 @@ const ShopFieldsPage: React.FC = () => {
     ]
       .filter(Boolean)
       .join(", ");
-    try {
-      const updated = await updateShopField(editing.field_code, {
-        field_name: form.field_name.trim(),
-        sport_type: form.sport_type,
-        price_per_hour: Number(form.price_per_hour) || 0,
-        address: composedAddress,
-        status: form.status,
-        deleted_images: imagesToDelete,
-      });
+      try {
+        const updated = await updateShopField(editing.field_code, {
+          field_name: form.field_name.trim(),
+          sport_type: form.sport_type,
+          price_per_hour: Number(form.price_per_hour) || 0,
+          address: composedAddress,
+          status: form.status,
+          quantity_count:
+            form.quantityCount !== undefined
+              ? Number(form.quantityCount)
+              : undefined,
+          deleted_images: imagesToDelete,
+        });
       if (updated) {
         setFields((prev) =>
           prev.map((x) =>
@@ -1224,6 +1239,40 @@ const ShopFieldsPage: React.FC = () => {
                   )}
                 </label>
               </div>
+
+              <label className="block">
+                <span className="text-sm text-gray-600">
+                  Số lượng sân (court){" "}
+                  <span className="text-gray-400"></span>
+                </span>
+                <input
+                  type="number"
+                  min={1}
+                  className="input mt-1 w-full"
+                  value={form.quantityCount ?? ""}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setForm((prev) =>
+                      prev
+                        ? {
+                            ...prev,
+                            quantityCount: value ? Number(value) : undefined,
+                          }
+                        : prev
+                    );
+                    setEditFormErrors((prev) => ({
+                      ...prev,
+                      quantityCount: undefined,
+                    }));
+                  }}
+                  placeholder="VD: 4"
+                />
+                {editFormErrors.quantityCount && (
+                  <p className="mt-1 text-sm text-red-600">
+                    {editFormErrors.quantityCount}
+                  </p>
+                )}
+              </label>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <label className="block">
