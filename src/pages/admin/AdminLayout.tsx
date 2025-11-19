@@ -5,7 +5,6 @@ import {
   Users,
   Store,
   FileClock,
-  BarChart3,
   CreditCard,
   Settings,
   ChevronLeft,
@@ -101,16 +100,6 @@ function AdminLayout() {
             >
               <FileClock className="h-4 w-4" />
               {!collapsed && <span>Yêu cầu mở sân</span>}
-            </NavLink>
-
-            <NavLink
-              to="/admin/insights"
-              className={({ isActive }) =>
-                `${navItemBase} ${isActive ? navItemActive : navItemIdle}`
-              }
-            >
-              <BarChart3 className="h-4 w-4" />
-              {!collapsed && <span>Insights</span>}
             </NavLink>
 
             <NavLink

@@ -33,7 +33,6 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUsersPage from "./pages/admin/AdminUsersPage";
 import AdminShopsPage from "./pages/admin/AdminShopsPage";
 import AdminRequestsPage from "./pages/admin/AdminRequestsPage";
-import AdminInsightsPage from "./pages/admin/AdminInsightsPage";
 import AdminTransactionsPage from "./pages/admin/AdminTransactionsPage";
 import AdminPayoutRequestsPage from "./pages/admin/AdminPayoutRequestsPage";
 import PaymentPage from "./pages/PaymentPage";
@@ -169,7 +168,6 @@ function App() {
             <Route path="users" element={<AdminUsersPage />} />
             <Route path="shops" element={<AdminShopsPage />} />
             <Route path="requests" element={<AdminRequestsPage />} />
-            <Route path="insights" element={<AdminInsightsPage />} />
             <Route path="transactions" element={<AdminTransactionsPage />} />
             <Route path="payouts" element={<AdminPayoutRequestsPage />} />
           </Route>
