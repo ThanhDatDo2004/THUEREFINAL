@@ -2,6 +2,13 @@ import api from "./api";
 import type { IApiSuccessResponse } from "../interfaces/common";
 import type { PaymentStatus } from "../utils/payment-helpers";
 
+export interface BankAccountInfo {
+  adminBankId: number;
+  bankName: string;
+  accountNumber: string;
+  accountHolder: string;
+}
+
 export interface PaymentInitResponse {
   paymentID: number;
   qr_code: string;
@@ -12,6 +19,8 @@ export interface PaymentInitResponse {
   paymentStatus: PaymentStatus;
   expiresIn: number;
   bookingId?: number;
+  paymentMethod?: string;
+  bankAccount?: BankAccountInfo | null;
 }
 
 export interface PaymentStatusResponse {

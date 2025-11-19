@@ -2,6 +2,10 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Clock, AlertCircle, FileText } from "lucide-react";
 import { extractErrorMessage } from "../models/api.helpers";
+import {
+  getBookingStatusBadge,
+  getPaymentStatusBadge,
+} from "../utils/statusLabels";
 import { getBookingDetailApi, type BookingDetail } from "../models/booking.api";
 
 type BookingDetailPageState = BookingDetail & {
@@ -17,56 +21,6 @@ const formatCurrency = (value?: number) => {
     currency: "VND",
     minimumFractionDigits: 0,
   }).format(value);
-};
-
-const getStatusBadge = (status: string) => {
-  const mapping: Record<string, { bg: string; text: string; label: string }> = {
-    pending: {
-      bg: "bg-amber-100",
-      text: "text-amber-700",
-      label: "Chờ xác nhận",
-    },
-    confirmed: {
-      bg: "bg-emerald-100",
-      text: "text-emerald-700",
-      label: "Đã xác nhận",
-    },
-    cancelled: { bg: "bg-red-100", text: "text-red-700", label: "Đã hủy" },
-    completed: {
-      bg: "bg-blue-100",
-      text: "text-blue-700",
-      label: "Hoàn thành",
-    },
-  };
-  const config = mapping[status] || mapping.pending;
-  return { ...config, value: status };
-};
-
-const getPaymentStatusBadge = (status: string) => {
-  const mapping: Record<string, { bg: string; text: string; label: string }> = {
-    pending: {
-      bg: "bg-amber-100",
-      text: "text-amber-700",
-      label: "Chưa thanh toán",
-    },
-    paid: {
-      bg: "bg-emerald-100",
-      text: "text-emerald-700",
-      label: "Đã thanh toán",
-    },
-    failed: {
-      bg: "bg-red-100",
-      text: "text-red-700",
-      label: "Thanh toán thất bại",
-    },
-    refunded: {
-      bg: "bg-gray-100",
-      text: "text-gray-700",
-      label: "Đã hoàn tiền",
-    },
-  };
-  const config = mapping[status] || mapping.pending;
-  return { ...config, value: status };
 };
 
 const getSlotStatusBadge = (status?: string | null) => {
@@ -225,7 +179,9 @@ const BookingDetailPage: React.FC = () => {
     );
   }
 
-  const bookingStatusBadge = getStatusBadge(data.BookingStatus || "pending");
+  const bookingStatusBadge = getBookingStatusBadge(
+    data.BookingStatus || "pending"
+  );
   const paymentStatusBadge = getPaymentStatusBadge(
     data.PaymentStatus || "pending"
   );
@@ -258,12 +214,12 @@ const BookingDetailPage: React.FC = () => {
               </div>
               <div className="flex flex-col gap-2">
                 <span
-                  className={`rounded-full px-4 py-2 text-sm font-semibold text-center ${bookingStatusBadge.bg} ${bookingStatusBadge.text}`}
+                  className={`rounded-full px-4 py-2 text-sm font-semibold text-center ${bookingStatusBadge.className}`}
                 >
                   {bookingStatusBadge.label}
                 </span>
                 <span
-                  className={`rounded-full px-4 py-2 text-sm font-semibold text-center ${paymentStatusBadge.bg} ${paymentStatusBadge.text}`}
+                  className={`rounded-full px-4 py-2 text-sm font-semibold text-center ${paymentStatusBadge.className}`}
                 >
                   {paymentStatusBadge.label}
                 </span>

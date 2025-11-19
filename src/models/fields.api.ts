@@ -1,4 +1,5 @@
 import { api } from "./api";
+import { extractErrorMessage } from "./api.helpers";
 import type { FieldImages, FieldWithImages, FieldsQuery } from "../types";
 
 export interface FieldsFacetItem {
@@ -105,31 +106,6 @@ const buildQuery = (params: FieldsQuery = {}) => {
   if (params.sortDir) query.sortDir = params.sortDir;
 
   return query;
-};
-
-type ErrorWithResponse = {
-  response?: {
-    status?: number;
-    data?: {
-      error?: { message?: string | null } | null;
-      message?: string | null;
-    };
-  };
-  message?: string;
-};
-
-const extractErrorMessage = (error: unknown, fallback: string) => {
-  if (error instanceof Error && error.message) {
-    return error.message;
-  }
-  if (typeof error === "object" && error !== null) {
-    const typed = error as ErrorWithResponse;
-    const apiMessage =
-      typed.response?.data?.error?.message || typed.response?.data?.message;
-    if (apiMessage) return apiMessage;
-    if (typed.message) return typed.message;
-  }
-  return fallback;
 };
 
 const toNumberOrUndefined = (value: unknown) => {

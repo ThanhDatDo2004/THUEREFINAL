@@ -61,7 +61,7 @@ export const usePriceCalculation = (
 
     if (promotionCode.trim()) {
       if (!isAuthenticated) {
-        feedback = "Hãy đăng ký để được áp dụng khuyến mãi.";
+        feedback = "Hãy đăng nhập để được áp dụng khuyến mãi.";
         feedbackClass = "text-red-600";
       } else if (!selectedPromotion) {
         feedback = "Không tìm thấy khuyến mãi tương ứng.";

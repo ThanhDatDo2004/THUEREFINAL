@@ -10,6 +10,7 @@ import {
 import {
   initiatePaymentApi,
   checkPaymentStatusApi,
+  type BankAccountInfo,
 } from "../models/payment.api";
 import { usePaymentPolling } from "../hooks/usePaymentPolling";
 import { extractErrorMessage } from "../models/api.helpers";
@@ -28,6 +29,7 @@ interface PaymentPageState {
   pollInterval: number;
   pollingEnabled: boolean;
   checkCooldown: number;
+  bankAccount: BankAccountInfo | null;
 }
 
 type LocationState = {
@@ -46,20 +48,21 @@ const PaymentPage: React.FC = () => {
     return state || {};
   }, [location.state]);
 
-  const [state, setState] = useState<PaymentPageState>({
-    loading: !navigationState.qrCode,
-    initiating: false,
-    error: null,
-    qrCode: navigationState.qrCode || null,
+const [state, setState] = useState<PaymentPageState>({
+  loading: !navigationState.qrCode,
+  initiating: false,
+  error: null,
+  qrCode: navigationState.qrCode || null,
     momoUrl: null,
     amount: navigationState.amount || null,
     paymentID: navigationState.paymentID || null,
     expiresIn: 900,
     bookingId: null,
-    pollInterval: 4000,
-    pollingEnabled: false,
-    checkCooldown: 0,
-  });
+  pollInterval: 4000,
+  pollingEnabled: false,
+  checkCooldown: 0,
+  bankAccount: null,
+});
 
   const paymentPolling = usePaymentPolling({
     bookingCode: bookingCode || "",
@@ -134,6 +137,7 @@ const PaymentPage: React.FC = () => {
             expiresIn: data.expiresIn || 900,
             bookingId,
             loading: false,
+            bankAccount: data.bankAccount || null,
           }));
         }
       } catch (err: unknown) {
@@ -174,41 +178,6 @@ const PaymentPage: React.FC = () => {
     return () => clearTimeout(timer);
   }, [state.checkCooldown]);
 
-  // ✅ Auto-polling every 2 seconds after user verifies
-  useEffect(() => {
-    if (!state.pollingEnabled || !bookingCode) return;
-
-    const pollInterval = setInterval(async () => {
-      try {
-        const response = await checkPaymentStatusApi(bookingCode);
-
-        if (response.success && response.data) {
-          const paymentStatus = normalizePaymentStatus(response.data.status);
-
-          if (paymentStatus === "paid") {
-            clearInterval(pollInterval);
-            setState((prev) => ({ ...prev, pollingEnabled: false }));
-            setTimeout(() => {
-              navigate(`/payment/${bookingCode}`);
-            }, 1000);
-          } else if (paymentStatus === "failed") {
-            clearInterval(pollInterval);
-            setState((prev) => ({
-              ...prev,
-              error: "Thanh toán thất bại. Vui lòng thử lại.",
-              pollingEnabled: false,
-            }));
-          }
-          // If still pending, continue polling
-        }
-      } catch (err: unknown) {
-        console.error("Polling error:", err);
-        // Continue polling on error
-      }
-    }, 2000);
-
-    return () => clearInterval(pollInterval);
-  }, [state.pollingEnabled, bookingCode, navigate]);
   const handleRetry = () => {
     setState((prev) => ({
       ...prev,
@@ -351,12 +320,22 @@ const PaymentPage: React.FC = () => {
                 <p className="text-xs uppercase tracking-wide text-gray-500">
                   Tài khoản nhận
                 </p>
-                <div className="mt-1 text-sm text-gray-900">
-                  <p>Người nhận: Do Thanh Dat</p>
-                  <p>Ngân hàng: BIDV</p>
-                  <p>Số tài khoản: 6353897509</p>
-                  <p>Chi nhánh: TP.HCM</p>
-                </div>
+                {state.bankAccount ? (
+                  <div className="mt-1 text-sm text-gray-900 space-y-1">
+                    <p>Người nhận: {state.bankAccount.accountHolder}</p>
+                    <p>Ngân hàng: {state.bankAccount.bankName}</p>
+                    <p>
+                      Số tài khoản:{" "}
+                      <span className="font-mono">
+                        {state.bankAccount.accountNumber}
+                      </span>
+                    </p>
+                  </div>
+                ) : (
+                  <div className="mt-1 text-sm text-gray-500">
+                    Đang lấy thông tin tài khoản nhận...
+                  </div>
+                )}
               </div>
             </div>
           )}

@@ -1,5 +1,5 @@
 // src/pages/shop/ShopLayout.tsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import {
   Layers,
@@ -25,6 +25,7 @@ const navItemActive = "bg-gray-900 text-white shadow";
 const ShopLayout: React.FC = () => {
   const { user } = useAuth();
   const [shop, setShop] = useState<Shops | null>(null);
+  const [shopLoading, setShopLoading] = useState(true);
   const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
@@ -32,16 +33,36 @@ const ShopLayout: React.FC = () => {
     (async () => {
       if (!user?.user_code) return;
       try {
+        setShopLoading(true);
         const s = await fetchMyShop();
         if (!ignore) setShop(s ?? null);
       } catch (error) {
         console.error(error);
+        if (!ignore) setShop(null);
       }
+      if (!ignore) setShopLoading(false);
     })();
     return () => {
       ignore = true;
     };
   }, [user?.user_code]);
+
+  const isShopConfigured = useMemo(() => {
+    if (!shop) return false;
+    const hasBasicInfo =
+      Boolean(shop.shop_name?.trim()) &&
+      Boolean(shop.address?.trim()) &&
+      Boolean(shop.phone_number?.trim());
+    const hasBankInfo =
+      Boolean(shop.bank_name?.trim()) &&
+      Boolean(shop.bank_account_number?.trim());
+    const hasOperatingHours =
+      Boolean(shop.is_open_24h) ||
+      (Boolean(shop.opening_time) && Boolean(shop.closing_time));
+    return hasBasicInfo && hasBankInfo && hasOperatingHours;
+  }, [shop]);
+
+  const showSetupReminder = !shopLoading && !isShopConfigured;
 
   const initial = (shop?.shop_name?.trim()?.charAt(0) || "S").toUpperCase();
 
@@ -165,7 +186,26 @@ const ShopLayout: React.FC = () => {
         </aside>
 
         {/* CONTENT */}
-        <main className="rounded-2xl bg-white shadow-md border border-gray-100 p-4 lg:p-6 min-h-[60vh]">
+        <main className="rounded-2xl bg-white shadow-md border border-gray-100 p-4 lg:p-6 min-h-[60vh] space-y-4">
+          {showSetupReminder && (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 sm:flex sm:items-center sm:justify-between sm:gap-6">
+              <div>
+                <p className="font-semibold text-amber-900">
+                  Để sử dụng đầy đủ các chức năng shop
+                </p>
+                <p className="text-sm text-amber-700">
+                  Vui lòng truy cập mục <strong>Thiết lập</strong> và điền thông
+                  tin shop của bạn trước khi quản lý sân, đơn đặt hay ví.
+                </p>
+              </div>
+              <NavLink
+                to="/shop/settings"
+                className="mt-3 inline-flex items-center justify-center rounded-lg bg-amber-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-amber-700 sm:mt-0"
+              >
+                Mở Thiết lập
+              </NavLink>
+            </div>
+          )}
           <Outlet />
         </main>
       </div>

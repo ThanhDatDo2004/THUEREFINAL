@@ -610,19 +610,19 @@ const ShopFieldsPage: React.FC = () => {
     ]
       .filter(Boolean)
       .join(", ");
-      try {
-        const updated = await updateShopField(editing.field_code, {
-          field_name: form.field_name.trim(),
-          sport_type: form.sport_type,
-          price_per_hour: Number(form.price_per_hour) || 0,
-          address: composedAddress,
-          status: form.status,
-          quantity_count:
-            form.quantityCount !== undefined
-              ? Number(form.quantityCount)
-              : undefined,
-          deleted_images: imagesToDelete,
-        });
+    try {
+      const updated = await updateShopField(editing.field_code, {
+        field_name: form.field_name.trim(),
+        sport_type: form.sport_type,
+        price_per_hour: Number(form.price_per_hour) || 0,
+        address: composedAddress,
+        status: form.status,
+        quantity_count:
+          form.quantityCount !== undefined
+            ? Number(form.quantityCount)
+            : undefined,
+        deleted_images: imagesToDelete,
+      });
       if (updated) {
         setFields((prev) =>
           prev.map((x) =>
@@ -654,9 +654,7 @@ const ShopFieldsPage: React.FC = () => {
         onCloseEdit();
       }
     } catch (error: any) {
-      setEditSubmitError(
-        error?.message || "Không thể lưu thay đổi. Vui lòng thử lại."
-      );
+      setEditSubmitError("Không thể lưu thay đổi. Vui lòng kiểm tra lại.");
     } finally {
       setSaving(false);
     }
@@ -772,7 +770,12 @@ const ShopFieldsPage: React.FC = () => {
         .join(", ");
 
       console.log("📝 Creating field with data:", formNew);
-      console.log("🔢 QuantityCount being sent:", Number(formNew.quantityCount), "Type:", typeof Number(formNew.quantityCount));
+      console.log(
+        "🔢 QuantityCount being sent:",
+        Number(formNew.quantityCount),
+        "Type:",
+        typeof Number(formNew.quantityCount)
+      );
       const created = await createShopField(shop.shop_code, {
         field_name: formNew.field_name.trim(),
         sport_type: formNew.sport_type,
@@ -814,8 +817,12 @@ const ShopFieldsPage: React.FC = () => {
       }
 
       closeCreate();
-      const quantityMsg = created.quantityCount ? ` với ${created.quantityCount} sân` : "";
-      setSuccessMessage(`Đã tạo sân "${created.field_name}"${quantityMsg} thành công.`);
+      const quantityMsg = created.quantityCount
+        ? ` với ${created.quantityCount} sân`
+        : "";
+      setSuccessMessage(
+        `Đã tạo sân "${created.field_name}"${quantityMsg} thành công.`
+      );
     } catch (error: any) {
       setCreateError(
         error?.message || "Không thể tạo sân mới. Vui lòng thử lại."
@@ -1098,8 +1105,6 @@ const ShopFieldsPage: React.FC = () => {
                       {getSportLabel(f.sport_type)}
                     </div>
                   </div>
-
-                
                 </div>
 
                 <div className="mt-2 flex items-center gap-1 text-gray-700">
@@ -1128,7 +1133,6 @@ const ShopFieldsPage: React.FC = () => {
         <div className="card">Chưa có sân nào.</div>
       )}
 
-      {/* ===== MODAL EDIT ===== */}
       {editing && form && (
         <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4 sm:p-6">
           <div className="absolute inset-0 bg-black/40" onClick={onCloseEdit} />
@@ -1242,8 +1246,7 @@ const ShopFieldsPage: React.FC = () => {
 
               <label className="block">
                 <span className="text-sm text-gray-600">
-                  Số lượng sân (court){" "}
-                  <span className="text-gray-400"></span>
+                  Số lượng sân<span className="text-gray-400"></span>
                 </span>
                 <input
                   type="number"
@@ -1676,7 +1679,7 @@ const ShopFieldsPage: React.FC = () => {
                 </label>
 
                 <label className="block">
-                  <span className="text-sm text-gray-600">Số sân *</span>
+                  <span className="text-sm text-gray-600">Số lượng sân *</span>
                   <input
                     type="number"
                     min={1}

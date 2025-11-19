@@ -43,6 +43,7 @@ import AvailableCourtSelector, {
   type CourtAvailabilityOption,
 } from "../components/forms/AvailableCourtSelector";
 import { fetchActiveShopPromotions } from "../models/promotions.api";
+import { extractErrorMessage } from "../models/api.helpers";
 
 interface BookingFormData {
   customer_name: string;
@@ -137,21 +138,6 @@ const formatHoldExpiresAt = (
     hour: "2-digit",
     minute: "2-digit",
   });
-};
-
-const getErrorMessage = (error: unknown, fallback: string) => {
-  if (error instanceof Error && error.message) {
-    return error.message;
-  }
-  if (
-    typeof error === "object" &&
-    error !== null &&
-    "message" in error &&
-    typeof (error as { message?: unknown }).message === "string"
-  ) {
-    return (error as { message: string }).message;
-  }
-  return fallback;
 };
 
 const deriveSlotState = (slot: FieldSlot) => {
@@ -272,7 +258,7 @@ const BookingPage: React.FC = () => {
           if (!ignore) setField(fetched ?? null);
         } catch (error: unknown) {
           if (!ignore) {
-            const message = getErrorMessage(
+            const message = extractErrorMessage(
               error,
               "Không thể tải thông tin sân. Vui lòng thử lại."
             );
@@ -337,7 +323,7 @@ const BookingPage: React.FC = () => {
       } catch (error: unknown) {
         if (!ignore) {
           setSlots([]);
-          const message = getErrorMessage(
+          const message = extractErrorMessage(
             error,
             "Không thể tải khung giờ trống. Vui lòng thử lại."
           );
@@ -1074,7 +1060,7 @@ const BookingPage: React.FC = () => {
         if (!ignore) {
           setPromotionOptions([]);
           setPromotionError(
-            getErrorMessage(
+            extractErrorMessage(
               error,
               "Không thể tải danh sách khuyến mãi của sân."
             )
@@ -1332,7 +1318,7 @@ const BookingPage: React.FC = () => {
           }
         }
       } else {
-        const message = getErrorMessage(
+        const message = extractErrorMessage(
           error,
           "Không thể xác nhận thanh toán. Vui lòng thử lại."
         );
@@ -1576,7 +1562,7 @@ const BookingPage: React.FC = () => {
                     setField(fetched ?? null);
                     setFieldError("");
                   } catch (error: unknown) {
-                    const message = getErrorMessage(
+                    const message = extractErrorMessage(
                       error,
                       "Không thể tải thông tin sân. Vui lòng thử lại."
                     );
