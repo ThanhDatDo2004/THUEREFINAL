@@ -503,22 +503,7 @@ const FieldDetailPage: React.FC = () => {
                 Đặt sân ngay
               </Link>
 
-              {/* Sử dụng class .btn-ghost từ skin.css, tùy biến lại màu */}
-              <button
-                className="btn-ghost w-full mb-6"
-                style={{
-                  borderColor: "var(--brand-600)",
-                  color: "var(--brand-600)",
-                }}
-                onMouseOver={(e) =>
-                  (e.currentTarget.style.backgroundColor = "var(--brand-50)")
-                }
-                onMouseOut={(e) =>
-                  (e.currentTarget.style.backgroundColor = "#fff")
-                }
-              >
-                Liên hệ chủ sân
-              </button>
+             
 
               {/* Shop Info */}
               <div className="border-t pt-6">

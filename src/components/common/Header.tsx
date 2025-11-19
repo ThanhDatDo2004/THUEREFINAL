@@ -48,10 +48,10 @@ const Header: React.FC = () => {
             )}
             {user?.level_type === "shop" && (
               <Link
-                to="/shop/dashboard"
+                to="/shop/fields"
                 className="text-gray-700 hover:text-emerald-600 transition-colors duration-200 font-medium"
               >
-                Quản lý Shop
+                Quản lý tài khoản
               </Link>
             )}
             {user?.level_type === "admin" && (

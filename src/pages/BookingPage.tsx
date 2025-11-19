@@ -1753,10 +1753,6 @@ const BookingPage: React.FC = () => {
                   <h2 className="text-2xl font-bold text-gray-900">
                     1. Chọn ngày và khung giờ
                   </h2>
-                  <p className="text-sm text-gray-500">
-                    Lịch trống hiển thị theo thời gian thực từ hệ thống quản lý
-                    của sân.
-                  </p>
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-[220px,1fr]">
@@ -2156,16 +2152,16 @@ const BookingPage: React.FC = () => {
                         Phương thức thanh toán
                       </label>
                       <label className="radio-tile">
-                        <input
-                          type="radio"
-                          value="banktransfer"
-                          {...register("payment_method")}
-                          defaultChecked
-                        />
                         <div className="radio-body">
                           <div className="flex items-center justify-between">
+                            <input
+                              type="radio"
+                              value="banktransfer"
+                              {...register("payment_method")}
+                              defaultChecked
+                            />
                             <span className="font-medium text-gray-900">
-                              Chuyển khoản ngân hàng
+                              Thanh toán mã QR (Sepay)
                             </span>
                             <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">
                               Khuyến nghị
@@ -2389,10 +2385,7 @@ const BookingPage: React.FC = () => {
                       </div>
                     )}
                     <div className="mt-2 flex items-center justify-between text-lg font-bold">
-                      <span className="flex items-center gap-1">
-                        <DollarSign className="h-5 w-5" />
-                        Tạm tính
-                      </span>
+                      <span className="flex items-center gap-1">Tạm tính</span>
                       <span className="text-emerald-600">
                         {effectiveBooking
                           ? formatPrice(finalPreviewTotal)
@@ -2409,7 +2402,7 @@ const BookingPage: React.FC = () => {
 
                   <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-xs text-blue-800">
                     Sau khi xác nhận, mã đặt sân và hướng dẫn thanh toán sẽ được
-                    gửi qua email và hiển thị trong lịch sử đặt sân của bạn.
+                    gửi qua email của bạn.
                   </div>
                 </div>
               ) : (

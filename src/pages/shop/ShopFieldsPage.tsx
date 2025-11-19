@@ -1084,19 +1084,7 @@ const ShopFieldsPage: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Toggle bảo trì */}
-                  <button
-                    onClick={() => onToggleMaintenance(f)}
-                    className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs border ${
-                      isMaintenance
-                        ? "border-amber-400 text-amber-600 bg-amber-50"
-                        : "border-gray-200 text-gray-700 hover:bg-gray-50"
-                    }`}
-                    title={isMaintenance ? "Bỏ bảo trì" : "Đặt bảo trì"}
-                  >
-                    <Wrench className="w-3.5 h-3.5" />
-                    {isMaintenance ? "Bỏ BT" : "Bảo trì"}
-                  </button>
+                
                 </div>
 
                 <div className="mt-2 flex items-center gap-1 text-gray-700">

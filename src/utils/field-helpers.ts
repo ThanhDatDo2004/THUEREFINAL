@@ -39,23 +39,27 @@ const SPORT_METADATA: Record<
   basketball: { label: "Bóng rổ" },
 };
 
-const SPORT_ALIASES = (Object.entries(SPORT_METADATA) as [Exclude<FieldSportType, string>, { label: string }][]).reduce(
-  (
-    acc: Record<string, Exclude<FieldSportType, string>>,
-    entry
-  ) => {
-    const [key, { label }] = entry;
-    const canonical = key as Exclude<FieldSportType, string>;
-    acc[normalizeStringForLookup(key)] = canonical;
-    acc[normalizeStringForLookup(label)] = canonical;
-    return acc;
-  },
-  {} as Record<string, Exclude<FieldSportType, string>>
-);
+const SPORT_ALIASES = (
+  Object.entries(SPORT_METADATA) as [
+    Exclude<FieldSportType, string>,
+    { label: string }
+  ][]
+).reduce((acc: Record<string, Exclude<FieldSportType, string>>, entry) => {
+  const [key, { label }] = entry;
+  const canonical = key as Exclude<FieldSportType, string>;
+  acc[normalizeStringForLookup(key)] = canonical;
+  acc[normalizeStringForLookup(label)] = canonical;
+  return acc;
+}, {} as Record<string, Exclude<FieldSportType, string>>);
 
 // --- Status Metadata and Aliases ---
 
-type CanonicalStatus = "active" | "maintenance" | "booked" | "inactive" | "draft";
+type CanonicalStatus =
+  | "active"
+  | "maintenance"
+  | "booked"
+  | "inactive"
+  | "draft";
 
 const STATUS_METADATA: Record<
   CanonicalStatus,
@@ -122,7 +126,7 @@ export const getSportLabel = (
 ): string => {
   const normalized = normalizeSportTypeValue(sportType);
   if (normalized && normalized in SPORT_METADATA) {
-    return SPORT_METADATA[normalized as keyof typeof SPORT_METADATA].label ?? "Không xác định";
+    return SPORT_METADATA[normalized].label ?? "Không xác định";
   }
   return "Không xác định";
 };
@@ -149,7 +153,9 @@ export const getFieldStatusLabel = (
   status?: FieldStatus | string | null
 ): string => {
   const normalized = normalizeFieldStatusValue(status);
-  return normalized ? STATUS_METADATA[normalized]?.label ?? "Không xác định" : "Không xác định";
+  return normalized
+    ? STATUS_METADATA[normalized]?.label ?? "Không xác định"
+    : "Không xác định";
 };
 
 /**
@@ -162,7 +168,9 @@ export const getFieldStatusClass = (
 ): string => {
   const normalized = normalizeFieldStatusValue(status);
   const defaultClass = "status-chip status-khac";
-  return normalized ? STATUS_METADATA[normalized]?.className ?? defaultClass : defaultClass;
+  return normalized
+    ? STATUS_METADATA[normalized]?.className ?? defaultClass
+    : defaultClass;
 };
 
 /**
@@ -184,7 +192,10 @@ export const normalizeFieldStatusValue = (
  * @returns The resolved price, or 0 if not found.
  */
 export const resolveFieldPrice = (
-  field: Pick<Fields, "price_per_hour" | "default_price_per_hour"> | null | undefined
+  field:
+    | Pick<Fields, "price_per_hour" | "default_price_per_hour">
+    | null
+    | undefined
 ): number => {
   return field?.price_per_hour ?? field?.default_price_per_hour ?? 0;
 };
@@ -201,7 +212,9 @@ const normalizeTimeForDisplay = (value?: string | null) => {
   return trimmed;
 };
 
-const toBooleanFlexible = (value: Shops["is_open_24h"]): boolean | undefined => {
+const toBooleanFlexible = (
+  value: Shops["is_open_24h"]
+): boolean | undefined => {
   if (typeof value === "boolean") return value;
   if (typeof value === "number") return value !== 0;
   if (typeof value === "string") {
