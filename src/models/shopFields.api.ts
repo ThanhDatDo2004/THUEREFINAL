@@ -10,7 +10,7 @@ import type {
   FieldsListResultNormalized,
   FieldImages,
 } from "../types";
-import { ensureSuccess, extractErrorMessage } from "./api.helpers";
+import { ensureSuccess, extractErrorMessage, rethrowApiError } from "./api.helpers";
 
 // Types for shop field management
 export interface CreateFieldData {
@@ -85,12 +85,8 @@ export async function fetchMyFields(
         },
       },
     };
-  } catch (error: unknown) {
-    const message = extractErrorMessage(
-      error,
-      "Không thể tải danh sách sân của bạn"
-    );
-    throw new Error(message);
+  } catch (error) {
+    rethrowApiError(error, "Không thể tải danh sách sân của bạn");
   }
 }
 
@@ -135,9 +131,8 @@ export async function createMyField(
     });
 
     return ensureSuccess(data, "Không thể tạo sân mới");
-  } catch (error: unknown) {
-    const message = extractErrorMessage(error, "Không thể tạo sân mới");
-    throw new Error(message);
+  } catch (error) {
+    rethrowApiError(error, "Không thể tạo sân mới");
   }
 }
 
@@ -155,9 +150,8 @@ export async function updateMyField(
     >(`/shops/me/fields/${fieldId}`, fieldData);
 
     return ensureSuccess(data, "Không thể cập nhật sân");
-  } catch (error: unknown) {
-    const message = extractErrorMessage(error, "Không thể cập nhật sân");
-    throw new Error(message);
+  } catch (error) {
+    rethrowApiError(error, "Không thể cập nhật sân");
   }
 }
 
@@ -176,29 +170,17 @@ export async function fetchMyFieldById(
     >(`/fields/${fieldId}`);
 
     return ensureSuccess(data, "Không thể tải thông tin sân");
-  } catch (error: unknown) {
-    const typed = error as ErrorWithResponse;
-    if (typed.response?.status === 404) {
+  } catch (error: any) {
+    const status = error?.status ?? error?.response?.status;
+    if (status === 404) {
       return null;
     }
-    const message = extractErrorMessage(error, "Không thể tải thông tin sân");
-    throw new Error(message);
+    rethrowApiError(error, "Không thể tải thông tin sân");
   }
 }
 
 
 // ===== Quantity Support =====
-type ErrorWithResponse = {
-  response?: {
-    status?: number;
-    data?: {
-      error?: { message?: string | null } | null;
-      message?: string | null;
-    };
-  };
-  message?: string;
-};
-
 /**
  * Update CreateFieldData interface to support quantityCount
  */

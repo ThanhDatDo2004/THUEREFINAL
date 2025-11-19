@@ -13,6 +13,7 @@ import {
   getPayoutRequestsApi,
   type PayoutRequest,
 } from "../../models/wallet.api";
+import { extractErrorMessage } from "../../models/api.helpers";
 import {
   Send,
   Calendar,
@@ -199,12 +200,10 @@ const ShopRevenuePage: React.FC = () => {
       if (showPayoutRequests) {
         handleFetchPayoutRequests();
       }
-    } catch (error: any) {
-      const message =
-        error?.response?.data?.message ||
-        error?.message ||
-        "Lỗi khi tạo đơn rút tiền";
-      setPayoutError(message);
+    } catch (error: unknown) {
+      setPayoutError(
+        extractErrorMessage(error, "Lỗi khi tạo đơn rút tiền")
+      );
     } finally {
       setPayoutLoading(false);
     }

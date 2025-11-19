@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
-import type { AxiosError } from "axios";
 import { useAuth } from "../../contexts/AuthContext";
 import { fetchMyShop, updateMyShop } from "../../models/shop.api";
 import type { Shops } from "../../types";
+import { extractErrorMessage } from "../../models/api.helpers";
 
 const TIME_REGEX = /^([01]\d|2[0-3]):[0-5]\d$/;
 const PHONE_REGEX = /^[0-9]{10,11}$/;
@@ -52,10 +52,11 @@ const ShopSettingsPage: React.FC = () => {
       } catch (error: any) {
         console.error(error);
         if (ignore) return;
-        const status = error?.response?.status;
-        // Với contract mới: nếu chưa có shop, PUT sẽ tạo mới, nên GET 404 không coi là lỗi chặn form
+        const status = error?.status ?? error?.response?.status;
         if (status !== 404) {
-          setError(error?.message || "Không thể tải thông tin shop.");
+          setError(
+            extractErrorMessage(error, "Không thể tải thông tin shop.")
+          );
         }
       }
     })();
@@ -130,15 +131,9 @@ const ShopSettingsPage: React.FC = () => {
         setShop(updated);
       }
       setSuccess("Đã lưu thay đổi thành công.");
-    } catch (e: any) {
-      const err = e as AxiosError<
-        { message?: string } | { error?: { message?: string } }
-      >;
-      const status = err.response?.status;
-      const apiMessage =
-        (err.response?.data as any)?.error?.message ||
-        (err.response?.data as any)?.message ||
-        err.message;
+    } catch (error: any) {
+      const status = error?.status ?? error?.response?.status;
+      const apiMessage = extractErrorMessage(error, "Không thể lưu thay đổi.");
       if (status === 400) setError(apiMessage || "Dữ liệu không hợp lệ (400).");
       else if (status === 401)
         setError(apiMessage || "Bạn cần đăng nhập (401).");

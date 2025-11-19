@@ -23,12 +23,12 @@ function AdminLayout() {
   const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <div className="container mx-auto px-4 py-6">
-      <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">
+    <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(220px,260px)_minmax(0,1fr)]">
         {/* SIDEBAR */}
         <aside
           className={[
-            "rounded-2xl bg-white shadow-md border border-gray-100 sticky top-6 h-max",
+            "sticky top-6 h-max w-full rounded-2xl border border-gray-100 bg-white shadow-md",
             collapsed ? "lg:w-[84px]" : "lg:w-[280px]",
           ].join(" ")}
         >
@@ -126,7 +126,7 @@ function AdminLayout() {
         </aside>
 
         {/* CONTENT */}
-        <main className="rounded-2xl bg-white shadow-md border border-gray-100 p-4 lg:p-6 min-h-[60vh]">
+        <main className="min-h-[60vh] min-w-0 overflow-x-hidden rounded-2xl border border-gray-100 bg-white p-4 lg:p-6 shadow-md">
           <Outlet />
         </main>
       </div>

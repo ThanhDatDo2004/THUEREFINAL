@@ -49,15 +49,29 @@ export const extractErrorMessage = (
   error: unknown,
   fallback: string
 ): string => {
-  if (error instanceof Error) return error.message;
+  const typed = error as any;
+  return (
+    typed?.body?.error?.message ||
+    typed?.body?.message ||
+    typed?.response?.data?.error?.message ||
+    typed?.response?.data?.message ||
+    typed?.message ||
+    fallback
+  );
+};
 
-  const apiError = error as ErrorWithResponse;
-  const data = apiError.response?.data as any;
-  return data?.error?.message || data?.message || apiError.message || fallback;
+export const rethrowApiError = (error: unknown, fallback: string): never => {
+  const message = extractErrorMessage(error, fallback);
+  if (error && typeof error === "object") {
+    (error as any).message = message;
+    throw error;
+  }
+  throw new Error(message);
 };
 
 export default {
   isApiSuccess,
   ensureSuccess,
   extractErrorMessage,
+  rethrowApiError,
 };

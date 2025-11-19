@@ -1,5 +1,5 @@
 import { api } from "./api";
-import { extractErrorMessage } from "./api.helpers";
+import { rethrowApiError } from "./api.helpers";
 import type { FieldImages, FieldWithImages, FieldsQuery } from "../types";
 
 export interface FieldsFacetItem {
@@ -195,9 +195,8 @@ export async function fetchFields(
     );
     const payload = ensureSuccess(data, "Không thể tải danh sách sân");
     return normalizeFieldsListResult(payload);
-  } catch (error: unknown) {
-    const message = extractErrorMessage(error, "Không thể tải danh sách sân");
-    throw new Error(message);
+  } catch (error) {
+    rethrowApiError(error, "Không thể tải danh sách sân");
   }
 }
 
@@ -209,13 +208,12 @@ export async function fetchFieldById(
       `/fields/${fieldId}`
     );
     return ensureSuccess(data, "Không thể tải thông tin sân");
-  } catch (error: unknown) {
-    const typed = error as ErrorWithResponse;
-    if (typed.response?.status === 404) {
+  } catch (error: any) {
+    const status = error?.status ?? error?.response?.status;
+    if (status === 404) {
       return null;
     }
-    const message = extractErrorMessage(error, "Không thể tải thông tin sân");
-    throw new Error(message);
+    rethrowApiError(error, "Không thể tải thông tin sân");
   }
 }
 
@@ -232,9 +230,8 @@ export async function uploadFieldImage(
       formData
     );
     return ensureSuccess(data, "Không thể tải ảnh sân");
-  } catch (error: unknown) {
-    const message = extractErrorMessage(error, "Không thể tải ảnh sân");
-    throw new Error(message);
+  } catch (error) {
+    rethrowApiError(error, "Không thể tải ảnh sân");
   }
 }
 
@@ -283,9 +280,8 @@ export async function fetchFieldAvailability(
       params: date ? { date } : undefined,
     });
     return ensureSuccess(data, "Không thể tải lịch sân");
-  } catch (error: unknown) {
-    const message = extractErrorMessage(error, "Không thể tải lịch sân");
-    throw new Error(message);
+  } catch (error) {
+    rethrowApiError(error, "Không thể tải lịch sân");
   }
 }
 
@@ -366,14 +362,13 @@ export async function fetchFieldStats(
       });
 
       return stats;
-    } catch (error) {
+    } catch (error: any) {
       FIELD_STATS_CACHE.delete(fieldCode);
-      const typed = error as ErrorWithResponse;
-      if (typed.response?.status === 404) {
+      const status = error?.status ?? error?.response?.status;
+      if (status === 404) {
         throw new Error("Sân không tồn tại");
       }
-      const message = extractErrorMessage(error, "Không thể tải thông tin sân");
-      throw new Error(message);
+      rethrowApiError(error, "Không thể tải thông tin sân");
     }
   })();
 
@@ -400,9 +395,8 @@ export async function fetchFieldsWithRent(
       params: { limit, offset },
     });
     return ensureSuccess(data, "Không thể tải danh sách sân");
-  } catch (error: unknown) {
-    const message = extractErrorMessage(error, "Không thể tải danh sách sân");
-    throw new Error(message);
+  } catch (error) {
+    rethrowApiError(error, "Không thể tải danh sách sân");
   }
 }
 
@@ -461,12 +455,8 @@ export async function fetchAvailableQuantities(
       },
     });
     return ensureSuccess(data, "Không thể tải danh sách sân trống");
-  } catch (error: unknown) {
-    const message = extractErrorMessage(
-      error,
-      "Không thể tải danh sách sân trống"
-    );
-    throw new Error(message);
+  } catch (error) {
+    rethrowApiError(error, "Không thể tải danh sách sân trống");
   }
 }
 
@@ -482,9 +472,8 @@ export async function fetchFieldQuantities(
       ApiSuccess<QuantitiesListResponse> | ApiError
     >(`/fields/${fieldCode}/quantities`);
     return ensureSuccess(data, "Không thể tải danh sách sân");
-  } catch (error: unknown) {
-    const message = extractErrorMessage(error, "Không thể tải danh sách sân");
-    throw new Error(message);
+  } catch (error) {
+    rethrowApiError(error, "Không thể tải danh sách sân");
   }
 }
 
@@ -503,11 +492,7 @@ export async function updateQuantityStatus(
       { status }
     );
     return ensureSuccess(data, "Không thể cập nhật trạng thái sân");
-  } catch (error: unknown) {
-    const message = extractErrorMessage(
-      error,
-      "Không thể cập nhật trạng thái sân"
-    );
-    throw new Error(message);
+  } catch (error) {
+    rethrowApiError(error, "Không thể cập nhật trạng thái sân");
   }
 }

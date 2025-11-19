@@ -8,6 +8,7 @@ import React, {
 import { AuthContextType, AuthUser, RegisterData } from "../types";
 import { getGuestTokenApi, loginApi, registerApi } from "../models/auth.api";
 import { mapApiUserToAuthUser } from "../utils/mapUser";
+import { extractErrorMessage } from "../models/api.helpers";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -17,14 +18,9 @@ export const useAuth = () => {
   return ctx;
 };
 
-// Ưu tiên message từ backend (axios error)
+// Ưu tiên message phía backend
 function pickErrorMessage(err: any, fallback = "Đã có lỗi xảy ra") {
-  return (
-    err?.response?.data?.error?.message ||
-    err?.response?.data?.message ||
-    err?.message ||
-    fallback
-  );
+  return extractErrorMessage(err, fallback);
 }
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
@@ -88,10 +84,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       localStorage.setItem("user", JSON.stringify(authUser));
       return true;
     } catch (err: any) {
-      // NÉM LẠI để UI hiển thị
-      throw new Error(
-        pickErrorMessage(err, "Tên đăng nhập hoặc mật khẩu không đúng")
+      const message = pickErrorMessage(
+        err,
+        "Tên đăng nhập hoặc mật khẩu không đúng"
       );
+      if (err && typeof err === "object") {
+        err.message = message;
+        throw err;
+      }
+      throw new Error(message);
     }
   };
 
@@ -105,8 +106,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       });
       return true;
     } catch (err: any) {
-      // NÉM LẠI để UI hiển thị
-      throw new Error(pickErrorMessage(err, "Đăng ký thất bại"));
+      const message = pickErrorMessage(err, "Đăng ký thất bại");
+      if (err && typeof err === "object") {
+        err.message = message;
+        throw err;
+      }
+      throw new Error(message);
     }
   };
 

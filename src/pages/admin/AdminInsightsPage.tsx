@@ -148,9 +148,9 @@ const AdminInsightsPage: React.FC = () => {
   }, [shops]);
 
   return (
-    <div className="space-y-6">
-      <div className="shop-header">
-        <div>
+    <div className="flex w-full min-w-0 flex-col gap-6">
+      <div className="shop-header flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
           <h1 className="shop-title">Insights</h1>
           <p className="shop-sub">
             Bức tranh tổng quan về người dùng, shop và yêu cầu đăng ký trong hệ
@@ -165,8 +165,8 @@ const AdminInsightsPage: React.FC = () => {
         </div>
       )}
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <div className="stat-card">
+      <div className="grid min-w-0 gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="stat-card min-w-0">
           <div className="stat-icon">
             <UsersIcon size={18} />
           </div>
@@ -177,7 +177,7 @@ const AdminInsightsPage: React.FC = () => {
             {insightStats.totalAdmins} admin
           </div>
         </div>
-        <div className="stat-card">
+        <div className="stat-card min-w-0">
           <div className="stat-icon">
             <Store size={18} />
           </div>
@@ -195,7 +195,7 @@ const AdminInsightsPage: React.FC = () => {
             %)
           </div>
         </div>
-        <div className="stat-card">
+        <div className="stat-card min-w-0">
           <div className="stat-icon">
             <AlertTriangle size={18} />
           </div>
@@ -205,7 +205,7 @@ const AdminInsightsPage: React.FC = () => {
             Tỉ lệ duyệt: {insightStats.approvalRate}%
           </div>
         </div>
-        <div className="stat-card">
+        <div className="stat-card min-w-0">
           <div className="stat-icon">
             <TrendingUp size={18} />
           </div>
@@ -221,8 +221,8 @@ const AdminInsightsPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-        <div className="section">
+      <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        <div className="section min-w-0 overflow-hidden">
           <div className="section-header">
             <div>
               <h3 className="text-lg font-semibold text-gray-900">
@@ -233,7 +233,7 @@ const AdminInsightsPage: React.FC = () => {
               </p>
             </div>
           </div>
-          <div className="h-72">
+          <div className="h-72 w-full">
             <ResponsiveContainer>
               <BarChart data={requestStatusData}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -246,7 +246,7 @@ const AdminInsightsPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="section">
+        <div className="section min-w-0 overflow-hidden">
           <div className="section-header">
             <div>
               <h3 className="text-lg font-semibold text-gray-900">
@@ -257,7 +257,7 @@ const AdminInsightsPage: React.FC = () => {
               </p>
             </div>
           </div>
-          <div className="h-72">
+          <div className="h-72 w-full">
             {revenueSeries.length ? (
               <ResponsiveContainer>
                 <AreaChart data={revenueSeries}>
@@ -310,16 +310,16 @@ const AdminInsightsPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-        <div className="section">
+      <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        <div className="section min-w-0 overflow-hidden">
           <h3 className="text-lg font-semibold text-gray-900 mb-3">
             Shop nổi bật
           </h3>
-          <div className="divide-y divide-gray-100">
+          <div className="min-w-0 divide-y divide-gray-100">
             {topShops.map((shop) => (
               <div
                 key={shop.shop_code}
-                className="py-3 flex items-center gap-3"
+                className="flex w-full items-center gap-3 py-3"
               >
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-700 font-semibold">
                   {shop.shop_name?.charAt(0).toUpperCase() ?? "S"}
@@ -361,11 +361,11 @@ const AdminInsightsPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="section">
+        <div className="section min-w-0 overflow-hidden">
           <h3 className="text-lg font-semibold text-gray-900 mb-3">
             Tiến trình yêu cầu
           </h3>
-          <div className="space-y-4">
+          <div className="min-w-0 space-y-4">
             {requests.slice(0, 6).map((req) => (
               <div
                 key={req.request_id}

@@ -4,7 +4,7 @@ import type {
   IApiSuccessResponse,
   IApiErrorResponse,
 } from "../interfaces/common";
-import { ensureSuccess, extractErrorMessage } from "./api.helpers";
+import { ensureSuccess, rethrowApiError } from "./api.helpers";
 
 // --- API Functions ---
 
@@ -24,12 +24,8 @@ export async function deleteFieldImage(
       IApiSuccessResponse<{ deleted: boolean }> | IApiErrorResponse
     >(`/shops/me/fields/${fieldId}/images/${imageId}`);
     return ensureSuccess(data, "Không thể xóa ảnh. Vui lòng thử lại.");
-  } catch (error: unknown) {
-    const message = extractErrorMessage(
-      error,
-      "Lỗi không xác định khi xóa ảnh"
-    );
-    throw new Error(message);
+  } catch (error) {
+    rethrowApiError(error, "Lỗi không xác định khi xóa ảnh");
   }
 }
 
@@ -54,12 +50,8 @@ export async function uploadFieldImage(
       headers: { "Content-Type": "multipart/form-data" },
     });
     return ensureSuccess(data, "Không thể tải ảnh lên. Vui lòng thử lại.");
-  } catch (error: unknown) {
-    const message = extractErrorMessage(
-      error,
-      "Lỗi không xác định khi tải ảnh lên"
-    );
-    throw new Error(message);
+  } catch (error) {
+    rethrowApiError(error, "Lỗi không xác định khi tải ảnh lên");
   }
 }
 
@@ -215,4 +207,3 @@ export function getFieldImageUrls(field: { images: FieldImages[] }): string[] {
     .sort((a, b) => (a.sort_order ?? 999) - (b.sort_order ?? 999))
     .map((img) => img.image_url);
 }
-

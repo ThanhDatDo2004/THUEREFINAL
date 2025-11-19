@@ -141,8 +141,9 @@ const [state, setState] = useState<PaymentPageState>({
           }));
         }
       } catch (err: unknown) {
-        const anyErr = err as { response?: { status?: number } };
-        const is404 = anyErr?.response?.status === 404;
+        const anyErr = err as { status?: number; response?: { status?: number } };
+        const status = anyErr?.status ?? anyErr?.response?.status;
+        const is404 = status === 404;
         const fallback = is404
           ? "Không tìm thấy booking. Vui lòng tạo booking trước."
           : "Failed to initiate payment";

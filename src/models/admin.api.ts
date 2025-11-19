@@ -1,4 +1,5 @@
 import { api } from "./api";
+import { rethrowApiError } from "./api.helpers";
 import type {
   Users,
   UsersLevel,
@@ -106,25 +107,6 @@ const normalizeSingle = <T>(input: MaybeArrayResult<T>) => {
   return input as T;
 };
 
-const extractErrorMessage = (error: unknown, fallback: string) => {
-  if (error instanceof Error && error.message) return error.message;
-  if (typeof error === "object" && error !== null) {
-    const maybe = error as {
-      response?: {
-        data?: { error?: { message?: string | null } | null; message?: string };
-        status?: number;
-      };
-      message?: string;
-    };
-    const apiMessage =
-      maybe.response?.data?.error?.message ||
-      maybe.response?.data?.message ||
-      maybe.message;
-    if (apiMessage) return apiMessage;
-  }
-  return fallback;
-};
-
 export async function fetchAdminUsers(): Promise<Users[]> {
   try {
     const { data } = await api.get<ApiSuccess<MaybeArrayResult<Users[]>> | ApiError>(
@@ -135,10 +117,8 @@ export async function fetchAdminUsers(): Promise<Users[]> {
       "Không thể tải danh sách người dùng."
     );
     return normalizeList(payload);
-  } catch (error: unknown) {
-    throw new Error(
-      extractErrorMessage(error, "Không thể tải danh sách người dùng.")
-    );
+  } catch (error) {
+    rethrowApiError(error, "Không thể tải danh sách người dùng.");
   }
 }
 
@@ -152,10 +132,8 @@ export async function fetchAdminUserLevels(): Promise<UsersLevel[]> {
       "Không thể tải thông tin phân quyền."
     );
     return normalizeList(payload);
-  } catch (error: unknown) {
-    throw new Error(
-      extractErrorMessage(error, "Không thể tải thông tin phân quyền.")
-    );
+  } catch (error) {
+    rethrowApiError(error, "Không thể tải thông tin phân quyền.");
   }
 }
 
@@ -166,10 +144,8 @@ export async function fetchAdminShops(): Promise<Shops[]> {
     );
     const payload = ensureSuccess(data, "Không thể tải danh sách shop.");
     return normalizeList(payload);
-  } catch (error: unknown) {
-    throw new Error(
-      extractErrorMessage(error, "Không thể tải danh sách shop.")
-    );
+  } catch (error) {
+    rethrowApiError(error, "Không thể tải danh sách shop.");
   }
 }
 
@@ -183,10 +159,8 @@ export async function fetchAdminBookings(): Promise<Bookings[]> {
       "Không thể tải danh sách đơn đặt."
     );
     return normalizeList(payload);
-  } catch (error: unknown) {
-    throw new Error(
-      extractErrorMessage(error, "Không thể tải danh sách đơn đặt.")
-    );
+  } catch (error) {
+    rethrowApiError(error, "Không thể tải danh sách đơn đặt.");
   }
 }
 
@@ -204,10 +178,8 @@ export async function fetchAdminRevenue(
       "Không thể tải dữ liệu doanh thu."
     );
     return normalizeList(payload);
-  } catch (error: unknown) {
-    throw new Error(
-      extractErrorMessage(error, "Không thể tải dữ liệu doanh thu.")
-    );
+  } catch (error) {
+    rethrowApiError(error, "Không thể tải dữ liệu doanh thu.");
   }
 }
 
@@ -221,13 +193,8 @@ export async function fetchAdminShopRequests(): Promise<ShopRequests[]> {
       "Không thể tải danh sách yêu cầu mở shop."
     );
     return normalizeList(payload);
-  } catch (error: unknown) {
-    throw new Error(
-      extractErrorMessage(
-        error,
-        "Không thể tải danh sách yêu cầu mở shop."
-      )
-    );
+  } catch (error) {
+    rethrowApiError(error, "Không thể tải danh sách yêu cầu mở shop.");
   }
 }
 
@@ -255,10 +222,8 @@ export async function fetchAdminFinanceBookings(
     });
 
     return ensureSuccess(data, "Không thể tải dữ liệu tài chính.");
-  } catch (error: unknown) {
-    throw new Error(
-      extractErrorMessage(error, "Không thể tải dữ liệu tài chính.")
-    );
+  } catch (error) {
+    rethrowApiError(error, "Không thể tải dữ liệu tài chính.");
   }
 }
 
@@ -275,13 +240,8 @@ export async function fetchAdminShopRequestById(
       "Không thể tải chi tiết yêu cầu mở shop."
     );
     return normalizeSingle(payload) ?? null;
-  } catch (error: unknown) {
-    throw new Error(
-      extractErrorMessage(
-        error,
-        "Không thể tải chi tiết yêu cầu mở shop."
-      )
-    );
+  } catch (error) {
+    rethrowApiError(error, "Không thể tải chi tiết yêu cầu mở shop.");
   }
 }
 
@@ -324,13 +284,8 @@ export async function updateAdminShopRequestStatus(
       throw new Error("Không nhận được dữ liệu yêu cầu đã cập nhật.");
     }
     return result;
-  } catch (error: unknown) {
-    throw new Error(
-      extractErrorMessage(
-        error,
-        "Không thể cập nhật trạng thái yêu cầu mở shop."
-      )
-    );
+  } catch (error) {
+    rethrowApiError(error, "Không thể cập nhật trạng thái yêu cầu mở shop.");
   }
 }
 

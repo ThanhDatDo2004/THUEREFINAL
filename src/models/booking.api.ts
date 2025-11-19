@@ -1,6 +1,7 @@
 import { api } from "./api";
 import type { ApiError, ApiSuccess } from "./fields.api";
 import type { IApiSuccessResponse } from "../interfaces/common";
+import { rethrowApiError } from "./api.helpers";
 
 export interface ConfirmBookingSlotPayload {
   slot_id: number;
@@ -159,13 +160,8 @@ export async function confirmFieldBooking(
       payload
     );
     return ensureSuccess(data, "Không thể xác nhận thanh toán.");
-  } catch (error: any) {
-    const message =
-      error?.response?.data?.error?.message ||
-      error?.response?.data?.message ||
-      error?.message ||
-      "Không thể xác nhận thanh toán.";
-    throw new Error(message);
+  } catch (error) {
+    rethrowApiError(error, "Không thể xác nhận thanh toán.");
   }
 }
 

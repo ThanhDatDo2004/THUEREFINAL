@@ -1,4 +1,5 @@
 import { api } from "./api";
+import { rethrowApiError } from "./api.helpers";
 
 export type LoginApiReq = { login: string; password: string };
 export type RegisterApiReq = { user_name: string; email: string; password: string };
@@ -15,14 +16,8 @@ export async function loginApi(payload: LoginApiReq) {
       throw new Error(msg);
     }
     return res.data; // { success, data: {token,...}, ... }
-  } catch (e: any) {
-    // Trường hợp HTTP 401/4xx/timeout, axios sẽ vào catch
-    const msg =
-      e?.response?.data?.error?.message || // ví dụ "Invalid username or password"
-      e?.response?.data?.message ||
-      e?.message ||
-      "Đăng nhập thất bại";
-    throw new Error(msg);
+  } catch (error) {
+    rethrowApiError(error, "Đăng nhập thất bại");
   }
 }
 
@@ -53,12 +48,7 @@ export async function getGuestTokenApi() {
       throw new Error(data?.error?.message || data?.message || "Không thể lấy guest token");
     }
     return data;
-  } catch (error: any) {
-    const message =
-      error?.response?.data?.error?.message ||
-      error?.response?.data?.message ||
-      error?.message ||
-      "Không thể lấy guest token";
-    throw new Error(message);
+  } catch (error) {
+    rethrowApiError(error, "Không thể lấy guest token");
   }
 }
