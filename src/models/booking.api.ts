@@ -155,9 +155,14 @@ export async function confirmFieldBooking(
   }
 
   try {
+    const requestBody = {
+      field_code: fieldId,
+      fieldCode: fieldId,
+      ...payload,
+    };
     const { data } = await api.post<ApiConfirmBookingResponse>(
-      `/fields/${fieldId}/bookings/confirm`,
-      payload
+      `/bookings`,
+      requestBody
     );
     return ensureSuccess(data, "Không thể xác nhận thanh toán.");
   } catch (error) {
@@ -256,8 +261,11 @@ export const createBookingApi = async (
   payload: CreateBookingRequest
 ): Promise<IApiSuccessResponse<CreateBookingData>> => {
   const response = await api.post<IApiSuccessResponse<CreateBookingData>>(
-    `/bookings/create`,
-    payload
+    `/bookings`,
+    {
+      ...payload,
+      field_code: payload.fieldCode,
+    }
   );
   return response.data;
 };

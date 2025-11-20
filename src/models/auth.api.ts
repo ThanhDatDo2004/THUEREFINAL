@@ -26,11 +26,6 @@ export async function registerApi(payload: RegisterApiReq) {
   return data;
 }
 
-export async function checkEmailExists(email: string) {
-  const { data } = await api.post("/auth/check-email", { email });
-  return data as { success: boolean; exists: boolean; message?: string };
-}
-
 export async function forgotPassword(email: string) {
   const { data } = await api.post("/auth/forgot-password", { email });
   return data;
@@ -43,7 +38,7 @@ export async function resetPassword(token: string, new_password: string) {
 
 export async function getGuestTokenApi() {
   try {
-    const { data } = await api.get("/auth/guest-token");
+    const { data } = await api.post("/auth/guest");
     if (!data?.success || !data?.data?.token) {
       throw new Error(data?.error?.message || data?.message || "Không thể lấy guest token");
     }
