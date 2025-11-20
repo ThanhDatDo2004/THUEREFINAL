@@ -5,7 +5,7 @@ import {
   fetchMyShop,
   fetchShopFields,
   updateShopField,
-  updateShopFieldStatus,
+  // updateShopFieldStatus,
   createShopField,
   deleteShopField,
 } from "../../models/shop.api";
@@ -17,7 +17,6 @@ import type { FieldWithImages, Shops, Fields } from "../../types";
 import {
   DollarSign,
   Pencil,
-  Wrench,
   X,
   Plus,
   UploadCloud,
@@ -55,81 +54,6 @@ type ProvinceOption = {
   name: string;
   districts: DistrictOption[];
 };
-
-const DEFAULT_PROVINCES: ProvinceOption[] = [
-  {
-    code: "01",
-    name: "Thành phố Hà Nội",
-    districts: [
-      {
-        code: "001",
-        name: "Quận Ba Đình",
-        wards: [
-          { code: "00001", name: "Phường Phúc Xá" },
-          { code: "00004", name: "Phường Trúc Bạch" },
-          { code: "00006", name: "Phường Vĩnh Phúc" },
-        ],
-      },
-      {
-        code: "002",
-        name: "Quận Hoàn Kiếm",
-        wards: [
-          { code: "00007", name: "Phường Phan Chu Trinh" },
-          { code: "00008", name: "Phường Hàng Bài" },
-          { code: "00010", name: "Phường Lý Thái Tổ" },
-        ],
-      },
-    ],
-  },
-  {
-    code: "79",
-    name: "Thành phố Hồ Chí Minh",
-    districts: [
-      {
-        code: "760",
-        name: "Quận 1",
-        wards: [
-          { code: "26734", name: "Phường Bến Nghé" },
-          { code: "26737", name: "Phường Bến Thành" },
-          { code: "26740", name: "Phường Nguyễn Thái Bình" },
-        ],
-      },
-      {
-        code: "769",
-        name: "Thành phố Thủ Đức",
-        wards: [
-          { code: "26834", name: "Phường Linh Tây" },
-          { code: "26837", name: "Phường Linh Chiểu" },
-          { code: "26840", name: "Phường Linh Trung" },
-        ],
-      },
-    ],
-  },
-  {
-    code: "48",
-    name: "Thành phố Đà Nẵng",
-    districts: [
-      {
-        code: "490",
-        name: "Quận Hải Châu",
-        wards: [
-          { code: "20224", name: "Phường Thạch Thang" },
-          { code: "20227", name: "Phường Thanh Bình" },
-          { code: "20230", name: "Phường Thuận Phước" },
-        ],
-      },
-      {
-        code: "492",
-        name: "Quận Sơn Trà",
-        wards: [
-          { code: "20263", name: "Phường An Hải Bắc" },
-          { code: "20266", name: "Phường An Hải Đông" },
-          { code: "20269", name: "Phường An Hải Tây" },
-        ],
-      },
-    ],
-  },
-];
 
 // ===== Options khớp đúng union hiện có =====
 const STATUS_OPTIONS = [
@@ -334,15 +258,20 @@ const ShopFieldsPage: React.FC = () => {
                 })) ?? [],
             })),
           }));
-          setProvinces(mapped.length ? mapped : DEFAULT_PROVINCES);
+          setProvinces(mapped);
+          if (!mapped.length) {
+            setLocationsError(
+              "API tỉnh/thành trả về dữ liệu rỗng. Vui lòng thử lại sau."
+            );
+          }
         }
       } catch (error) {
         console.error("Failed to load provinces", error);
         if (!cancelled) {
           setLocationsError(
-            "Không thể tải danh sách tỉnh/thành từ API. Đang dùng dữ liệu mặc định."
+            "Không thể tải danh sách tỉnh/thành từ API. Vui lòng thử lại sau."
           );
-          setProvinces(DEFAULT_PROVINCES);
+          setProvinces([]);
         }
       } finally {
         if (!cancelled) {
@@ -668,29 +597,29 @@ const ShopFieldsPage: React.FC = () => {
       return [...prev, imageId];
     });
   };
-  const onToggleMaintenance = async (f: FieldWithImages) => {
-    const raw = f.status ? f.status.toString().trim().toLowerCase() : "";
-    const isMaintenance = ["bảo trì", "maintenance", "on_maintenance"].includes(
-      raw
-    );
-    const next: FieldStatus = isMaintenance ? "active" : "maintenance";
-    const updated = await updateShopFieldStatus(f.field_code, next);
-    if (updated) {
-      setFields((prev) =>
-        prev.map((x) =>
-          x.field_code === updated.field_code ? { ...x, status: next } : x
-        )
-      );
-      if (editing && editing.field_code === f.field_code) {
-        setForm((p) => (p ? { ...p, status: next } : p));
-      }
-      setEditing((prev) =>
-        prev && prev.field_code === f.field_code
-          ? { ...prev, status: next }
-          : prev
-      );
-    }
-  };
+  // const onToggleMaintenance = async (f: FieldWithImages) => {
+  //   const raw = f.status ? f.status.toString().trim().toLowerCase() : "";
+  //   const isMaintenance = ["bảo trì", "maintenance", "on_maintenance"].includes(
+  //     raw
+  //   );
+  //   const next: FieldStatus = isMaintenance ? "active" : "maintenance";
+  //   const updated = await updateShopFieldStatus(f.field_code, next);
+  //   if (updated) {
+  //     setFields((prev) =>
+  //       prev.map((x) =>
+  //         x.field_code === updated.field_code ? { ...x, status: next } : x
+  //       )
+  //     );
+  //     if (editing && editing.field_code === f.field_code) {
+  //       setForm((p) => (p ? { ...p, status: next } : p));
+  //     }
+  //     setEditing((prev) =>
+  //       prev && prev.field_code === f.field_code
+  //         ? { ...prev, status: next }
+  //         : prev
+  //     );
+  //   }
+  // };
 
   const onDeleteField = async () => {
     if (!editing) return;
