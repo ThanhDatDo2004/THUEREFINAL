@@ -317,27 +317,7 @@ const [state, setState] = useState<PaymentPageState>({
                   </p>
                 </div>
               </div>
-              <div className="rounded-lg border px-4 py-3">
-                <p className="text-xs uppercase tracking-wide text-gray-500">
-                  Tài khoản nhận
-                </p>
-                {state.bankAccount ? (
-                  <div className="mt-1 text-sm text-gray-900 space-y-1">
-                    <p>Người nhận: {state.bankAccount.accountHolder}</p>
-                    <p>Ngân hàng: {state.bankAccount.bankName}</p>
-                    <p>
-                      Số tài khoản:{" "}
-                      <span className="font-mono">
-                        {state.bankAccount.accountNumber}
-                      </span>
-                    </p>
-                  </div>
-                ) : (
-                  <div className="mt-1 text-sm text-gray-500">
-                    Đang lấy thông tin tài khoản nhận...
-                  </div>
-                )}
-              </div>
+              
             </div>
           )}
 

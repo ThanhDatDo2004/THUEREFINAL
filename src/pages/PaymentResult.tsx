@@ -13,7 +13,7 @@ type SlotInfo = {
 };
 
 type PaymentResultData = BookingDetail & {
-  transactionId?: string;
+  PaymentID?: string;
 };
 
 const formatCurrency = (value?: number) => {
@@ -149,7 +149,7 @@ const PaymentResult: React.FC = () => {
               <div className="text-xs uppercase tracking-wide text-gray-500">
                 Mã Booking
               </div>
-              <div className="mt-1 font-mono text-base font-semibold text-gray-900">
+              <div className="mt-1 text-base font-semibold text-gray-900">
                 {shownBookingCode}
               </div>
             </div>
@@ -157,8 +157,8 @@ const PaymentResult: React.FC = () => {
               <div className="text-xs uppercase tracking-wide text-gray-500">
                 Mã Giao Dịch
               </div>
-              <div className="mt-1 font-mono text-base text-gray-900">
-                {data?.transactionId || "Đang cập nhật"}
+              <div className="mt-1 text-base font-semibold text-gray-900">
+                {data?.PaymentID || "Đang cập nhật"}
               </div>
             </div>
             <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">

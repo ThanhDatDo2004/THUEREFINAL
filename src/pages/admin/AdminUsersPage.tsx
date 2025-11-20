@@ -5,6 +5,7 @@ import {
   updateAdminUserStatus,
 } from "../../models/admin.api";
 import type { Users, UsersLevel } from "../../types";
+import { Ban, Search, ShieldCheck, Users as UsersIcon } from "lucide-react";
 
 type StatusFilter = "all" | "active" | "inactive";
 type SortKey = "name" | "email" | "role" | "id";
@@ -71,6 +72,36 @@ const AdminUsersPage: React.FC = () => {
     }, {});
     return { total, active, inactive, byRole };
   }, [users, levels]);
+
+  const heroStats = [
+    {
+      label: "Tổng người dùng",
+      value: stats.total.toLocaleString("vi-VN"),
+      accent: "bg-white/15 text-white",
+      icon: UsersIcon,
+    },
+    {
+      label: "Đang hoạt động",
+      value: stats.active.toLocaleString("vi-VN"),
+      accent: "bg-emerald-500/30 text-white",
+      icon: ShieldCheck,
+    },
+    {
+      label: "Đã khóa",
+      value: stats.inactive.toLocaleString("vi-VN"),
+      accent: "bg-rose-500/30 text-white",
+      icon: Ban,
+    },
+    {
+      label: "Phân bố vai trò",
+      value:
+        Object.entries(stats.byRole)
+          .map(([role, count]) => `${role}: ${count}`)
+          .join(" · ") || "—",
+      accent: "bg-slate-900/20 text-white",
+      icon: UsersIcon,
+    },
+  ];
 
   const filtered = useMemo(() => {
     const search = q.trim().toLowerCase();
@@ -185,203 +216,221 @@ const AdminUsersPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="shop-header">
-        <div>
-          <h1 className="shop-title">Users</h1>
-          <p className="shop-sub">
-            Quản lý người dùng hệ thống, vai trò và trạng thái hoạt động
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            className="input w-64"
-            placeholder="Tìm theo tên hoặc email"
-          />
-          <button type="button" className="btn-ghost" onClick={resetFilters}>
-            Đặt lại
-          </button>
-        </div>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-4">
-        <div className="stat-card">
-          <div className="stat-value">{stats.total}</div>
-          <div className="stat-label">Tổng người dùng</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-value text-emerald-600">{stats.active}</div>
-          <div className="stat-label">Đang hoạt động</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-value text-rose-600">{stats.inactive}</div>
-          <div className="stat-label">Đã khóa</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-value text-sky-600">
-            {Object.entries(stats.byRole)
-              .map(([role, count]) => `${role}: ${count}`)
-              .join(" • ") || "—"}
-          </div>
-          <div className="stat-label">Phân bố theo vai trò</div>
-        </div>
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-        <div className="section space-y-4 overflow-hidden">
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2">
-              <label className="text-sm font-medium text-gray-600">Role</label>
-              <select
-                className="input h-10 w-40"
-                value={roleFilter}
-                onChange={(e) =>
-                  setRoleFilter(
-                    e.target.value === "all"
-                      ? "all"
-                      : Number(e.target.value) || "all"
-                  )
-                }
-              >
-                {roleOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+    <div className="flex w-full min-w-0 flex-col gap-6">
+      <section className="rounded-3xl border border-emerald-100 bg-gradient-to-r from-emerald-500 via-emerald-400 to-emerald-600 text-white shadow-lg">
+        <div className="space-y-6 p-6 md:p-8">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div className="space-y-2">
+              <p className="inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-1 text-xs font-semibold uppercase tracking-wide text-white/90">
+                <UsersIcon className="h-3.5 w-3.5" />
+                Trung tâm người dùng
+              </p>
+              <h1 className="text-3xl font-bold leading-tight md:text-4xl">
+                Quản lý người dùng hệ thống
+              </h1>
+              <p className="text-sm text-white/80 md:text-base">
+                Theo dõi quyền truy cập, trạng thái hoạt động và hành động nhanh
+                với từng tài khoản.
+              </p>
             </div>
-
-            <div className="flex items-center gap-2">
-              <label className="text-sm font-medium text-gray-600">
-                Trạng thái
-              </label>
-              <select
-                className="input h-10 w-36"
-                value={statusFilter}
-                onChange={(e) =>
-                  setStatusFilter(e.target.value as StatusFilter)
-                }
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <div className="relative flex-1">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/70" />
+                <input
+                  value={q}
+                  onChange={(e) => setQ(e.target.value)}
+                  placeholder="Tìm theo tên, email hoặc ID"
+                  className="w-full rounded-2xl border border-white/30 bg-white/15 px-10 py-2 text-sm text-white placeholder:text-white/70 focus:border-white focus:outline-none focus:ring-2 focus:ring-white/40"
+                />
+              </div>
+              <button
+                type="button"
+                className="rounded-2xl border border-white/40 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10"
+                onClick={resetFilters}
               >
-                <option value="all">Tất cả</option>
-                <option value="active">Đang hoạt động</option>
-                <option value="inactive">Đã khóa</option>
-              </select>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <label className="text-sm font-medium text-gray-600">
-                Sắp xếp
-              </label>
-              <select
-                className="input h-10 w-40"
-                value={sortKey}
-                onChange={(e) => setSortKey(e.target.value as SortKey)}
-              >
-                <option value="name">Theo tên</option>
-                <option value="email">Theo email</option>
-                <option value="role">Theo vai trò</option>
-                <option value="id">Theo ID</option>
-              </select>
+                Đặt lại
+              </button>
             </div>
           </div>
 
-          <div className="overflow-x-auto w-full">
-            <table className="table min-w-[720px]">
-              <thead>
-                <tr>
-                  <th className="th text-left">User</th>
-                  <th className="th text-left">Email</th>
-                  <th className="th text-left">Role</th>
-                  <th className="th text-left">Trạng thái</th>
-                  <th className="th text-left">Liên hệ</th>
-                  <th className="th text-left">Mã</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sorted.map((user) => {
-                  const isSelected = selectedUser?.user_code === user.user_code;
-                  return (
-                    <tr
-                      key={user.user_code}
-                      className={isSelected ? "bg-gray-50" : undefined}
-                      onClick={() => setSelectedUser(user)}
-                    >
-                      <td className="td font-medium text-gray-900">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {heroStats.map(({ label, value, accent, icon: Icon }) => (
+              <div
+                key={label}
+                className="rounded-2xl border border-white/20 bg-white/10 p-4"
+              >
+                <div className="flex items-center gap-3">
+                  <span
+                    className={`flex h-10 w-10 items-center justify-center rounded-xl ${accent}`}
+                  >
+                    <Icon className="h-5 w-5" />
+                  </span>
+                  <div>
+                    <p className="text-xs uppercase tracking-wide text-white/70">
+                      {label}
+                    </p>
+                    <p className="text-xl font-semibold">{value}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="grid gap-4 md:grid-cols-3">
+          <label className="flex flex-col text-sm text-slate-600">
+            <span className="font-semibold text-slate-700">Vai trò</span>
+            <select
+              className="input mt-1 h-11 w-full"
+              value={roleFilter}
+              onChange={(e) =>
+                setRoleFilter(
+                  e.target.value === "all"
+                    ? "all"
+                    : Number(e.target.value) || "all"
+                )
+              }
+            >
+              {roleOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="flex flex-col text-sm text-slate-600">
+            <span className="font-semibold text-slate-700">Trạng thái</span>
+            <select
+              className="input mt-1 h-11 w-full"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
+            >
+              <option value="all">Tất cả</option>
+              <option value="active">Đang hoạt động</option>
+              <option value="inactive">Đã khóa</option>
+            </select>
+          </label>
+
+          <label className="flex flex-col text-sm text-slate-600">
+            <span className="font-semibold text-slate-700">Sắp xếp</span>
+            <select
+              className="input mt-1 h-11 w-full"
+              value={sortKey}
+              onChange={(e) => setSortKey(e.target.value as SortKey)}
+            >
+              <option value="name">Theo tên</option>
+              <option value="email">Theo email</option>
+              <option value="role">Theo vai trò</option>
+              <option value="id">Theo ID</option>
+            </select>
+          </label>
+        </div>
+      </section>
+
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+        <section className="min-w-0 rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+            <div>
+              <h2 className="text-lg font-semibold text-slate-900">
+                Danh sách người dùng
+              </h2>
+              <p className="text-xs text-slate-500">
+                {sorted.length} kết quả · {users.length} tổng cộng
+              </p>
+            </div>
+          </div>
+          <div className="space-y-3 px-4 py-4 sm:px-6">
+            {sorted.map((user) => {
+              const isSelected = selectedUser?.user_code === user.user_code;
+              return (
+                <div
+                  key={user.user_code}
+                  className={`rounded-2xl border p-4 transition ${
+                    isSelected
+                      ? "border-emerald-400 bg-emerald-50/30 shadow-sm"
+                      : "border-slate-100 bg-white hover:border-emerald-200"
+                  }`}
+                  onClick={() => setSelectedUser(user)}
+                  role="button"
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-4">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-base font-semibold text-slate-900">
                         {user.user_name}
-                      </td>
-                      <td className="td text-gray-600">{user.email}</td>
-                      <td className="td">{renderRoleBadge(user)}</td>
-                      <td className="td">{renderStatusBadge(user)}</td>
-                      <td className="td text-sm text-gray-600">
-                        <div>{user.phone_number || "—"}</div>
-                        <div className="text-xs text-gray-500">
-                          {user.email}
-                        </div>
-                      </td>
-                      <td className="td text-sm text-gray-500">
-                        #{user.user_code}
-                      </td>
-                    </tr>
-                  );
-                })}
-                {sorted.length === 0 && (
-                  <tr>
-                    <td className="td text-center text-gray-500" colSpan={5}>
-                      Không tìm thấy người dùng phù hợp.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                      </p>
+                    </div>
+                    <div className="flex flex-col items-start gap-2 text-sm sm:items-end">
+                      {renderRoleBadge(user)}
+                      {renderStatusBadge(user)}
+                    </div>
+                  </div>
+                  <div className="mt-4 grid gap-4 text-xs text-slate-500 sm:grid-cols-3">
+                    <div>
+                      <p className="font-semibold text-slate-700">Tài khoản</p>
+                      <p>{user.user_id}</p>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-slate-700">
+                        Mã hệ thống
+                      </p>
+                      <p>#{user.user_code}</p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+            {!sorted.length && (
+              <div className="rounded-2xl border border-dashed border-slate-200 px-4 py-6 text-center text-sm text-slate-500">
+                Không tìm thấy người dùng phù hợp.
+              </div>
+            )}
           </div>
-        </div>
+        </section>
 
-        <aside className="section space-y-4">
-          <h3 className="text-lg font-semibold text-gray-900">
+        <aside className="min-w-0 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h3 className="text-lg font-semibold text-slate-900">
             Thông tin chi tiết
           </h3>
           {selectedUser ? (
-            <div className="space-y-4">
-              <div className="space-y-1">
-                <p className="text-sm text-gray-500">Tên người dùng</p>
-                <p className="text-lg font-semibold text-gray-900">
+            <div className="mt-4 space-y-4 text-sm text-slate-600">
+              <div>
+                <p className="text-xs uppercase text-slate-400">
+                  Tên người dùng
+                </p>
+                <p className="text-lg font-semibold text-slate-900">
                   {selectedUser.user_name}
                 </p>
               </div>
-              <div className="space-y-1">
-                <p className="text-sm text-gray-500">Tài khoản đăng nhập</p>
-                <p className="text-sm font-medium text-gray-700">
-                  {selectedUser.user_id}
-                </p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm text-gray-500">Email</p>
+           
+              <div>
+                <p className="text-xs uppercase text-slate-400">Email</p>
                 <a
                   href={`mailto:${selectedUser.email}`}
-                  className="text-sm font-medium text-indigo-600 hover:underline"
+                  className="font-medium text-emerald-600 hover:underline"
                 >
                   {selectedUser.email}
                 </a>
               </div>
-              <div className="space-y-1">
-                <p className="text-sm text-gray-500">Số điện thoại</p>
-                <p className="text-sm font-medium text-gray-700">
-                  {selectedUser.phone_number || "Chưa cập nhật"}
+              <div>
+                <p className="text-xs uppercase text-slate-400">
+                  Số điện thoại
                 </p>
+                <p>{selectedUser.phone_number || "Chưa cập nhật"}</p>
               </div>
-              <div className="space-y-1">
-                <p className="text-sm text-gray-500">Vai trò</p>
+              <div>
+                <p className="text-xs uppercase text-slate-400">Vai trò</p>
                 {renderRoleBadge(selectedUser)}
               </div>
-              <div className="space-y-1">
-                <p className="text-sm text-gray-500">Trạng thái</p>
+              <div>
+                <p className="text-xs uppercase text-slate-400">Trạng thái</p>
                 {renderStatusBadge(selectedUser)}
               </div>
-              <div className="space-y-1">
-                <p className="text-sm text-gray-500">Mã hệ thống</p>
-                <p className="text-sm font-medium text-gray-700">
+              <div>
+                <p className="text-xs uppercase text-slate-400">Mã hệ thống</p>
+                <p className="font-semibold text-slate-900">
                   #{selectedUser.user_code}
                 </p>
               </div>
@@ -399,11 +448,11 @@ const AdminUsersPage: React.FC = () => {
               </button>
               <button
                 type="button"
-                className={
+                className={`w-full rounded-xl px-4 py-2 text-sm font-semibold ${
                   selectedUser.isActive
-                    ? "btn-danger w-full"
-                    : "btn-primary w-full"
-                }
+                    ? "bg-rose-50 text-rose-600 hover:bg-rose-100"
+                    : "bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
+                }`}
                 onClick={() => handleToggleStatus(selectedUser)}
                 disabled={updatingId === selectedUser.user_code}
               >
@@ -415,7 +464,7 @@ const AdminUsersPage: React.FC = () => {
               </button>
             </div>
           ) : (
-            <p className="text-sm text-gray-500">
+            <p className="mt-4 text-sm text-slate-500">
               Chọn một người dùng từ danh sách để xem chi tiết.
             </p>
           )}
