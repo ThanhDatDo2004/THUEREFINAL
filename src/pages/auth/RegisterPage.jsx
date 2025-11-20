@@ -399,7 +399,7 @@ const RegisterPage = () => {
           </div>
           <div>
             <span className="font-semibold text-white">Đã có tài khoản?</span>
-            <span className="text-sm text-white/70">Đăng nhập ngay</span>
+            <span className="text-sm text-white/70"> Đăng nhập ngay</span>
           </div>
         </div>
       </div>

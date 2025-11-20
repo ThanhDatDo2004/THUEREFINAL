@@ -108,7 +108,7 @@ const ForgotPasswordPage = () => {
           </div>
           <div>
             <span className="font-semibold text-white">Quay lại đăng nhập</span>
-            <span className="text-sm text-white/70">Bỏ qua và đăng nhập</span>
+            <span className="text-sm text-white/70"> Bỏ qua và đăng nhập</span>
           </div>
         </Link>
       </div>

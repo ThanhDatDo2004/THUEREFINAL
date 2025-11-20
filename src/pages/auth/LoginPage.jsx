@@ -1,7 +1,15 @@
 import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import { Mail, Lock, Eye, EyeOff, LogIn, UserPlus, KeyRound } from "lucide-react";
+import {
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  LogIn,
+  UserPlus,
+  KeyRound,
+} from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 
 const LoginPage = () => {
@@ -55,7 +63,8 @@ const LoginPage = () => {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div>
               <label className="label text-white/80">
-                <Mail className="w-4 h-4 inline mr-2" />Email
+                <Mail className="w-4 h-4 inline mr-2" />
+                Email
               </label>
               <input
                 type="email"
@@ -71,20 +80,26 @@ const LoginPage = () => {
                 autoComplete="username"
               />
               {errors.email && (
-                <p className="text-red-400 text-sm mt-1">{errors.email.message}</p>
+                <p className="text-red-400 text-sm mt-1">
+                  {errors.email.message}
+                </p>
               )}
             </div>
 
             <div>
               <label className="label text-white/80">
-                <Lock className="w-4 h-4 inline mr-2" />Mật khẩu
+                <Lock className="w-4 h-4 inline mr-2" />
+                Mật khẩu
               </label>
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
                   {...register("password", {
                     required: "Vui lòng nhập mật khẩu",
-                    minLength: { value: 6, message: "Mật khẩu phải có ít nhất 6 ký tự" },
+                    minLength: {
+                      value: 6,
+                      message: "Mật khẩu phải có ít nhất 6 ký tự",
+                    },
                   })}
                   className="input"
                   placeholder="Nhập mật khẩu của bạn"
@@ -95,11 +110,17 @@ const LoginPage = () => {
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
                 >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  {showPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
                 </button>
               </div>
               {errors.password && (
-                <p className="text-red-400 text-sm mt-1">{errors.password.message}</p>
+                <p className="text-red-400 text-sm mt-1">
+                  {errors.password.message}
+                </p>
               )}
             </div>
 
@@ -109,7 +130,11 @@ const LoginPage = () => {
               </div>
             )}
 
-            <button type="submit" disabled={submitting} className="btn-primary w-full">
+            <button
+              type="submit"
+              disabled={submitting}
+              className="btn-primary w-full"
+            >
               {submitting ? (
                 <>
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -132,7 +157,7 @@ const LoginPage = () => {
             </div>
             <div>
               <span className="font-semibold text-white">Quên mật khẩu?</span>
-              <span className="text-sm text-white/70">Nhấn để đặt lại</span>
+              <span className="text-sm text-white/70"> Nhấn để đặt lại</span>
             </div>
           </Link>
 
@@ -141,8 +166,10 @@ const LoginPage = () => {
               <UserPlus className="w-5 h-5" />
             </div>
             <div>
-              <span className="font-semibold text-white">Chưa có tài khoản?</span>
-              <span className="text-sm text-white/70">Đăng ký ngay</span>
+              <span className="font-semibold text-white">
+                Chưa có tài khoản?
+              </span>
+              <span className="text-sm text-white/70"> Đăng ký ngay</span>
             </div>
           </Link>
         </div>

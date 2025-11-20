@@ -503,8 +503,6 @@ const FieldDetailPage: React.FC = () => {
                 Đặt sân ngay
               </Link>
 
-             
-
               {/* Shop Info */}
               <div className="border-t pt-6">
                 <h3 className="font-bold text-gray-900 mb-4">
@@ -551,7 +549,7 @@ const FieldDetailPage: React.FC = () => {
                 }}
               >
                 <p className="text-xs font-medium">
-                  ✓ Đặt ngay - Thanh toán an toàn - Hoàn tiền nếu hủy
+                  ✓ Đặt ngay - Thanh toán an toàn
                 </p>
               </div>
             </div>
