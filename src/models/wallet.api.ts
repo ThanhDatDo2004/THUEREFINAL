@@ -91,7 +91,7 @@ export const getWalletTransactionsApi = async (
   return response.data;
 };
 
-/**
+/**`
  * Create payout request
  */
 export const createPayoutRequestApi = async (

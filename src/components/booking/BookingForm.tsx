@@ -1,11 +1,43 @@
 import React, { useState } from "react";
 import type { ConfirmBookingPayload } from "../../models/booking.api";
 
+type BookingFormSubmitPayload = ConfirmBookingPayload & {
+  field_code: number;
+};
+
 interface BookingFormProps {
-  onSubmit: (payload: ConfirmBookingPayload) => Promise<void>;
+  onSubmit: (payload: BookingFormSubmitPayload) => Promise<void>;
   loading: boolean;
   fieldCode: number;
 }
+
+type PaymentMethod = "card" | "bank" | "ewallet";
+
+interface BookingFormState {
+  customer: {
+    name: string;
+    email: string;
+    phone: string;
+  };
+  payment_method: PaymentMethod;
+  notes: string;
+}
+
+type CustomerFieldKey = keyof BookingFormState["customer"];
+
+const CUSTOMER_FIELDS: ReadonlyArray<CustomerFieldKey> = ["name", "email", "phone"];
+const isCustomerField = (value: string): value is CustomerFieldKey =>
+  (CUSTOMER_FIELDS as readonly string[]).includes(value);
+
+const initialState: BookingFormState = {
+  customer: {
+    name: "",
+    email: "",
+    phone: "",
+  },
+  payment_method: "card",
+  notes: "",
+};
 
 /**
  * Form component for booking submission
@@ -16,50 +48,47 @@ export const BookingForm: React.FC<BookingFormProps> = ({
   loading,
   fieldCode,
 }) => {
-  const [formData, setFormData] = useState({
-    customer: {
-      name: "",
-      email: "",
-      phone: "",
-    },
-    payment_method: "card",
-    notes: "",
-  });
+  const [formData, setFormData] = useState<BookingFormState>(initialState);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
     if (name.startsWith("customer.")) {
-      const field = name.split(".")[1];
-      setFormData((prev) => ({
-        ...prev,
-        customer: {
-          ...prev.customer,
-          [field]: value,
-        },
-      }));
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: value,
-      }));
+      const [, field] = name.split(".");
+      if (field && isCustomerField(field)) {
+        setFormData((prev) => ({
+          ...prev,
+          customer: {
+            ...prev.customer,
+            [field]: value,
+          },
+        }));
+      }
+      return;
     }
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
-    // Validate required fields
+
     if (!formData.customer.name || !formData.customer.email) {
       alert("Please fill in required fields");
       return;
     }
 
-    await onSubmit({
+    const payload: BookingFormSubmitPayload = {
       ...formData,
       field_code: fieldCode,
-      slots: [], // Slots should be passed separately
-      total_price: 0, // Should be calculated
-    } as any);
+      slots: [],
+      total_price: 0,
+    };
+
+    await onSubmit(payload);
   };
 
   return (

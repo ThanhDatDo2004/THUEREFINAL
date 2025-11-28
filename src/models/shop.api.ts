@@ -106,6 +106,7 @@ export async function submitShopRequest(payload: ShopRequestPayload) {
     return ensureSuccess(data, "Không thể gửi yêu cầu");
   } catch (error) {
     rethrowApiError(error, "Không thể gửi yêu cầu");
+    throw error;
   }
 }
 
@@ -121,6 +122,7 @@ export async function fetchMyShop(): Promise<Shops | null> {
     return normalizeSingle(payload) ?? null;
   } catch (error) {
     rethrowApiError(error, "Không thể tải thông tin shop của bạn.");
+    throw error;
   }
 }
 
@@ -161,6 +163,7 @@ export async function updateMyShop(
     return normalizeSingle(payloadData);
   } catch (error) {
     rethrowApiError(error, "Không thể cập nhật thông tin shop.");
+    throw error;
   }
 }
 
@@ -174,6 +177,7 @@ export async function fetchShopByCode(shopCode: number): Promise<Shops | null> {
     return normalizeSingle(payload) ?? null;
   } catch (error) {
     rethrowApiError(error, "Không thể tải thông tin shop.");
+    throw error;
   }
 }
 
@@ -245,6 +249,7 @@ export async function fetchShopFields(
     return normalizeFieldsListResult(payload as FieldsListResult);
   } catch (error) {
     rethrowApiError(error, "Không thể tải danh sách sân.");
+    throw error;
   }
 }
 
@@ -282,6 +287,7 @@ export async function createShopField(
     return normalized;
   } catch (error) {
     rethrowApiError(error, "Không thể tạo sân mới.");
+    throw error;
   }
 }
 
@@ -301,6 +307,7 @@ export async function updateShopField(
     return normalizeSingle(payloadData) ?? null;
   } catch (error) {
     rethrowApiError(error, "Không thể cập nhật thông tin sân.");
+    throw error;
   }
 }
 
@@ -320,6 +327,7 @@ export async function updateShopFieldStatus(
     return normalizeSingle(payloadData) ?? null;
   } catch (error) {
     rethrowApiError(error, "Không thể cập nhật trạng thái sân.");
+    throw error;
   }
 }
 
@@ -334,6 +342,7 @@ export async function deleteShopField(
     return ensureSuccess(data, "Không thể xoá sân.");
   } catch (error) {
     rethrowApiError(error, "Không thể xoá sân.");
+    throw error;
   }
 }
 
@@ -349,6 +358,7 @@ export async function fetchMyShopBookings(): Promise<Bookings[]> {
     return normalizeList(payload);
   } catch (error) {
     rethrowApiError(error, "Không thể tải danh sách đơn đặt của shop.");
+    throw error;
   }
 }
 
@@ -394,6 +404,7 @@ export async function fetchShopBookingsForRevenue(): Promise<ShopBookingItem[]> 
     return normalizeList(payload);
   } catch (error) {
     rethrowApiError(error, "Không thể tải danh sách đơn đặt của shop.");
+    throw error;
   }
 }
 
@@ -419,6 +430,7 @@ export async function fetchShopBankAccounts(): Promise<ShopBankAccount[]> {
     return normalizeList(payload);
   } catch (error) {
     rethrowApiError(error, "Không thể tải danh sách tài khoản ngân hàng.");
+    throw error;
   }
 }
 
@@ -431,6 +443,7 @@ export async function fetchMyShopCustomers(): Promise<Customers[]> {
     return normalizeList(payload);
   } catch (error) {
     rethrowApiError(error, "Không thể tải danh sách khách hàng.");
+    throw error;
   }
 }
 
@@ -451,6 +464,7 @@ export async function fetchMyShopRevenue(params?: {
     return normalizeList(payload);
   } catch (error) {
     rethrowApiError(error, "Không thể tải dữ liệu doanh thu của shop.");
+    throw error;
   }
 }
 
@@ -516,6 +530,7 @@ export async function fetchFieldOperatingHours(
       error
     );
     rethrowApiError(error, "Không thể tải dữ liệu giờ hoạt động.");
+    throw error;
   }
 }
 
@@ -564,6 +579,7 @@ export async function createFieldOperatingHours(
   } catch (error) {
     console.error("Create operating hours error:", error);
     rethrowApiError(error, "Không thể tạo giờ hoạt động mới.");
+    throw error;
   }
 }
 
@@ -621,6 +637,7 @@ export async function updateFieldOperatingHours(
     return normalizeOperatingHoursResponse(rawData);
   } catch (error) {
     rethrowApiError(error, "Không thể cập nhật giờ hoạt động.");
+    throw error;
   }
 }
 
@@ -637,6 +654,7 @@ export async function deleteFieldOperatingHours(
     return ensureSuccess(data, "Không thể xóa giờ hoạt động.");
   } catch (error) {
     rethrowApiError(error, "Không thể xóa giờ hoạt động.");
+    throw error;
   }
 }
 
@@ -656,6 +674,7 @@ export async function fetchFieldPricing(
     return rawList.map((item: any) => normalizePricingResponse(item));
   } catch (error) {
     rethrowApiError(error, "Không thể tải dữ liệu giá sân.");
+    throw error;
   }
 }
 
@@ -684,6 +703,7 @@ export async function createFieldPricing(
     return normalizePricingResponse(rawData);
   } catch (error) {
     rethrowApiError(error, "Không thể tạo giá sân mới.");
+    throw error;
   }
 }
 
@@ -709,6 +729,7 @@ export async function updateFieldPricing(
     return normalizePricingResponse(rawData);
   } catch (error) {
     rethrowApiError(error, "Không thể cập nhật giá sân.");
+    throw error;
   }
 }
 
@@ -725,5 +746,6 @@ export async function deleteFieldPricing(
     return ensureSuccess(data, "Không thể xóa giá sân.");
   } catch (error) {
     rethrowApiError(error, "Không thể xóa giá sân.");
+    throw error;
   }
 }

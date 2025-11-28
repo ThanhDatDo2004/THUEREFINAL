@@ -3,14 +3,13 @@ import type {
   IApiSuccessResponse,
   IApiErrorResponse,
 } from "../interfaces/common";
-import type {
-  FieldWithImages,
-  FieldsQuery,
-  FieldsListResult,
-  FieldsListResultNormalized,
-  FieldImages,
-} from "../types";
-import { ensureSuccess, extractErrorMessage, rethrowApiError } from "./api.helpers";
+import type { FieldWithImages, FieldsQuery } from "../types";
+import {
+  normalizeFieldsListResult,
+  type FieldsListResult,
+  type FieldsListResultNormalized,
+} from "./fields.api";
+import { ensureSuccess, rethrowApiError } from "./api.helpers";
 
 // Types for shop field management
 export interface CreateFieldData {
@@ -35,6 +34,25 @@ export interface UpdateFieldStatusData {
   status: "active" | "maintenance" | "inactive";
 }
 
+const buildQuery = (params: FieldsQuery = {}) => {
+  const query: Record<string, unknown> = {};
+  if (params.search) query.search = params.search;
+  if (params.sportType) query.sportType = params.sportType;
+  if (params.location) query.location = params.location;
+  if (typeof params.priceMin === "number") query.priceMin = params.priceMin;
+  if (typeof params.priceMax === "number") query.priceMax = params.priceMax;
+  if (typeof params.page === "number") query.page = params.page;
+  if (typeof params.pageSize === "number") query.pageSize = params.pageSize;
+  if (params.sortBy) query.sortBy = params.sortBy;
+  if (params.sortDir) query.sortDir = params.sortDir;
+  if (params.status) query.status = params.status;
+  if (params.shopStatus) query.shopStatus = params.shopStatus;
+  if (params.date) query.date = params.date;
+  if (params.startTime) query.startTime = params.startTime;
+  if (params.endTime) query.endTime = params.endTime;
+  return query;
+};
+
 /**
  * Shop Fields Management API
  * Tương ứng với các routes mới trong backend:
@@ -57,36 +75,15 @@ export async function fetchMyFields(
       params: buildQuery(params),
     });
 
-    const payload = ensureSuccess(data, "Không thể tải danh sách sân của bạn");
+    const payload = ensureSuccess<FieldsListResult>(
+      data,
+      "Không thể tải danh sách sân của bạn"
+    );
 
-    // Normalize the result similar to fetchFields
-    return {
-      fields: payload.fields,
-      total: payload.total,
-      page: payload.page,
-      pageSize: payload.pageSize,
-      totalPages:
-        payload.totalPages ||
-        Math.ceil(payload.total / (payload.pageSize || 12)),
-      hasNext:
-        payload.hasNext || (payload.page || 1) < (payload.totalPages || 1),
-      hasPrev: payload.hasPrev || (payload.page || 1) > 1,
-      meta: {
-        pagination: {
-          total: payload.total,
-          page: payload.page,
-          pageSize: payload.pageSize,
-          totalPages:
-            payload.totalPages ||
-            Math.ceil(payload.total / (payload.pageSize || 12)),
-          hasNext:
-            payload.hasNext || (payload.page || 1) < (payload.totalPages || 1),
-          hasPrev: payload.hasPrev || (payload.page || 1) > 1,
-        },
-      },
-    };
+    return normalizeFieldsListResult(payload);
   } catch (error) {
     rethrowApiError(error, "Không thể tải danh sách sân của bạn");
+    throw error;
   }
 }
 
@@ -133,6 +130,7 @@ export async function createMyField(
     return ensureSuccess(data, "Không thể tạo sân mới");
   } catch (error) {
     rethrowApiError(error, "Không thể tạo sân mới");
+    throw error;
   }
 }
 
@@ -152,6 +150,7 @@ export async function updateMyField(
     return ensureSuccess(data, "Không thể cập nhật sân");
   } catch (error) {
     rethrowApiError(error, "Không thể cập nhật sân");
+    throw error;
   }
 }
 
@@ -176,6 +175,7 @@ export async function fetchMyFieldById(
       return null;
     }
     rethrowApiError(error, "Không thể tải thông tin sân");
+    throw error;
   }
 }
 

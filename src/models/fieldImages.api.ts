@@ -26,6 +26,7 @@ export async function deleteFieldImage(
     return ensureSuccess(data, "Không thể xóa ảnh. Vui lòng thử lại.");
   } catch (error) {
     rethrowApiError(error, "Lỗi không xác định khi xóa ảnh");
+    throw error;
   }
 }
 
@@ -52,6 +53,7 @@ export async function uploadFieldImage(
     return ensureSuccess(data, "Không thể tải ảnh lên. Vui lòng thử lại.");
   } catch (error) {
     rethrowApiError(error, "Lỗi không xác định khi tải ảnh lên");
+    throw error;
   }
 }
 
@@ -69,7 +71,7 @@ export async function uploadMultipleFieldImages(
   try {
     return await Promise.all(uploadPromises);
   } catch (error: unknown) {
-    // The error is already processed in uploadFieldImage, just re-throw it.
+    throw error instanceof Error ? error : new Error("Upload failed");
   }
 }
 
@@ -87,7 +89,7 @@ export async function deleteMultipleFieldImages(
   try {
     return await Promise.all(deletePromises);
   } catch (error: unknown) {
-    // The error is already processed in deleteFieldImage, just re-throw it.
+    throw error instanceof Error ? error : new Error("Delete failed");
   }
 }
 

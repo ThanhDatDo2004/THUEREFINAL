@@ -119,6 +119,7 @@ export async function fetchAdminUsers(): Promise<Users[]> {
     return normalizeList(payload);
   } catch (error) {
     rethrowApiError(error, "Không thể tải danh sách người dùng.");
+    throw error;
   }
 }
 
@@ -134,6 +135,7 @@ export async function fetchAdminUserLevels(): Promise<UsersLevel[]> {
     return normalizeList(payload);
   } catch (error) {
     rethrowApiError(error, "Không thể tải thông tin phân quyền.");
+    throw error;
   }
 }
 
@@ -146,6 +148,7 @@ export async function fetchAdminShops(): Promise<Shops[]> {
     return normalizeList(payload);
   } catch (error) {
     rethrowApiError(error, "Không thể tải danh sách shop.");
+    throw error;
   }
 }
 
@@ -161,6 +164,7 @@ export async function fetchAdminBookings(): Promise<Bookings[]> {
     return normalizeList(payload);
   } catch (error) {
     rethrowApiError(error, "Không thể tải danh sách đơn đặt.");
+    throw error;
   }
 }
 
@@ -180,6 +184,7 @@ export async function fetchAdminRevenue(
     return normalizeList(payload);
   } catch (error) {
     rethrowApiError(error, "Không thể tải dữ liệu doanh thu.");
+    throw error;
   }
 }
 
@@ -195,6 +200,7 @@ export async function fetchAdminShopRequests(): Promise<ShopRequests[]> {
     return normalizeList(payload);
   } catch (error) {
     rethrowApiError(error, "Không thể tải danh sách yêu cầu mở shop.");
+    throw error;
   }
 }
 
@@ -224,6 +230,7 @@ export async function fetchAdminFinanceBookings(
     return ensureSuccess(data, "Không thể tải dữ liệu tài chính.");
   } catch (error) {
     rethrowApiError(error, "Không thể tải dữ liệu tài chính.");
+    throw error;
   }
 }
 
@@ -242,6 +249,7 @@ export async function fetchAdminShopRequestById(
     return normalizeSingle(payload) ?? null;
   } catch (error) {
     rethrowApiError(error, "Không thể tải chi tiết yêu cầu mở shop.");
+    throw error;
   }
 }
 
@@ -286,6 +294,7 @@ export async function updateAdminShopRequestStatus(
     return result;
   } catch (error) {
     rethrowApiError(error, "Không thể cập nhật trạng thái yêu cầu mở shop.");
+    throw error;
   }
 }
 

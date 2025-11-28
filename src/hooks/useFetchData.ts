@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import type { IApiSuccessResponse, IApiErrorResponse } from "../interfaces/common";
 import { isApiSuccess, extractErrorMessage } from "../models/api.helpers";
 
@@ -56,7 +56,7 @@ export const useFetchData = <T>(
   }, dependencies);
 
   // Auto-fetch on mount
-  useState(() => {
+  useEffect(() => {
     fetchData();
   }, [fetchData]);
 

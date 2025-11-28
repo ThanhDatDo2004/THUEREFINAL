@@ -4,14 +4,23 @@ import { useForm } from "react-hook-form";
 import { Mail, Send, ArrowLeft, CheckCircle2 } from "lucide-react";
 import { forgotPassword } from "../../models/auth.api";
 
-const ForgotPasswordPage = () => {
+type FeedbackState =
+  | { type: "success"; message: string }
+  | { type: "error"; message: string }
+  | null;
+
+interface ForgotPasswordForm {
+  email: string;
+}
+
+const ForgotPasswordPage: React.FC = () => {
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm({ mode: "onChange" });
+  } = useForm<ForgotPasswordForm>({ mode: "onChange" });
   const [submitting, setSubmitting] = useState(false);
-  const [feedback, setFeedback] = useState(null);
+  const [feedback, setFeedback] = useState<FeedbackState>(null);
 
   const onSubmit = handleSubmit(async ({ email }) => {
     setFeedback(null);

@@ -197,6 +197,7 @@ export async function fetchFields(
     return normalizeFieldsListResult(payload);
   } catch (error) {
     rethrowApiError(error, "Không thể tải danh sách sân");
+    throw error;
   }
 }
 
@@ -214,6 +215,7 @@ export async function fetchFieldById(
       return null;
     }
     rethrowApiError(error, "Không thể tải thông tin sân");
+    throw error;
   }
 }
 
@@ -232,6 +234,7 @@ export async function uploadFieldImage(
     return ensureSuccess(data, "Không thể tải ảnh sân");
   } catch (error) {
     rethrowApiError(error, "Không thể tải ảnh sân");
+    throw error;
   }
 }
 
@@ -282,6 +285,7 @@ export async function fetchFieldAvailability(
     return ensureSuccess(data, "Không thể tải lịch sân");
   } catch (error) {
     rethrowApiError(error, "Không thể tải lịch sân");
+    throw error;
   }
 }
 
@@ -369,6 +373,7 @@ export async function fetchFieldStats(
         throw new Error("Sân không tồn tại");
       }
       rethrowApiError(error, "Không thể tải thông tin sân");
+      throw error;
     }
   })();
 
@@ -397,6 +402,7 @@ export async function fetchFieldsWithRent(
     return ensureSuccess(data, "Không thể tải danh sách sân");
   } catch (error) {
     rethrowApiError(error, "Không thể tải danh sách sân");
+    throw error;
   }
 }
 
@@ -457,6 +463,7 @@ export async function fetchAvailableQuantities(
     return ensureSuccess(data, "Không thể tải danh sách sân trống");
   } catch (error) {
     rethrowApiError(error, "Không thể tải danh sách sân trống");
+    throw error;
   }
 }
 
@@ -474,6 +481,7 @@ export async function fetchFieldQuantities(
     return ensureSuccess(data, "Không thể tải danh sách sân");
   } catch (error) {
     rethrowApiError(error, "Không thể tải danh sách sân");
+    throw error;
   }
 }
 
@@ -494,5 +502,6 @@ export async function updateQuantityStatus(
     return ensureSuccess(data, "Không thể cập nhật trạng thái sân");
   } catch (error) {
     rethrowApiError(error, "Không thể cập nhật trạng thái sân");
+    throw error;
   }
 }

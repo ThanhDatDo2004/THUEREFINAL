@@ -167,6 +167,7 @@ export async function confirmFieldBooking(
     return ensureSuccess(data, "Không thể xác nhận thanh toán.");
   } catch (error) {
     rethrowApiError(error, "Không thể xác nhận thanh toán.");
+    throw error;
   }
 }
 

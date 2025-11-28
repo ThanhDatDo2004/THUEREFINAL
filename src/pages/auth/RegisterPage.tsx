@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
+import { useForm, type SubmitHandler } from "react-hook-form";
 import {
   User,
   Mail,
@@ -17,12 +17,27 @@ import { useAuth } from "../../contexts/AuthContext";
 
 const RESEND_SECONDS = 60;
 
-const RegisterPage = () => {
+type VerifyPhase = "idle" | "sending" | "sent" | "verifying" | "verified";
+
+interface RegisterFormInputs {
+  user_name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+}
+
+interface ApiResponse<T> {
+  success?: boolean;
+  message?: string;
+  data?: T;
+}
+
+const RegisterPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [registerError, setRegisterError] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
-  const [verifyPhase, setVerifyPhase] = useState("idle");
+  const [verifyPhase, setVerifyPhase] = useState<VerifyPhase>("idle");
   const [otp, setOtp] = useState("");
   const [otpError, setOtpError] = useState("");
   const [resendIn, setResendIn] = useState(0);
@@ -38,7 +53,7 @@ const RegisterPage = () => {
     formState: { errors, isValid },
     getValues,
     resetField,
-  } = useForm({ mode: "onChange" });
+  } = useForm<RegisterFormInputs>({ mode: "onChange" });
 
   const watchPassword = watch("password");
   const watchConfirm = watch("confirmPassword");
@@ -89,6 +104,21 @@ const RegisterPage = () => {
     verifyPhase,
   ]);
 
+  const safeErrorMessage = (error: unknown, fallback: string) => {
+    if (error && typeof error === "object") {
+      const err = error as {
+        response?: { data?: { message?: string } };
+        message?: string;
+      };
+      return (
+        err.response?.data?.message ??
+        err.message ??
+        fallback
+      );
+    }
+    return fallback;
+  };
+
   const sendCode = async () => {
     setServerMsg("");
     setOtpError("");
@@ -96,7 +126,7 @@ const RegisterPage = () => {
 
     try {
       setVerifyPhase("sending");
-      const { data } = await api.post("/auth/send-code", {
+      const { data } = await api.post<ApiResponse<null>>("/auth/send-code", {
         email: getValues("email"),
       });
 
@@ -109,11 +139,7 @@ const RegisterPage = () => {
       setServerMsg("Đã gửi mã xác minh đến email của bạn.");
     } catch (error) {
       setVerifyPhase("idle");
-      const msg =
-        error?.response?.data?.message ||
-        error?.message ||
-        "Có lỗi xảy ra khi gửi mã.";
-      setServerMsg(msg);
+      setServerMsg(safeErrorMessage(error, "Có lỗi xảy ra khi gửi mã."));
     }
   };
 
@@ -126,7 +152,7 @@ const RegisterPage = () => {
     }
     try {
       setVerifyPhase("verifying");
-      const { data } = await api.post("/auth/verify-code", {
+      const { data } = await api.post<ApiResponse<null>>("/auth/verify-code", {
         email: getValues("email"),
         code: otp,
       });
@@ -138,15 +164,13 @@ const RegisterPage = () => {
       setServerMsg("Xác minh email thành công!");
     } catch (error) {
       setVerifyPhase("sent");
-      const msg =
-        error?.response?.data?.message ||
-        error?.message ||
-        "Xác minh thất bại, vui lòng thử lại.";
-      setOtpError(msg);
+      setOtpError(
+        safeErrorMessage(error, "Xác minh thất bại, vui lòng thử lại.")
+      );
     }
   };
 
-  const onSubmit = async (data) => {
+  const onSubmit: SubmitHandler<RegisterFormInputs> = async (data) => {
     setRegisterError("");
 
     if (verifyPhase !== "verified") {
@@ -407,7 +431,7 @@ const RegisterPage = () => {
   );
 };
 
-const LoadingSpinner = () => (
+const LoadingSpinner: React.FC = () => (
   <div className="w-10 h-10 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
 );
 

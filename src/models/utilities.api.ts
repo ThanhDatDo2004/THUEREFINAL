@@ -66,6 +66,7 @@ export async function updateShopUtilities(
     return [];
   } catch (error) {
     console.error("Error updating shop utilities:", error);
+    return [];
   }
 }
 
@@ -87,6 +88,7 @@ export async function addUtility(
     throw new Error("Failed to add utility");
   } catch (error) {
     console.error("Error adding utility:", error);
+    throw (error instanceof Error ? error : new Error("Error adding utility"));
   }
 }
 
@@ -104,6 +106,7 @@ export async function removeUtility(
     return data?.success || false;
   } catch (error) {
     console.error("Error removing utility:", error);
+    return false;
   }
 }
 

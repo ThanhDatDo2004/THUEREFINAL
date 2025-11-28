@@ -138,6 +138,7 @@ export async function loginApi(payload: LoginApiReq): Promise<LoginApiSuccess> {
     return normalizeLoginResponse(base, data);
   } catch (error) {
     rethrowApiError(error, "Đăng nhập thất bại");
+    throw error;
   }
 }
 
@@ -174,5 +175,6 @@ export async function getGuestTokenApi(): Promise<string> {
     return payload.token;
   } catch (error) {
     rethrowApiError(error, "Không thể lấy guest token");
+    throw error;
   }
 }

@@ -1,10 +1,20 @@
 import React, { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { useForm } from "react-hook-form";
+import { useForm, type SubmitHandler } from "react-hook-form";
 import { Lock, Eye, EyeOff, CheckCircle2, ArrowLeft } from "lucide-react";
 import { resetPassword } from "../../models/auth.api";
 
-const ResetPasswordPage = () => {
+interface ResetPasswordForm {
+  password: string;
+  confirmPassword: string;
+}
+
+type ResetPasswordResponse = {
+  success?: boolean;
+  message?: string;
+};
+
+const ResetPasswordPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token") || "";
   const navigate = useNavigate();
@@ -20,10 +30,10 @@ const ResetPasswordPage = () => {
     handleSubmit,
     watch,
     formState: { errors },
-  } = useForm({ mode: "onChange" });
+  } = useForm<ResetPasswordForm>({ mode: "onChange" });
   const watchPassword = watch("password");
 
-  const onSubmit = async (data) => {
+  const onSubmit: SubmitHandler<ResetPasswordForm> = async (data) => {
     setServerMsg("");
     if (!token) {
       setServerMsg("Liên kết không hợp lệ.");
@@ -31,7 +41,10 @@ const ResetPasswordPage = () => {
     }
     setLoading(true);
     try {
-      const res = await resetPassword(token, data.password);
+      const res = (await resetPassword(
+        token,
+        data.password
+      )) as ResetPasswordResponse;
       if (!res?.success) {
         throw new Error(res?.message || "Đặt lại mật khẩu thất bại.");
       }
@@ -39,7 +52,19 @@ const ResetPasswordPage = () => {
       setServerMsg("Đặt lại mật khẩu thành công.");
       setTimeout(() => navigate("/login"), 1500);
     } catch (error) {
-      setServerMsg(error?.response?.data?.message || error?.message || "Có lỗi xảy ra.");
+      const message =
+        error &&
+        typeof error === "object" &&
+        "response" in error &&
+        (error as { response?: { data?: { message?: string } } }).response
+          ?.data?.message
+          ? (
+              error as { response?: { data?: { message?: string } } }
+            ).response?.data?.message
+          : error instanceof Error
+          ? error.message
+          : "Có lỗi xảy ra.";
+      setServerMsg(message);
     } finally {
       setLoading(false);
     }

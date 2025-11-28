@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
+import { useForm, type SubmitHandler } from "react-hook-form";
 import {
   Mail,
   Lock,
@@ -12,21 +12,31 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 
-const LoginPage = () => {
+interface LocationState {
+  from?: { pathname: string };
+  carry?: unknown;
+}
+
+interface LoginFormInputs {
+  email: string;
+  password: string;
+}
+
+const LoginPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loginError, setLoginError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
+  const location = useLocation<LocationState>();
 
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm({ mode: "onChange" });
+  } = useForm<LoginFormInputs>({ mode: "onChange" });
 
-  const onSubmit = async (data) => {
+  const onSubmit: SubmitHandler<LoginFormInputs> = async (data) => {
     setLoginError("");
     setSubmitting(true);
     try {
@@ -37,7 +47,11 @@ const LoginPage = () => {
         navigate(fromPath, { replace: true, state: carryState });
       }
     } catch (error) {
-      setLoginError(error?.message || "Email hoặc mật khẩu không chính xác");
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Email hoặc mật khẩu không chính xác";
+      setLoginError(message);
     } finally {
       setSubmitting(false);
     }

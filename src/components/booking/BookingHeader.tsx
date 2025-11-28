@@ -30,16 +30,16 @@ export const BookingHeader: React.FC<BookingHeaderProps> = ({ field, loading }) 
   return (
     <div className="booking-header">
       <div className="field-info">
-        <h1>{field.FieldName}</h1>
-        <p className="sport-type">{field.SportType}</p>
-        <p className="location">{field.Location}</p>
+        <h1>{field.field_name}</h1>
+        <p className="sport-type">{field.sport_type}</p>
+        <p className="location">{field.address}</p>
       </div>
 
       {field.images && field.images.length > 0 && (
         <div className="field-images carousel">
           {field.images.map((image, idx) => (
             <div key={idx} className="carousel-item">
-              <img src={image.ImageUrl} alt={`${field.FieldName} ${idx}`} />
+              <img src={image.image_url} alt={`${field.field_name} ${idx}`} />
             </div>
           ))}
         </div>
