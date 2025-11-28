@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { loginApi, registerApi } from "../models/auth.api";
 import { mapApiUserToAuthUser } from "../utils/mapUser";
 
-const AuthContext = createContext(undefined);
+export const AuthContext = createContext(undefined);
 
 export const useAuth = () => {
   const ctx = useContext(AuthContext);

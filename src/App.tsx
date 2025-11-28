@@ -1,5 +1,10 @@
 // src/App.tsx
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 
 import Layout from "./components/layouts/Layout";
@@ -131,7 +136,6 @@ function App() {
             }
           />
 
-          {/* Shop Routes (nested) */}
           <Route
             path="/shop/*"
             element={
@@ -152,7 +156,7 @@ function App() {
             <Route path="settings" element={<ShopSettingsPage />} />
           </Route>
 
-          {/* Admin Routes (nested) */}
+          {/* Admin Routes */}
           <Route
             path="/admin/*"
             element={
@@ -171,10 +175,7 @@ function App() {
             <Route path="transactions" element={<AdminTransactionsPage />} />
             <Route path="payouts" element={<AdminPayoutRequestsPage />} />
           </Route>
-
-          {/* Forgot / Reset password */}
           <Route path="/forgot" element={<ForgotPasswordPage />} />
-          {/* Reset bằng QUERY ?token=... để khớp link email và ResetPasswordPage */}
           <Route path="/reset-password" element={<ResetPasswordPage />} />
 
           {/* 404 Route */}
