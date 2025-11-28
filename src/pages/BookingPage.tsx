@@ -1368,9 +1368,6 @@ const BookingPage: React.FC = () => {
         ? confirmation.payment_status.toString()
         : "";
       if (!status) return "Không xác định";
-      if (status === "mock_success") {
-        return "Thanh toán mô phỏng thành công";
-      }
       return status.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase());
     })();
 

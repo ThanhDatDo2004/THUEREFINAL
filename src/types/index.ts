@@ -234,27 +234,30 @@ export interface AuthUser {
   level_type: "cus" | "shop" | "admin";
   user_name: string;
   email: string;
-}
-
-export interface AuthContextType {
-  user: AuthUser | null;
-  login: (email: string, password: string) => Promise<boolean>;
-  register: (userData: RegisterData) => Promise<boolean>;
-  logout: () => void;
-  loading: boolean;
+  shop_code?: number | null;
 }
 
 export interface RegisterData {
   user_name: string;
-  user_id: string;
   email: string;
   password: string;
-  level_type: "cus" | "shop";
+  user_id?: string;
+  level_type?: "cus" | "shop";
 }
 
 export interface LoginData {
-  email: string;
+  login: string;
   password: string;
+}
+
+export interface AuthContextType {
+  user: AuthUser | null;
+  login: (emailOrPhone: string, password: string) => Promise<boolean>;
+  register: (userData: RegisterData) => Promise<boolean>;
+  logout: () => void;
+  loading: boolean;
+  isShopOwner: () => boolean;
+  getShopCode: () => number | null;
 }
 
 // Shop Field Management Types
@@ -276,15 +279,6 @@ export interface UpdateFieldData {
 
 export interface UpdateFieldStatusData {
   status: "active" | "maintenance" | "inactive";
-}
-
-// Enhanced AuthUser with shop_code
-export interface AuthUser {
-  user_code: number;
-  level_type: "cus" | "shop" | "admin";
-  user_name: string;
-  email: string;
-  shop_code?: number; // Added for shop owners
 }
 
 // Field Operating Hours Types (separated from pricing)
@@ -327,17 +321,6 @@ export interface FieldPricingPayload {
 
 export interface WeeklyPricing {
   [dayOfWeek: number]: FieldPricing[]; // 0-6 for Sunday-Saturday
-}
-
-// Enhanced AuthContextType
-export interface AuthContextType {
-  user: AuthUser | null;
-  login: (email: string, password: string) => Promise<boolean>;
-  register: (userData: RegisterData) => Promise<boolean>;
-  logout: () => void;
-  loading: boolean;
-  isShopOwner: () => boolean; // Helper to check if user is shop owner
-  getShopCode: () => number | null; // Helper to get shop code
 }
 
 // ===== Quantity Types for Field_Quantity System =====

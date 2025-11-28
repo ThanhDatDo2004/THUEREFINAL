@@ -64,7 +64,6 @@ export const rethrowApiError = (error: unknown, fallback: string): never => {
   const message = extractErrorMessage(error, fallback);
   if (error && typeof error === "object") {
     (error as any).message = message;
-    throw error;
   }
   throw new Error(message);
 };

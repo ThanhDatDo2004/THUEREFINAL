@@ -31,7 +31,7 @@ export interface ConfirmBookingPayload {
 export interface ConfirmBookingResponse {
   booking_code: string;
   transaction_id: string;
-  payment_status: "mock_success";
+  payment_status: string;
   payment_method: string;
   field_code: number;
   slots: ConfirmBookingSlotPayload[];

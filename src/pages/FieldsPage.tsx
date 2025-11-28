@@ -128,20 +128,7 @@ const FieldsPage: React.FC = () => {
         break;
     }
     try {
-      // DEBUG: verify requested page/params
-      // eslint-disable-next-line no-console
-      console.log("[FieldsPage] Request params", q);
       const payload = await fetchFields(q);
-      // DEBUG: verify response pagination and items
-      // eslint-disable-next-line no-console
-      console.log(
-        "[FieldsPage] Response pagination",
-        payload?.meta?.pagination,
-        "firstCodes",
-        (payload?.items || []).slice(0, 3).map((x) => x.field_code),
-        "count",
-        payload?.items?.length
-      );
       setFields(payload.items);
       setTotal(payload.meta.pagination.total);
       setFacets({

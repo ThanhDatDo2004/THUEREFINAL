@@ -497,24 +497,17 @@ export async function fetchFieldOperatingHours(
 ): Promise<FieldOperatingHours[]> {
   if (!Number.isFinite(fieldCode)) return [];
   try {
-    console.log(`Fetching operating hours for field ${fieldCode}`);
-
     const { data } = await api.get<
       ApiSuccess<MaybeArrayResult<FieldOperatingHours[]>> | ApiError
     >(`/shops/me/fields/${fieldCode}/pricing`);
 
-    console.log(`API response for field ${fieldCode}:`, data);
-
     const payload = ensureSuccess(data, "Không thể tải dữ liệu giờ hoạt động.");
     const rawList = normalizeList(payload);
-
-    console.log(`Normalized list for field ${fieldCode}:`, rawList);
 
     // Normalize each item in the list to handle different backend response formats
     const result = rawList.map((item: any) =>
       normalizeOperatingHoursResponse(item)
     );
-    console.log(`Final result for field ${fieldCode}:`, result);
 
     return result;
   } catch (error) {
@@ -560,11 +553,6 @@ export async function createFieldOperatingHours(
       start_time: start,
       end_time: end,
     };
-
-    console.log(
-      "Attempting to create operating hours with payload:",
-      normalizedPayload
-    );
 
     const { data } = await api.post<
       ApiSuccess<MaybeArrayResult<FieldOperatingHours>> | ApiError

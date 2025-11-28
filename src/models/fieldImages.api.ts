@@ -70,7 +70,6 @@ export async function uploadMultipleFieldImages(
     return await Promise.all(uploadPromises);
   } catch (error: unknown) {
     // The error is already processed in uploadFieldImage, just re-throw it.
-    throw error;
   }
 }
 
@@ -89,7 +88,6 @@ export async function deleteMultipleFieldImages(
     return await Promise.all(deletePromises);
   } catch (error: unknown) {
     // The error is already processed in deleteFieldImage, just re-throw it.
-    throw error;
   }
 }
 

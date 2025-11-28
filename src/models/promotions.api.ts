@@ -63,7 +63,6 @@ export async function fetchShopPromotions(): Promise<ShopPromotion[]> {
     );
   } catch (error: unknown) {
     if (error instanceof Error) {
-      throw error;
     }
     throw new Error("Không thể tải danh sách khuyến mãi");
   }
@@ -80,7 +79,6 @@ export async function createShopPromotion(
     return ensureItem(data, "Không thể tạo khuyến mãi");
   } catch (error: unknown) {
     if (error instanceof Error) {
-      throw error;
     }
     throw new Error("Không thể tạo khuyến mãi");
   }
@@ -98,7 +96,6 @@ export async function updateShopPromotion(
     return ensureItem(data, "Không thể cập nhật khuyến mãi");
   } catch (error: unknown) {
     if (error instanceof Error) {
-      throw error;
     }
     throw new Error("Không thể cập nhật khuyến mãi");
   }
@@ -116,7 +113,6 @@ export async function updateShopPromotionStatus(
     return ensureItem(data, "Không thể cập nhật trạng thái khuyến mãi");
   } catch (error: unknown) {
     if (error instanceof Error) {
-      throw error;
     }
     throw new Error("Không thể cập nhật trạng thái khuyến mãi");
   }
@@ -140,7 +136,6 @@ export async function fetchActiveShopPromotions(
     );
   } catch (error: unknown) {
     if (error instanceof Error) {
-      throw error;
     }
     throw new Error("Không thể tải khuyến mãi đang áp dụng");
   }
@@ -161,7 +156,6 @@ export async function deleteShopPromotion(promotionId: number): Promise<void> {
     }
   } catch (error: unknown) {
     if (error instanceof Error) {
-      throw error;
     }
     throw new Error("Không thể xóa khuyến mãi");
   }

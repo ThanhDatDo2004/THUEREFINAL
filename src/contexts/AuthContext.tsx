@@ -6,7 +6,12 @@ import React, {
   useCallback,
 } from "react";
 import { AuthContextType, AuthUser, RegisterData } from "../types";
-import { getGuestTokenApi, loginApi, registerApi } from "../models/auth.api";
+import {
+  getGuestTokenApi,
+  loginApi,
+  registerApi,
+  type LoginApiSuccess,
+} from "../models/auth.api";
 import { mapApiUserToAuthUser } from "../utils/mapUser";
 import { extractErrorMessage } from "../models/api.helpers";
 
@@ -36,8 +41,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
 
     try {
-      const response = await getGuestTokenApi();
-      const token = response?.data?.token;
+      const token = await getGuestTokenApi();
       if (token) {
         localStorage.setItem("access_token", token);
       }
@@ -76,10 +80,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       if (!pwd) throw new Error("Vui lòng nhập mật khẩu");
 
       // sẽ ném Error nếu 401/4xx/5xx
-      const res = await loginApi({ login: identifier, password: pwd });
+      const res: LoginApiSuccess = await loginApi({
+        login: identifier,
+        password: pwd,
+      });
 
-      localStorage.setItem("access_token", res.data.token);
-      const authUser = mapApiUserToAuthUser(res.data);
+      localStorage.setItem("access_token", res.token);
+      const authUser = mapApiUserToAuthUser(res.user);
       setUser(authUser);
       localStorage.setItem("user", JSON.stringify(authUser));
       return true;
@@ -119,7 +126,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     setUser(null);
     localStorage.removeItem("user");
     localStorage.removeItem("access_token");
-    ensureGuestToken();
+    ensureGuestToken().catch((error) =>
+      console.error("Không thể làm mới guest token:", error)
+    );
   };
 
   const isShopOwner = () => {
