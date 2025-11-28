@@ -1,4 +1,48 @@
-const RAW_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5050";
+const PRODUCTION_API_BASE = "https://thuere.site";
+const LOCAL_API_BASE = "http://localhost:5050";
+
+const isPrivateNetworkHost = (hostname: string) => {
+  if (!hostname) return false;
+  const lower = hostname.toLowerCase();
+  if ( 
+    lower === "localhost" ||
+    lower === "127.0.0.1" ||
+    lower === "::1" ||
+    lower === "[::1]"
+  ) {
+    return true;
+  }
+
+  if (lower.startsWith("192.168.")) return true;
+  if (lower.startsWith("10.")) return true;
+  if (/^172\.(1[6-9]|2\d|3[0-1])\./.test(lower)) return true;
+
+  return false;
+};
+
+function resolveRawBase() {
+  const configuredBase = import.meta.env.VITE_API_BASE;
+  if (configuredBase) {
+    return configuredBase;
+  }
+
+  if (typeof window !== "undefined" && window.location) {
+    const origin = window.location.origin;
+    if (!origin || origin === "null") {
+      return PRODUCTION_API_BASE;
+    }
+
+    if (isPrivateNetworkHost(window.location.hostname)) {
+      return LOCAL_API_BASE;
+    }
+
+    return origin;
+  }
+
+  return PRODUCTION_API_BASE;
+}
+
+const RAW_BASE = resolveRawBase();
 
 function normalizeApiBase(base: string) {
   const clean = base.replace(/\/+$/, "");
