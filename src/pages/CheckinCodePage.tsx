@@ -164,16 +164,6 @@ const CheckinCodePage: React.FC = () => {
             </div>
           </div>
 
-          {/* Booking Code */}
-          <div className="rounded-lg border border-gray-200 bg-white px-4 py-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">
-              Mã Booking
-            </p>
-            <p className="font-mono text-lg font-semibold text-gray-900 break-all">
-              {data.bookingCode}
-            </p>
-          </div>
-
           {/* Checkin Code - Big Display */}
           <div className="space-y-4">
             <div className="relative rounded-2xl border-2 border-emerald-300 bg-gradient-to-br from-emerald-50 to-emerald-100 p-8 shadow-lg">
@@ -202,55 +192,6 @@ const CheckinCodePage: React.FC = () => {
               <Copy className="w-5 h-5" />
               {copied ? "✓ Đã sao chép" : "Sao chép mã"}
             </button>
-          </div>
-
-          {/* Instructions */}
-          <div className="space-y-4">
-            <h2 className="text-lg font-semibold text-gray-900">
-              📋 Hướng dẫn check-in
-            </h2>
-            <div className="space-y-3">
-              <div className="flex gap-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
-                <div className="flex-shrink-0">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-200 font-semibold text-blue-700">
-                    1
-                  </div>
-                </div>
-                <div>
-                  <p className="font-medium text-blue-900">
-                    Đến sân trước 15 phút so với giờ đặt
-                  </p>
-                  <p className="text-sm text-blue-700">
-                    Vui lòng đến đúng giờ để có thể chuẩn bị
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex gap-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
-                <div className="flex-shrink-0">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-200 font-semibold text-blue-700">
-                    2
-                  </div>
-                </div>
-                <div>
-                  <p className="font-medium text-blue-900">
-                    Báo mã check-in này cho nhân viên sân
-                  </p>
-                  <p className="text-sm text-blue-700">
-                    Nhân viên sẽ xác nhận thông tin đặt sân của bạn
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Warnings */}
-          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-            <p className="font-semibold mb-2">⚠️ Lưu ý quan trọng:</p>
-            <ul className="list-disc list-inside space-y-1 text-xs">
-              <li>Mã check-in này chỉ có hiệu lực vào ngày đặt</li>
-              <li>Liên hệ cơ sở nếu có bất kỳ thay đổi nào</li>
-            </ul>
           </div>
 
           {/* Actions */}
