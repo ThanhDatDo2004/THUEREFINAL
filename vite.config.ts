@@ -15,6 +15,11 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ["lucide-react"],
   },
+  server: {
+    host: true,
+    port: 5173,
+    allowedHosts: ["thuere.site", "www.thuere.site"],
+  },
   build: {
     rollupOptions: {
       plugins: [
