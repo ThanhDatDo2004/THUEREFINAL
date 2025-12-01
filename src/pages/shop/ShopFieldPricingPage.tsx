@@ -15,7 +15,6 @@ import type {
   Shops,
 } from "../../types";
 
-// Day names in Vietnamese
 const DAY_NAMES = [
   "Chủ nhật",
   "Thứ hai",
@@ -73,6 +72,7 @@ const OperatingHoursRow: React.FC<OperatingHoursRowProps> = ({
         <div className="flex-shrink-0 w-24 font-semibold text-gray-900">
           {DAY_NAMES[operatingHours.day_of_week]}
         </div>
+
         <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 rounded-lg">
           <Clock className="h-4 w-4 text-blue-600" />
           <span className="text-sm font-medium text-gray-800">
@@ -142,7 +142,7 @@ const EditOperatingHoursModal: React.FC<EditOperatingHoursModalProps> = ({
     } else {
       setFormData({
         field_code: fieldCode,
-        day_of_week: 1,
+        day_of_week: 0,
         start_time: defaultStart,
         end_time: defaultEnd,
       });
@@ -205,9 +205,7 @@ const EditOperatingHoursModal: React.FC<EditOperatingHoursModalProps> = ({
       <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full">
         <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
           <h2 className="text-xl font-bold text-gray-900">
-            {operatingHours
-              ? "Chỉnh sửa giờ hoạt động"
-              : "Thêm giờ hoạt động"}
+            {operatingHours ? "Chỉnh sửa giờ hoạt động" : "Thêm giờ hoạt động"}
           </h2>
           <button
             onClick={onClose}
@@ -272,16 +270,23 @@ const EditOperatingHoursModal: React.FC<EditOperatingHoursModalProps> = ({
             </div>
           </div>
 
-          {shopWindow && !shopWindow.isOpen24h && shopWindow.openingTime && shopWindow.closingTime && (
-            <p className="text-xs text-gray-500">
-              Khung giờ phải nằm trong khoảng {shopWindow.openingTime} - {shopWindow.closingTime}.
-            </p>
-          )}
-          {shopWindow && !shopWindow.isOpen24h && (!shopWindow.openingTime || !shopWindow.closingTime) && (
-            <p className="text-xs text-rose-600">
-              Shop chưa thiết lập giờ mở cửa. Vui lòng cập nhật tại trang Cài đặt shop.
-            </p>
-          )}
+          {shopWindow &&
+            !shopWindow.isOpen24h &&
+            shopWindow.openingTime &&
+            shopWindow.closingTime && (
+              <p className="text-xs text-gray-500">
+                Khung giờ phải nằm trong khoảng {shopWindow.openingTime} -{" "}
+                {shopWindow.closingTime}.
+              </p>
+            )}
+          {shopWindow &&
+            !shopWindow.isOpen24h &&
+            (!shopWindow.openingTime || !shopWindow.closingTime) && (
+              <p className="text-xs text-rose-600">
+                Shop chưa thiết lập giờ mở cửa. Vui lòng cập nhật tại trang Cài
+                đặt shop.
+              </p>
+            )}
 
           <div className="flex gap-3 pt-4">
             <button
@@ -338,7 +343,9 @@ const FieldOperatingHoursSection: React.FC<FieldOperatingHoursSectionProps> = ({
         <div className="flex items-center gap-4 flex-1">
           <div className="flex-shrink-0 w-3 h-3 rounded-full bg-green-500"></div>
           <div>
-            <h3 className="font-bold text-gray-900 text-base">{field.field_name}</h3>
+            <h3 className="font-bold text-gray-900 text-base">
+              {field.field_name}
+            </h3>
             <p className="text-sm text-gray-500 mt-0.5">
               {field.sport_type} • {field.address}
             </p>
@@ -359,7 +366,9 @@ const FieldOperatingHoursSection: React.FC<FieldOperatingHoursSectionProps> = ({
               onAddOperatingHours(field.field_code);
             }}
             className={`p-2 text-blue-600 rounded-lg transition-colors flex-shrink-0 ${
-              isLoading || disabled ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-50"
+              isLoading || disabled
+                ? "opacity-50 cursor-not-allowed"
+                : "hover:bg-blue-50"
             }`}
             title={
               disabled
@@ -384,7 +393,9 @@ const FieldOperatingHoursSection: React.FC<FieldOperatingHoursSectionProps> = ({
             ) : fieldOperatingHours.length === 0 ? (
               <div className="text-center py-12 px-4">
                 <Clock className="h-14 w-14 mx-auto mb-3 text-gray-300" />
-                <p className="text-gray-600 font-medium mb-4">Chưa có giờ hoạt động</p>
+                <p className="text-gray-600 font-medium mb-4">
+                  Chưa có giờ hoạt động
+                </p>
                 <button
                   onClick={() => onAddOperatingHours(field.field_code)}
                   className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm ${
@@ -420,7 +431,9 @@ const ShopFieldOperatingHoursPage: React.FC = () => {
   const [operatingHoursData, setOperatingHoursData] = useState<
     FieldOperatingHours[]
   >([]);
-  const [shopWindow, setShopWindow] = useState<ShopOperatingWindow | null>(null);
+  const [shopWindow, setShopWindow] = useState<ShopOperatingWindow | null>(
+    null
+  );
   const [shopWindowLoading, setShopWindowLoading] = useState(true);
   const [loading, setLoading] = useState(true);
   const [operatingHoursLoading, setOperatingHoursLoading] = useState<{
@@ -646,7 +659,9 @@ const ShopFieldOperatingHoursPage: React.FC = () => {
                 <p className="font-semibold text-blue-900">
                   {shopWindow.isOpen24h
                     ? "Shop đang mở cửa 24/24."
-                    : `Shop hoạt động từ ${shopWindow.openingTime ?? "--:--"} đến ${shopWindow.closingTime ?? "--:--"}.`}
+                    : `Shop hoạt động từ ${
+                        shopWindow.openingTime ?? "--:--"
+                      } đến ${shopWindow.closingTime ?? "--:--"}.`}
                 </p>
                 {!shopWindow.isOpen24h &&
                   shopWindow.openingTime &&
@@ -658,7 +673,8 @@ const ShopFieldOperatingHoursPage: React.FC = () => {
                 {!shopWindow.isOpen24h &&
                   (!shopWindow.openingTime || !shopWindow.closingTime) && (
                     <p className="text-sm text-amber-700 mt-1">
-                      Shop chưa thiết lập đầy đủ giờ hoạt động. Vui lòng cập nhật trong mục Cài đặt shop.
+                      Shop chưa thiết lập đầy đủ giờ hoạt động. Vui lòng cập
+                      nhật trong mục Cài đặt shop.
                     </p>
                   )}
               </div>
@@ -671,7 +687,8 @@ const ShopFieldOperatingHoursPage: React.FC = () => {
             </div>
           ) : (
             <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
-              Không thể tải thông tin giờ hoạt động của shop. Vui lòng kiểm tra lại trong mục Cài đặt shop.
+              Không thể tải thông tin giờ hoạt động của shop. Vui lòng kiểm tra
+              lại trong mục Cài đặt shop.
             </div>
           )}
         </div>
@@ -681,18 +698,28 @@ const ShopFieldOperatingHoursPage: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
             <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
               <div className="text-gray-600 text-sm font-medium">Tổng sân</div>
-              <div className="text-3xl font-bold text-gray-900 mt-1">{fields.length}</div>
+              <div className="text-3xl font-bold text-gray-900 mt-1">
+                {fields.length}
+              </div>
             </div>
             <div className="bg-white rounded-lg border border-blue-200 p-4 shadow-sm bg-gradient-to-br from-white to-blue-50">
               <div className="text-blue-700 text-sm font-medium">Khung giờ</div>
-              <div className="text-3xl font-bold text-blue-900 mt-1">{operatingHoursData.length}</div>
+              <div className="text-3xl font-bold text-blue-900 mt-1">
+                {operatingHoursData.length}
+              </div>
             </div>
             <div className="bg-white rounded-lg border border-green-200 p-4 shadow-sm bg-gradient-to-br from-white to-green-50">
-              <div className="text-green-700 text-sm font-medium">Sân có giờ</div>
+              <div className="text-green-700 text-sm font-medium">
+                Sân có giờ
+              </div>
               <div className="text-3xl font-bold text-green-900 mt-1">
-                {fields.filter((f) =>
-                  operatingHoursData.some((h) => h.field_code === f.field_code)
-                ).length}
+                {
+                  fields.filter((f) =>
+                    operatingHoursData.some(
+                      (h) => h.field_code === f.field_code
+                    )
+                  ).length
+                }
               </div>
             </div>
           </div>

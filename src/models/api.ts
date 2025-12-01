@@ -1,6 +1,13 @@
 const PRODUCTION_API_BASE = "https://thuere.site";
 const LOCAL_API_BASE = "http://localhost:5050";
 
+const normalizeConfiguredBase = (value?: string) => {
+  if (typeof value !== "string") return undefined;
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+  return trimmed.replace(/\/+$/, "");
+};
+
 const isPrivateNetworkHost = (hostname: string) => {
   if (!hostname) return false;
   const lower = hostname.toLowerCase();
@@ -21,22 +28,19 @@ const isPrivateNetworkHost = (hostname: string) => {
 };
 
 function resolveRawBase() {
-  const configuredBase = import.meta.env.VITE_API_BASE;
+  const configuredBase = normalizeConfiguredBase(import.meta.env.VITE_API_BASE);
   if (configuredBase) {
     return configuredBase;
   }
 
   if (typeof window !== "undefined" && window.location) {
-    const origin = window.location.origin;
-    if (!origin || origin === "null") {
-      return PRODUCTION_API_BASE;
-    }
-
     if (isPrivateNetworkHost(window.location.hostname)) {
       return LOCAL_API_BASE;
     }
+  }
 
-    return origin;
+  if (import.meta.env.DEV) {
+    return LOCAL_API_BASE;
   }
 
   return PRODUCTION_API_BASE;
