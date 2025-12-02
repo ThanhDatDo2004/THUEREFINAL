@@ -204,9 +204,9 @@ const ShopBookingsPage: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 py-8">
+    <div className="min-h-screen bg-slate-50 py-8 overflow-x-hidden">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 sm:px-6 lg:px-8">
-        <section className="rounded-3xl border border-emerald-100 bg-gradient-to-r from-emerald-500 via-emerald-400 to-emerald-600 text-white shadow-lg">
+        <section className="rounded-3xl border border-emerald-100 bg-gradient-to-r from-emerald-500 via-emerald-400 to-emerald-600 text-white shadow-lg overflow-hidden">
           <div className="space-y-6 p-6 md:p-8">
             <div className="space-y-2">
               <p className="inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-1 text-xs font-semibold uppercase tracking-wide text-white/90">
@@ -261,7 +261,7 @@ const ShopBookingsPage: React.FC = () => {
               </div>
             )}
 
-            <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+            <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm overflow-hidden">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="relative">
                   <Search className="pointer-events-none absolute left-3 top-3 h-5 w-5 text-gray-400" />
@@ -302,7 +302,7 @@ const ShopBookingsPage: React.FC = () => {
               </div>
             </section>
 
-            <section className="rounded-2xl border border-gray-200 bg-white shadow-sm">
+            <section className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
               {bookings.length === 0 ? (
                 <div className="py-16 text-center">
                   <div className="mb-2 text-5xl text-gray-300">∅</div>
@@ -445,10 +445,7 @@ const ShopBookingsPage: React.FC = () => {
                         </button>
 
                         <div className="flex items-center gap-1">
-                          {Array.from(
-                            { length: totalPages },
-                            (_, i) => i + 1
-                          ).map((pageNumber) => (
+                          {getPageWindow(page, totalPages).map((pageNumber) => (
                             <button
                               key={pageNumber}
                               onClick={() => setPage(pageNumber)}
@@ -461,6 +458,20 @@ const ShopBookingsPage: React.FC = () => {
                               {pageNumber}
                             </button>
                           ))}
+                          {totalPages > 5 &&
+                            getPageWindow(page, totalPages)[
+                              getPageWindow(page, totalPages).length - 1
+                            ] < totalPages && (
+                              <>
+                                <span className="px-1 text-gray-400">…</span>
+                                <button
+                                  onClick={() => setPage(totalPages)}
+                                  className="h-8 w-8 rounded-lg border text-sm font-medium transition border-gray-300 text-gray-700 hover:bg-gray-100"
+                                >
+                                  {totalPages}
+                                </button>
+                              </>
+                            )}
                         </div>
 
                         <button
@@ -486,3 +497,21 @@ const ShopBookingsPage: React.FC = () => {
 };
 
 export default ShopBookingsPage;
+const getPageWindow = (
+  current: number,
+  total: number,
+  windowSize = 5
+): number[] => {
+  const half = Math.floor(windowSize / 2);
+  let start = Math.max(1, current - half);
+  let end = start + windowSize - 1;
+  if (end > total) {
+    end = total;
+    start = Math.max(1, end - windowSize + 1);
+  }
+  const pages: number[] = [];
+  for (let i = start; i <= end; i++) {
+    pages.push(i);
+  }
+  return pages;
+};
