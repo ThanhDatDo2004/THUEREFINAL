@@ -1,5 +1,6 @@
 import React from "react";
 import { AlertCircle } from "lucide-react";
+import { getHoldExpiryDate } from "../../utils/slotStatusUtils";
 
 export type CourtAvailabilityOption = {
   quantity_id: number;
@@ -20,19 +21,8 @@ const formatHoldExpiresAt = (
   value?: string | null,
   epochSeconds?: number | null
 ) => {
-  if (typeof epochSeconds === "number" && !Number.isNaN(epochSeconds)) {
-    const date = new Date(epochSeconds * 1000);
-    if (!Number.isNaN(date.getTime())) {
-      return date.toLocaleTimeString("vi-VN", {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-    }
-  }
-  if (!value) return "";
-  const normalized = value.replace(" ", "T");
-  const date = new Date(normalized);
-  if (Number.isNaN(date.getTime())) return "";
+  const date = getHoldExpiryDate(value, epochSeconds);
+  if (!date || Number.isNaN(date.getTime())) return "";
   return date.toLocaleTimeString("vi-VN", {
     hour: "2-digit",
     minute: "2-digit",

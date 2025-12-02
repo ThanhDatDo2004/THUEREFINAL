@@ -1893,9 +1893,9 @@ const BookingPage: React.FC = () => {
                           const availableCourtCount = courtStatuses.filter(
                             (item) => item.status === "available"
                           ).length;
-                          const heldCourtCount = courtStatuses.filter(
-                            (item) => item.status === "held"
-                          ).length;
+                          // const heldCourtCount = courtStatuses.filter(
+                          //   (item) => item.status === "held"
+                          // ).length;
 
                           return (
                             <button
@@ -1952,7 +1952,7 @@ const BookingPage: React.FC = () => {
                                       trống
                                     </span>
                                   )}
-                                  {heldCourtCount > 0 && (
+                                  {/* {heldCourtCount > 0 && (
                                     <span className="font-medium text-amber-600">
                                       {heldCourtCount} sân đang giữ
                                     </span>
@@ -1961,7 +1961,7 @@ const BookingPage: React.FC = () => {
                                     <span className="font-medium text-amber-600">
                                       Giữ đến {holdInfo}
                                     </span>
-                                  )}
+                                  )} */}
                                 </div>
                               </div>
                               {!isSelectable && totalCourts > 0 && (
