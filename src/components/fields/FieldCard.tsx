@@ -103,22 +103,6 @@ const FieldCard: React.FC<FieldCardProps> = ({ field }) => {
           </span>
         </div>
 
-        {/* Status Badge */}
-        <div className="absolute top-4 right-4">
-          <span
-            className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold ${getStatusBadgeStyle(
-              statusClassName
-            )} backdrop-blur-sm shadow-lg`}
-          >
-            <span
-              className={`w-2 h-2 rounded-full ${
-                isBookable ? "bg-green-500" : "bg-gray-400"
-              } animate-pulse`}
-            />
-            {statusLabel}
-          </span>
-        </div>
-
         {/* Booking Stats Overlay */}
         {bookingCount > 0 && (
           <div className="absolute bottom-4 left-4 flex items-center gap-2 px-3 py-2 rounded-lg bg-white/95 backdrop-blur-sm shadow-lg">
