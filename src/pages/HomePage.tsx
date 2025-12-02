@@ -136,7 +136,7 @@ const HomePage: React.FC = () => {
           <div className="hero-copy">
             <span className="hero-eyebrow">Nền tảng đặt sân thể thao</span>
             <h1 className="hero-title">
-              ASẵn sàng cho trận đấu{" "}
+              ẵn sàng cho trận đấu{" "}
               <span className="hero-highlight">mọi lúc</span>,
               <span className="hero-highlight"> mọi nơi</span>.
             </h1>
