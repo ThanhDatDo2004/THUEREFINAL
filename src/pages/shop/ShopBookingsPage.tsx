@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import type { BookingItem } from "../../models/booking.api";
-import { ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, Search } from "lucide-react";
 import { api } from "../../models/api";
 import { extractErrorMessage } from "../../models/api.helpers";
 import {
@@ -22,6 +22,7 @@ const ShopBookingsPage: React.FC = () => {
   const { user } = useAuth();
   const [bookings, setBookings] = useState<BookingItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
   const [statusFilter, setStatusFilter] = useState<BookingStatusFilter>("all");
   const [page, setPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
@@ -52,6 +53,7 @@ const ShopBookingsPage: React.FC = () => {
     if (!user?.user_code) {
       setBookings([]);
       setLoading(false);
+      setHasLoadedOnce(true);
       return;
     }
 
@@ -68,8 +70,16 @@ const ShopBookingsPage: React.FC = () => {
         if (statusFilter !== "all") {
           params.status = statusFilter;
         }
-        if (searchTerm.trim()) {
-          params.search = searchTerm.trim();
+        const trimmedSearch = searchTerm.trim();
+        const normalizedSearch = trimmedSearch.replace(/^#/, "").trim();
+        const isCheckinQuery =
+          normalizedSearch.length >= 4 &&
+          /^[a-zA-Z0-9]+$/.test(normalizedSearch);
+        if (trimmedSearch && !isCheckinQuery) {
+          params.search = trimmedSearch;
+        }
+        if (isCheckinQuery) {
+          params.checkin_code = normalizedSearch.toUpperCase();
         }
 
         const response = await api.get("/shops/me/bookings", { params });
@@ -86,14 +96,35 @@ const ShopBookingsPage: React.FC = () => {
         if (ignore) return;
 
         const rows = Array.isArray(result.data) ? result.data : [];
-        setBookings(rows);
-        setPagination(
+        let nextRows = rows;
+        let nextPagination =
           result.pagination ?? {
             limit: ITEMS_PER_PAGE,
             offset: (page - 1) * ITEMS_PER_PAGE,
             total: rows.length,
+          };
+
+        if (isCheckinQuery && normalizedSearch) {
+          const normalizedSearchLower = normalizedSearch.toLowerCase();
+          const checkinMatches = rows.filter((booking) => {
+            const code =
+              (booking.CheckinCode ||
+                (booking as Record<string, unknown>).checkin_code ||
+                "") as string;
+            return code.toLowerCase().includes(normalizedSearchLower);
+          });
+          if (checkinMatches.length > 0) {
+            nextRows = checkinMatches;
+            nextPagination = {
+              limit: checkinMatches.length,
+              offset: 0,
+              total: checkinMatches.length,
+            };
           }
-        );
+        }
+
+        setBookings(nextRows);
+        setPagination(nextPagination);
         setSummary({
           bookingStatus: {
             pending: result.summary?.bookingStatus?.pending ?? 0,
@@ -116,6 +147,7 @@ const ShopBookingsPage: React.FC = () => {
       } finally {
         if (!ignore) {
           setLoading(false);
+          setHasLoadedOnce(true);
         }
       }
     };
@@ -208,7 +240,7 @@ const ShopBookingsPage: React.FC = () => {
           </div>
         </section>
 
-        {loading ? (
+        {!hasLoadedOnce && loading ? (
           <div className="flex justify-center items-center h-96">
             <div className="text-center">
               <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-white/30 border-t-emerald-200"></div>
@@ -217,6 +249,12 @@ const ShopBookingsPage: React.FC = () => {
           </div>
         ) : (
           <>
+            {loading && hasLoadedOnce && (
+              <div className="flex items-center justify-center gap-2 rounded-2xl border border-emerald-100 bg-emerald-50/80 px-4 py-3 text-sm text-emerald-700">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Đang cập nhật dữ liệu...</span>
+              </div>
+            )}
             {error && (
               <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                 {error}

@@ -1,9 +1,4 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -33,7 +28,10 @@ const promotionFormSchema = yup
       .string()
       .trim()
       .required("Vui lòng nhập mã khuyến mãi")
-      .matches(/^[A-Z0-9_-]+$/i, "Mã chỉ gồm chữ, số, dấu gạch ngang hoặc gạch dưới")
+      .matches(
+        /^[A-Z0-9_-]+$/i,
+        "Mã chỉ gồm chữ, số, dấu gạch ngang hoặc gạch dưới"
+      )
       .min(3, "Mã khuyến mãi phải có ít nhất 3 ký tự")
       .max(50, "Mã khuyến mãi không được vượt quá 50 ký tự"),
     title: yup
@@ -69,11 +67,15 @@ const promotionFormSchema = yup
     end_at: yup
       .string()
       .required("Vui lòng chọn thời gian kết thúc")
-      .test("endAfterStart", "Thời gian kết thúc phải sau thời gian bắt đầu", function (value) {
-        const { start_at } = this.parent;
-        if (!value || !start_at) return true;
-        return new Date(value) > new Date(start_at);
-      }),
+      .test(
+        "endAfterStart",
+        "Thời gian kết thúc phải sau thời gian bắt đầu",
+        function (value) {
+          const { start_at } = this.parent;
+          if (!value || !start_at) return true;
+          return new Date(value) > new Date(start_at);
+        }
+      ),
     status: yup
       .mixed<ShopPromotionStatus>()
       .oneOf(["draft", "active"], "Trạng thái không hợp lệ")
@@ -185,9 +187,9 @@ const ShopPromotionsPage: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [statusLoadingId, setStatusLoadingId] = useState<number | null>(null);
   const [deleteLoadingId, setDeleteLoadingId] = useState<number | null>(null);
-  const [statusFilter, setStatusFilter] = useState<
-    ShopPromotionStatus | "all"
-  >("all");
+  const [statusFilter, setStatusFilter] = useState<ShopPromotionStatus | "all">(
+    "all"
+  );
   const [searchTerm, setSearchTerm] = useState("");
 
   const defaultValues = useMemo(() => createDefaultFormValues(), []);
@@ -441,8 +443,7 @@ const ShopPromotionsPage: React.FC = () => {
     });
   }, [promotions, statusFilter, searchTerm]);
 
-  const isFiltered =
-    statusFilter !== "all" || searchTerm.trim().length > 0;
+  const isFiltered = statusFilter !== "all" || searchTerm.trim().length > 0;
 
   return (
     <div className="space-y-6">
@@ -590,7 +591,7 @@ const ShopPromotionsPage: React.FC = () => {
                 min={0}
                 step={1000}
                 className="input"
-                placeholder="Không bắt buộc"
+                placeholder="Ví dụ: 20000"
                 {...register("min_order_amount")}
               />
             </div>
@@ -621,7 +622,10 @@ const ShopPromotionsPage: React.FC = () => {
 
             <div className="form-group">
               <label className="label">Bắt đầu</label>
-              <input type="datetime-local" className="input" {...register("start_at")}
+              <input
+                type="datetime-local"
+                className="input"
+                {...register("start_at")}
               />
               {errors.start_at && (
                 <p className="mt-1 text-sm text-red-600">
@@ -632,7 +636,10 @@ const ShopPromotionsPage: React.FC = () => {
 
             <div className="form-group">
               <label className="label">Kết thúc</label>
-              <input type="datetime-local" className="input" {...register("end_at")}
+              <input
+                type="datetime-local"
+                className="input"
+                {...register("end_at")}
               />
               {errors.end_at && (
                 <p className="mt-1 text-sm text-red-600">
@@ -655,7 +662,9 @@ const ShopPromotionsPage: React.FC = () => {
                 className="btn-primary"
                 disabled={submitting}
               >
-                {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {submitting && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
                 Lưu chiến dịch
               </button>
               <button
@@ -783,7 +792,9 @@ const ShopPromotionsPage: React.FC = () => {
                         </h3>
                       </div>
                       <span
-                        className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${statusStyles[promotion.current_status]}`}
+                        className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
+                          statusStyles[promotion.current_status]
+                        }`}
                       >
                         {statusLabels[promotion.current_status] || "—"}
                       </span>
@@ -826,10 +837,7 @@ const ShopPromotionsPage: React.FC = () => {
                     <div className="flex items-center justify-between rounded-lg border border-dashed border-emerald-200 bg-emerald-50/60 px-3 py-2 text-xs text-emerald-700">
                       <span>Thời gian áp dụng</span>
                       <span className="font-semibold">
-                        {formatDateRange(
-                          promotion.start_at,
-                          promotion.end_at
-                        )}
+                        {formatDateRange(promotion.start_at, promotion.end_at)}
                       </span>
                     </div>
                   </div>
