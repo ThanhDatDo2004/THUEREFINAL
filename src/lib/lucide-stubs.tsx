@@ -270,6 +270,15 @@ const ICON_MAP: Record<string, React.ReactNode> = {
       <rect key="r4" x="3" y="13" width="8" height="8" rx="1" />
     </>
   ),
+  ListChecks: (
+    <>
+      <path key="p1" d="m11 7 2 2 4-4" />
+      <path key="p2" d="m11 15 2 2 4-4" />
+      <path key="p3" d="M4 6h3" />
+      <path key="p4" d="M4 12h3" />
+      <path key="p5" d="M4 18h3" />
+    </>
+  ),
   LineChart: (
     <>
       <polyline key="p1" points="3 17 9 11 13 15 21 7" />
@@ -677,6 +686,7 @@ export const History = createIcon("History");
 export const KeyRound = createIcon("KeyRound");
 export const Layers = createIcon("Layers");
 export const LayoutDashboard = createIcon("LayoutDashboard");
+export const ListChecks = createIcon("ListChecks");
 export const LineChart = createIcon("LineChart");
 export const Loader = createIcon("Loader");
 export const Loader2 = createIcon("Loader2");

@@ -179,9 +179,15 @@ const BookingDetailPage: React.FC = () => {
     );
   }
 
-  const bookingStatusBadge = getBookingStatusBadge(
-    data.BookingStatus || "pending"
-  );
+  const isCancellationPending =
+    data.BookingStatus === "cancellation_pending" ||
+    data.cancellation?.status === "pending";
+  const bookingStatusBadge = isCancellationPending
+    ? {
+        label: "Đang chờ hủy",
+        className: "bg-amber-100 text-amber-800 border-amber-200",
+      }
+    : getBookingStatusBadge(data.BookingStatus || "pending");
   const paymentStatusBadge = getPaymentStatusBadge(
     data.PaymentStatus || "pending"
   );
@@ -218,6 +224,11 @@ const BookingDetailPage: React.FC = () => {
                 >
                   {bookingStatusBadge.label}
                 </span>
+                {isCancellationPending && (
+                  <p className="text-xs text-amber-600 text-center">
+                    Yêu cầu hủy đang chờ chủ sân xác nhận qua email.
+                  </p>
+                )}
                 <span
                   className={`rounded-full px-4 py-2 text-sm font-semibold text-center ${paymentStatusBadge.className}`}
                 >

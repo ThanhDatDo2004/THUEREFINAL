@@ -374,7 +374,12 @@ export interface ShopBookingItem {
   TotalPrice: number;
   PlatformFee?: number;
   NetToShop?: number;
-  BookingStatus: "pending" | "confirmed" | "cancelled" | "completed";
+  BookingStatus:
+    | "pending"
+    | "confirmed"
+    | "cancelled"
+    | "completed"
+    | "cancellation_pending";
   PaymentStatus: "pending" | "paid" | "failed" | "refunded";
   CheckinCode?: string;
   CustomerUserID?: number;

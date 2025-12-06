@@ -21,6 +21,7 @@ import CheckinCodePage from "./pages/CheckinCodePage";
 import CartPage from "./pages/CartPage";
 import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
+import CancellationResponsePage from "./pages/CancellationResponsePage";
 
 // Shop
 import ShopLayout from "./pages/shop/ShopLayout";
@@ -51,6 +52,10 @@ function App() {
           {/* Auth Routes (no layout) */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route
+            path="/cancellation-response"
+            element={<CancellationResponsePage />}
+          />
 
           {/* Public Routes (with layout) */}
           <Route

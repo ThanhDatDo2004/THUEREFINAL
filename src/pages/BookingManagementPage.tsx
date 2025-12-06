@@ -122,12 +122,17 @@ const BookingManagementPage: React.FC = () => {
   const handleCancelBooking = async () => {
     if (!state.selectedBooking) return;
 
+    if (state.selectedBooking.cancellation?.status === "pending") {
+      alert("Bạn đã gửi yêu cầu hủy. Vui lòng chờ chủ sân xử lý.");
+      return;
+    }
+
     const reason = prompt("Lý do hủy đặt sân (tùy chọn):");
     if (reason === null) return; // User cancelled
 
     try {
       setState((prev) => ({ ...prev, cancelingBooking: true }));
-      await cancelBookingApi(
+      const apiResponse = await cancelBookingApi(
         state.selectedBooking.BookingCode,
         reason || undefined
       );
@@ -135,7 +140,10 @@ const BookingManagementPage: React.FC = () => {
       // Reload booking detail
       await loadBookingDetail(state.selectedBooking.BookingCode);
       setState((prev) => ({ ...prev, cancelingBooking: false }));
-      alert("Hủy đặt sân thành công");
+      alert(
+        apiResponse.data?.message ||
+          "Đã gửi yêu cầu hủy. Vui lòng chờ chủ sân xác nhận."
+      );
     } catch (err: unknown) {
       const errorMsg = extractErrorMessage(err, "Failed to cancel booking");
       setState((prev) => ({
@@ -207,18 +215,27 @@ const BookingManagementPage: React.FC = () => {
     await loadBookings();
   };
 
-  const getStatusBadgeColor = (status: string) => {
+  const getStatusBadgeMeta = (
+    status: string,
+    cancellationStatus?: string | null
+  ) => {
+    if (status === "cancellation_pending" || cancellationStatus === "pending") {
+      return {
+        className: "bg-amber-100 text-amber-800",
+        label: "Đang chờ hủy",
+      };
+    }
     switch (status) {
       case "pending":
-        return "bg-yellow-100 text-yellow-800";
+        return { className: "bg-yellow-100 text-yellow-800", label: "Đang Chờ" };
       case "confirmed":
-        return "bg-blue-100 text-blue-800";
+        return { className: "bg-blue-100 text-blue-800", label: "Đã Xác Nhận" };
       case "completed":
-        return "bg-green-100 text-green-800";
+        return { className: "bg-green-100 text-green-800", label: "Hoàn Thành" };
       case "cancelled":
-        return "bg-red-100 text-red-800";
+        return { className: "bg-red-100 text-red-800", label: "Đã Hủy" };
       default:
-        return "bg-gray-100 text-gray-800";
+        return { className: "bg-gray-100 text-gray-800", label: status };
     }
   };
 
@@ -248,6 +265,12 @@ const BookingManagementPage: React.FC = () => {
   // DETAIL VIEW
   if (state.view === "detail" && state.selectedBooking) {
     const booking = state.selectedBooking;
+    const statusMeta = getStatusBadgeMeta(
+      booking.BookingStatus,
+      booking.cancellation?.status
+    );
+    const isCancellationPending =
+      booking.cancellation?.status === "pending";
     return (
       <Layout>
         <div className="min-h-screen bg-gray-50 py-8 px-4">
@@ -284,14 +307,9 @@ const BookingManagementPage: React.FC = () => {
                   Trạng Thái Đặt Sân
                 </h3>
                 <span
-                  className={`px-4 py-2 rounded-full font-semibold ${getStatusBadgeColor(
-                    booking.BookingStatus
-                  )}`}
+                  className={`px-4 py-2 rounded-full font-semibold ${statusMeta.className}`}
                 >
-                  {booking.BookingStatus === "pending" && "Đang Chờ"}
-                  {booking.BookingStatus === "confirmed" && "Đã Xác Nhận"}
-                  {booking.BookingStatus === "completed" && "Hoàn Thành"}
-                  {booking.BookingStatus === "cancelled" && "Đã Hủy"}
+                  {statusMeta.label}
                 </span>
               </div>
               <div className="bg-white rounded-lg shadow p-6">
@@ -310,6 +328,16 @@ const BookingManagementPage: React.FC = () => {
                 </span>
               </div>
             </div>
+
+            {booking.cancellation?.status === "pending" && (
+              <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-700">
+                Bạn đã gửi yêu cầu hủy cho đơn này. Chủ sân sẽ liên hệ lại qua số{" "}
+                <span className="font-semibold">
+                  {booking.CustomerPhone || "điện thoại đã cung cấp"}
+                </span>
+                .
+              </div>
+            )}
 
             {/* Booking Details */}
             <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
@@ -445,11 +473,15 @@ const BookingManagementPage: React.FC = () => {
                 booking.BookingStatus !== "completed" && (
                   <button
                     onClick={handleCancelBooking}
-                    disabled={state.cancelingBooking}
+                    disabled={state.cancelingBooking || isCancellationPending}
                     className="flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white font-semibold py-3 px-4 rounded-lg transition"
                   >
                     <X className="w-5 h-5" />
-                    {state.cancelingBooking ? "Đang Hủy..." : "Hủy Đặt Sân"}
+                    {isCancellationPending
+                      ? "Đang chờ hủy"
+                      : state.cancelingBooking
+                      ? "Đang Hủy..."
+                      : "Hủy Đặt Sân"}
                   </button>
                 )}
             </div>
@@ -540,6 +572,7 @@ const BookingManagementPage: React.FC = () => {
               <option value="confirmed">Đã Xác Nhận</option>
               <option value="completed">Hoàn Thành</option>
               <option value="cancelled">Đã Hủy</option>
+              <option value="cancellation_pending">Chờ Hủy</option>
             </select>
           </div>
 
@@ -562,16 +595,19 @@ const BookingManagementPage: React.FC = () => {
                           {booking.ShopName}
                         </p>
                       </div>
-                      <span
-                        className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusBadgeColor(
-                          booking.BookingStatus
-                        )}`}
-                      >
-                        {booking.BookingStatus === "pending" && "Đang Chờ"}
-                        {booking.BookingStatus === "confirmed" && "Đã Xác Nhận"}
-                        {booking.BookingStatus === "completed" && "Hoàn Thành"}
-                        {booking.BookingStatus === "cancelled" && "Đã Hủy"}
-                      </span>
+                      {(() => {
+                        const badge = getStatusBadgeMeta(
+                          booking.BookingStatus,
+                          booking.cancellationStatus
+                        );
+                        return (
+                          <span
+                            className={`px-3 py-1 rounded-full text-sm font-semibold ${badge.className}`}
+                          >
+                            {badge.label}
+                          </span>
+                        );
+                      })()}
                     </div>
 
                     {/* Details */}
@@ -615,6 +651,11 @@ const BookingManagementPage: React.FC = () => {
                         {booking.PaymentStatus === "failed" && "Thất Bại"}
                         {booking.PaymentStatus === "refunded" && "Đã Hoàn Tiền"}
                       </span>
+                      {booking.cancellationStatus === "pending" && (
+                        <p className="mt-2 text-xs font-semibold text-amber-600">
+                          Đang chờ chủ sân xác nhận hủy
+                        </p>
+                      )}
                     </div>
 
                     {/* Action Button */}

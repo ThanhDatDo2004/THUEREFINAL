@@ -16,7 +16,8 @@ type BookingStatusFilter =
   | "pending"
   | "confirmed"
   | "completed"
-  | "cancelled";
+  | "cancelled"
+  | "cancellation_pending";
 
 const ShopBookingsPage: React.FC = () => {
   const { user } = useAuth();
@@ -38,6 +39,7 @@ const ShopBookingsPage: React.FC = () => {
       confirmed: 0,
       completed: 0,
       cancelled: 0,
+      cancellation_pending: 0,
     },
     paymentStatus: {
       pending: 0,
@@ -131,6 +133,8 @@ const ShopBookingsPage: React.FC = () => {
             confirmed: result.summary?.bookingStatus?.confirmed ?? 0,
             completed: result.summary?.bookingStatus?.completed ?? 0,
             cancelled: result.summary?.bookingStatus?.cancelled ?? 0,
+            cancellation_pending:
+              result.summary?.bookingStatus?.cancellation_pending ?? 0,
           },
           paymentStatus: {
             pending: result.summary?.paymentStatus?.pending ?? 0,
@@ -162,7 +166,8 @@ const ShopBookingsPage: React.FC = () => {
     summary.bookingStatus.pending +
     summary.bookingStatus.confirmed +
     summary.bookingStatus.completed +
-    summary.bookingStatus.cancelled;
+    summary.bookingStatus.cancelled +
+    summary.bookingStatus.cancellation_pending;
   const totalPages = Math.max(
     1,
     Math.ceil(pagination.total / pagination.limit || ITEMS_PER_PAGE)
@@ -178,6 +183,7 @@ const ShopBookingsPage: React.FC = () => {
     pending: summary.bookingStatus.pending,
     confirmed: summary.bookingStatus.confirmed,
     cancelled: summary.bookingStatus.cancelled,
+    cancellationPending: summary.bookingStatus.cancellation_pending,
   };
 
   const heroStats = [
@@ -186,11 +192,16 @@ const ShopBookingsPage: React.FC = () => {
       value: stats.total,
       description: "Toàn bộ đơn đặt",
     },
-    {
-      label: "Đang chờ",
-      value: stats.pending,
-      description: "Cần xác nhận",
-    },
+      {
+        label: "Đang chờ",
+        value: stats.pending,
+        description: "Cần xác nhận",
+      },
+      {
+        label: "Chờ hủy",
+        value: stats.cancellationPending,
+        description: "Đợi phản hồi chủ sân",
+      },
     {
       label: "Đã xác nhận",
       value: stats.confirmed,
@@ -297,6 +308,9 @@ const ShopBookingsPage: React.FC = () => {
                   </option>
                   <option value="cancelled">
                     Đã hủy ({summary.bookingStatus.cancelled})
+                  </option>
+                  <option value="cancellation_pending">
+                    Chờ hủy ({summary.bookingStatus.cancellation_pending})
                   </option>
                 </select>
               </div>

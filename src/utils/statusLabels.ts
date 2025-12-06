@@ -13,6 +13,10 @@ const BOOKING_STATUS_BADGES: Record<string, StatusBadgeMeta> = {
     className: "bg-emerald-50 text-emerald-700 border-emerald-200",
   },
 
+  cancellation_pending: {
+    label: "Đang chờ hủy",
+    className: "bg-amber-100 text-amber-800 border-amber-300",
+  },
   cancelled: {
     label: "Đã hủy",
     className: "bg-rose-50 text-rose-700 border-rose-200",

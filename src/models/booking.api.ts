@@ -67,7 +67,12 @@ export interface BookingItem {
   TotalPrice: number;
   PlatformFee?: number;
   NetToShop?: number;
-  BookingStatus: "pending" | "confirmed" | "cancelled" | "completed";
+  BookingStatus:
+    | "pending"
+    | "confirmed"
+    | "cancelled"
+    | "completed"
+    | "cancellation_pending";
   PaymentStatus: "pending" | "paid" | "failed" | "refunded";
   CheckinCode?: string;
   CustomerUserID?: number;
@@ -82,6 +87,11 @@ export interface BookingItem {
     PricePerSlot: number;
     Status: string;
   }>;
+  cancellationStatus?: string | null;
+  cancellationRefundAmount?: number | null;
+  cancellationPenaltyPercent?: number | null;
+  cancellationRequestedAt?: string | null;
+  cancellationDecidedAt?: string | null;
 }
 
 export interface BookingListResponse {
@@ -98,7 +108,12 @@ export interface BookingDetail {
   TotalPrice: number;
   PlatformFee?: number;
   NetToShop?: number;
-  BookingStatus: "pending" | "confirmed" | "cancelled" | "completed";
+  BookingStatus:
+    | "pending"
+    | "confirmed"
+    | "cancelled"
+    | "completed"
+    | "cancellation_pending";
   PaymentStatus: "pending" | "paid" | "failed" | "refunded";
   slots: BookingSlot[];
   FieldName?: string;
@@ -107,6 +122,13 @@ export interface BookingDetail {
   CustomerName?: string;
   CustomerEmail?: string;
   CustomerPhone?: string;
+  cancellation?: {
+    status: string;
+    refundAmount?: number | null;
+    penaltyPercent?: number | null;
+    requestedAt?: string | null;
+    decidedAt?: string | null;
+  } | null;
 }
 
 export interface CancelBookingRequest {
@@ -115,8 +137,16 @@ export interface CancelBookingRequest {
 
 export interface CancelBookingResponse {
   bookingCode: string;
-  status: "cancelled";
+  status: "cancelled" | "cancellation_requested";
   refundAmount?: number;
+  cancellation?: {
+    status: "pending" | "approved" | "rejected";
+    refundAmount?: number | null;
+    penaltyPercent?: number | null;
+    requestedAt?: string | null;
+  };
+  message?: string;
+  customerPhone?: string | null;
 }
 
 export interface CheckinCodeResponse {
@@ -175,7 +205,12 @@ export async function confirmFieldBooking(
  * Get list of user bookings
  */
 export const getMyBookingsApi = async (
-  status?: "pending" | "confirmed" | "cancelled" | "completed",
+  status?:
+    | "pending"
+    | "confirmed"
+    | "cancelled"
+    | "completed"
+    | "cancellation_pending",
   limit: number = 10,
   offset: number = 0,
   sort: string = "CreateAt",
@@ -213,6 +248,29 @@ export const cancelBookingApi = async (
     `/bookings/${bookingCode}/cancel`,
     { reason }
   );
+  return response.data;
+};
+
+export const respondCancellationDecisionApi = async (
+  token: string,
+  decision: "approve" | "reject"
+): Promise<
+  IApiSuccessResponse<{
+    bookingCode: number;
+    decision: "approved" | "rejected";
+    refundAmount?: number | null;
+  }>
+> => {
+  const response = await api.post<
+    IApiSuccessResponse<{
+      bookingCode: number;
+      decision: "approved" | "rejected";
+      refundAmount?: number | null;
+    }>
+  >(`/bookings/cancellation-requests/respond`, {
+    token,
+    decision,
+  });
   return response.data;
 };
 
