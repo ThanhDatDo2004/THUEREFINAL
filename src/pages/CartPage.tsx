@@ -75,9 +75,12 @@ const CartPage: React.FC = () => {
     try {
       setOrdersLoading(true);
       setOrdersError(null);
-      const response = await getMyBookingsApi("confirmed", 20, 0);
+      const response = await getMyBookingsApi(undefined, 20, 0);
       const payload = response.data;
-      setOrders(payload?.data ?? []);
+      const paidOrders =
+        payload?.data?.filter((booking) => booking.PaymentStatus === "paid") ??
+        [];
+      setOrders(paidOrders);
     } catch (err: unknown) {
       const message = extractErrorMessage(
         err,
@@ -458,6 +461,12 @@ const CartPage: React.FC = () => {
                           label: "Đang chờ hủy",
                           className:
                             "bg-amber-50 text-amber-700 border-amber-200",
+                        }
+                      : booking.BookingStatus === "cancelled"
+                      ? {
+                          label: "Đã hủy",
+                          className:
+                            "bg-rose-50 text-rose-700 border-rose-200",
                         }
                       : getBookingStatusBadge(booking.BookingStatus);
                     const disableCancel =
