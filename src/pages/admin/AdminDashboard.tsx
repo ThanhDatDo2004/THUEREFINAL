@@ -18,7 +18,6 @@ import {
   RefreshCw,
   ScanLine,
   TrendingUp,
-  Users,
   Wallet2,
 } from "lucide-react";
 
@@ -603,7 +602,7 @@ const AdminDashboard: React.FC = () => {
             </p>
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          {/* <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="flex items-center justify-between text-sm font-semibold text-slate-500">
               Tỷ trọng dòng tiền
               <TrendingUp className="h-5 w-5 text-emerald-500" />
@@ -625,9 +624,9 @@ const AdminDashboard: React.FC = () => {
                 />
               </div>
             </div>
-          </div>
+          </div> */}
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          {/* <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="flex items-center justify-between text-sm font-semibold text-slate-500">
               Khách hàng nổi bật
               <Users className="h-5 w-5 text-emerald-500" />
@@ -658,9 +657,9 @@ const AdminDashboard: React.FC = () => {
                 </div>
               )}
             </div>
-          </div>
+          </div> */}
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          {/* <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="flex items-center justify-between text-sm font-semibold text-slate-500">
               Sân mang lại doanh thu cao
               <Building2 className="h-5 w-5 text-emerald-500" />
@@ -691,9 +690,9 @@ const AdminDashboard: React.FC = () => {
                 </div>
               )}
             </div>
-          </div>
+          </div> */}
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          {/* <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="flex items-center justify-between text-sm font-semibold text-slate-500">
               Gần nhất
               <Clock className="h-5 w-5 text-emerald-500" />
@@ -725,7 +724,7 @@ const AdminDashboard: React.FC = () => {
                 </div>
               )}
             </div>
-          </div>
+          </div> */}
         </div>
       </section>
 
@@ -866,7 +865,7 @@ const AdminDashboard: React.FC = () => {
                   Tổng tiền
                 </th>
                 <th className="px-4 py-3 text-right font-semibold">Phí nền</th>
-                <th className="px-4 py-3 text-right font-semibold">Net nhận</th>
+                <th className="px-4 py-3 text-right font-semibold">Shop nhận</th>
                 <th className="px-4 py-3 text-left font-semibold">Booking</th>
                 <th className="px-4 py-3 text-left font-semibold">
                   Thanh toán
