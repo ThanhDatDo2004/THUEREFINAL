@@ -12,6 +12,10 @@ const BOOKING_STATUS_BADGES: Record<string, StatusBadgeMeta> = {
     label: "Đã xác nhận",
     className: "bg-emerald-50 text-emerald-700 border-emerald-200",
   },
+  completed: {
+    label: "Đã hoàn tất",
+    className: "bg-blue-50 text-blue-700 border-blue-200",
+  },
 
   cancellation_pending: {
     label: "Đang chờ hủy",

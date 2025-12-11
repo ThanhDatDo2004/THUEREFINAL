@@ -182,10 +182,7 @@ const CartPage: React.FC = () => {
       );
       await loadOrders();
     } catch (err: unknown) {
-      const message = extractErrorMessage(
-        err,
-        "Không thể gửi yêu cầu hủy sân"
-      );
+      const message = extractErrorMessage(err, "Không thể gửi yêu cầu hủy sân");
       setOrdersError(message);
     } finally {
       setOrdersProcessing((prev) => {
@@ -268,8 +265,7 @@ const CartPage: React.FC = () => {
                     Giỏ hàng đang trống
                   </h2>
                   <p className="mt-2 text-sm text-gray-500">
-                    Bạn chưa giữ sân nào. Hãy khám phá các sân và đặt lịch
-                    ngay.
+                    Bạn chưa giữ sân nào. Hãy khám phá các sân và đặt lịch ngay.
                   </p>
                   <button
                     onClick={() => navigate("/fields")}
@@ -280,13 +276,13 @@ const CartPage: React.FC = () => {
                 </div>
               ) : (
                 <div className="space-y-6">
-              {items.map((item) => {
-                const remainingSeconds = secondsRemaining(item);
-                const isExpired = remainingSeconds <= 0;
-                const cartCancellationPending =
-                  item.bookingStatus === "cancellation_pending";
+                  {items.map((item) => {
+                    const remainingSeconds = secondsRemaining(item);
+                    const isExpired = remainingSeconds <= 0;
+                    const cartCancellationPending =
+                      item.bookingStatus === "cancellation_pending";
 
-                return (
+                    return (
                       <div
                         key={item.cartId}
                         className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition hover:shadow-md"
@@ -331,23 +327,24 @@ const CartPage: React.FC = () => {
                                   ? "bg-amber-50 text-amber-700"
                                   : "bg-emerald-50 text-emerald-700"
                               }`}
-                        >
-                          <Clock className="h-4 w-4" />
-                          {isExpired
-                            ? "Đã hết thời gian giữ"
-                            : `Giữ chỗ còn ${formatCountdown(
-                                remainingSeconds
-                              )}`}
-                        </div>
-                        {cartCancellationPending && (
-                          <p className="text-xs text-amber-600">
-                            Đã gửi yêu cầu hủy. Vui lòng đợi chủ sân xác nhận.
-                          </p>
-                        )}
-                        <p className="text-xs text-gray-500">
-                          Tạo lúc:{" "}
-                          {new Date(item.createdAt).toLocaleString("vi-VN")}
-                        </p>
+                            >
+                              <Clock className="h-4 w-4" />
+                              {isExpired
+                                ? "Đã hết thời gian giữ"
+                                : `Giữ chỗ còn ${formatCountdown(
+                                    remainingSeconds
+                                  )}`}
+                            </div>
+                            {cartCancellationPending && (
+                              <p className="text-xs text-amber-600">
+                                Đã gửi yêu cầu hủy. Vui lòng đợi chủ sân xác
+                                nhận.
+                              </p>
+                            )}
+                            <p className="text-xs text-gray-500">
+                              Tạo lúc:{" "}
+                              {new Date(item.createdAt).toLocaleString("vi-VN")}
+                            </p>
                           </div>
                         </div>
 
@@ -412,7 +409,7 @@ const CartPage: React.FC = () => {
               )}
             </div>
 
-            <aside className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+            <aside className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
               <div className="flex items-start gap-3">
                 <div className="rounded-full bg-emerald-50 p-3 text-emerald-600">
                   <ListChecks className="h-5 w-5" />
@@ -465,8 +462,7 @@ const CartPage: React.FC = () => {
                       : booking.BookingStatus === "cancelled"
                       ? {
                           label: "Đã hủy",
-                          className:
-                            "bg-rose-50 text-rose-700 border-rose-200",
+                          className: "bg-rose-50 text-rose-700 border-rose-200",
                         }
                       : getBookingStatusBadge(booking.BookingStatus);
                     const disableCancel =
@@ -498,7 +494,7 @@ const CartPage: React.FC = () => {
                           </div>
                           <div className="text-right">
                             <span
-                              className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold ${badge.className}`}
+                              className={`inline-flex items-center gap-2 rounded-full border px-1 py-1 text-xs font-semibold ${badge.className}`}
                             >
                               {badge.label}
                             </span>
@@ -509,7 +505,7 @@ const CartPage: React.FC = () => {
                         </div>
                         {booking.cancellationStatus === "pending" && (
                           <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-700">
-                          Đã gửi yêu cầu hủy. Chủ sân sẽ liên hệ với bạn sớm
+                            Đã gửi yêu cầu hủy. Chủ sân sẽ liên hệ với bạn sớm
                             nhất.
                           </div>
                         )}

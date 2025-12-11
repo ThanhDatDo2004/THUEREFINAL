@@ -99,20 +99,18 @@ const ShopBookingsPage: React.FC = () => {
 
         const rows = Array.isArray(result.data) ? result.data : [];
         let nextRows = rows;
-        let nextPagination =
-          result.pagination ?? {
-            limit: ITEMS_PER_PAGE,
-            offset: (page - 1) * ITEMS_PER_PAGE,
-            total: rows.length,
-          };
+        let nextPagination = result.pagination ?? {
+          limit: ITEMS_PER_PAGE,
+          offset: (page - 1) * ITEMS_PER_PAGE,
+          total: rows.length,
+        };
 
         if (isCheckinQuery && normalizedSearch) {
           const normalizedSearchLower = normalizedSearch.toLowerCase();
           const checkinMatches = rows.filter((booking) => {
-            const code =
-              (booking.CheckinCode ||
-                (booking as Record<string, unknown>).checkin_code ||
-                "") as string;
+            const code = (booking.CheckinCode ||
+              (booking as Record<string, unknown>).checkin_code ||
+              "") as string;
             return code.toLowerCase().includes(normalizedSearchLower);
           });
           if (checkinMatches.length > 0) {
@@ -181,6 +179,7 @@ const ShopBookingsPage: React.FC = () => {
   const stats = {
     total: totalBookings,
     pending: summary.bookingStatus.pending,
+    completed: summary.bookingStatus.completed,
     confirmed: summary.bookingStatus.confirmed,
     cancelled: summary.bookingStatus.cancelled,
     cancellationPending: summary.bookingStatus.cancellation_pending,
@@ -192,20 +191,26 @@ const ShopBookingsPage: React.FC = () => {
       value: stats.total,
       description: "Toàn bộ đơn đặt",
     },
-      {
-        label: "Đang chờ",
-        value: stats.pending,
-        description: "Cần xác nhận",
-      },
-      {
-        label: "Chờ hủy",
-        value: stats.cancellationPending,
-        description: "Đợi phản hồi chủ sân",
-      },
+    {
+      label: "Đang chờ",
+      value: stats.pending,
+      description: "Cần xác nhận",
+    },
+
+    {
+      label: "Chờ hủy",
+      value: stats.cancellationPending,
+      description: "Đợi phản hồi chủ sân",
+    },
     {
       label: "Đã xác nhận",
       value: stats.confirmed,
       description: "Sẵn sàng phục vụ",
+    },
+    {
+      label: "Đã hoàn thành",
+      value: stats.completed,
+      description: "Đã sử dụng dịch vụ",
     },
     {
       label: "Đã hủy",
@@ -361,7 +366,8 @@ const ShopBookingsPage: React.FC = () => {
                                 #{booking.BookingCode}
                               </p>
                               <p className="text-sm text-slate-600">
-                                {booking.FieldName || `Sân ${booking.FieldCode}`}
+                                {booking.FieldName ||
+                                  `Sân ${booking.FieldCode}`}
                               </p>
                             </div>
                             <div className="flex flex-wrap gap-2">

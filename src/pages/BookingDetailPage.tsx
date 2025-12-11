@@ -308,16 +308,7 @@ const BookingDetailPage: React.FC = () => {
                           Sân {slot.QuantityNumber}
                         </span>
                       )}
-                      {(() => {
-                        const badge = getSlotStatusBadge(slot.Status);
-                        return (
-                          <span
-                            className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${badge.bg} ${badge.text}`}
-                          >
-                            {badge.label}
-                          </span>
-                        );
-                      })()}
+                  
                     </div>
                   </div>
                 ))}
