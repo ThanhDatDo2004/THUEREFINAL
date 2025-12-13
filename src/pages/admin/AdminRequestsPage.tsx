@@ -290,32 +290,34 @@ const AdminRequestsPage: React.FC = () => {
                 <p className="mt-3 text-sm text-slate-600">
                   {r.message || "Không có ghi chú bổ sung."}
                 </p>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    className="btn-primary flex items-center gap-1 disabled:opacity-60 disabled:cursor-not-allowed"
-                    disabled={updatingId === r.request_id}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      void handleUpdateStatus(r, "approved");
-                    }}
-                  >
-                    <CheckCircle2 className="h-4 w-4" />
-                    Duyệt
-                  </button>
-                  <button
-                    type="button"
-                    className="btn-outline flex items-center gap-1 text-rose-600 border-rose-200 hover:bg-rose-50 disabled:opacity-60 disabled:cursor-not-allowed"
-                    disabled={updatingId === r.request_id}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      void handleUpdateStatus(r, "rejected");
-                    }}
-                  >
-                    <Ban className="h-4 w-4" />
-                    Từ chối
-                  </button>
-                </div>
+                {r.status === "pending" && (
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      className="btn-primary flex items-center gap-1 disabled:opacity-60 disabled:cursor-not-allowed"
+                      disabled={updatingId === r.request_id}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        void handleUpdateStatus(r, "approved");
+                      }}
+                    >
+                      <CheckCircle2 className="h-4 w-4" />
+                      Duyệt
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-outline flex items-center gap-1 text-rose-600 border-rose-200 hover:bg-rose-50 disabled:opacity-60 disabled:cursor-not-allowed"
+                      disabled={updatingId === r.request_id}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        void handleUpdateStatus(r, "rejected");
+                      }}
+                    >
+                      <Ban className="h-4 w-4" />
+                      Từ chối
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
             {!filtered.length && (
