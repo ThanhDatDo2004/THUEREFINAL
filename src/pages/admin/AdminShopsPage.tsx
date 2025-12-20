@@ -133,7 +133,9 @@ const AdminShopsPage: React.FC = () => {
               </div>
               <select
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as ShopStatusFilter)}
+                onChange={(e) =>
+                  setStatusFilter(e.target.value as ShopStatusFilter)
+                }
                 className="rounded-2xl border border-white/30 bg-white/20 px-4 py-2 text-sm font-semibold text-white focus:border-white focus:outline-none focus:ring-2 focus:ring-white/40"
               >
                 <option value="all">Tất cả trạng thái</option>
@@ -202,9 +204,7 @@ const AdminShopsPage: React.FC = () => {
                     <p className="text-xs text-slate-500">
                       Chủ sở hữu #{shop.user_code}
                     </p>
-                    <p className="text-sm text-slate-600">
-                      #{shop.shop_code}
-                    </p>
+                    <p className="text-sm text-slate-600">#{shop.shop_code}</p>
                   </div>
                   {renderStatusBadge(shop)}
                 </div>
@@ -214,9 +214,7 @@ const AdminShopsPage: React.FC = () => {
                     <p>{shop.address || "Chưa cập nhật"}</p>
                   </div>
                   <div>
-                    <p className="font-semibold text-slate-700">
-                      Ngân hàng
-                    </p>
+                    <p className="font-semibold text-slate-700">Ngân hàng</p>
                     <p>
                       {shop.bank_name || "—"}
                       {shop.bank_account_number &&
@@ -224,9 +222,7 @@ const AdminShopsPage: React.FC = () => {
                     </p>
                   </div>
                   <div>
-                    <p className="font-semibold text-slate-700">
-                      Mã shop
-                    </p>
+                    <p className="font-semibold text-slate-700">Mã shop</p>
                     <p>#{shop.shop_code}</p>
                   </div>
                 </div>
@@ -272,19 +268,6 @@ const AdminShopsPage: React.FC = () => {
                 </p>
                 {renderStatusBadge(selectedShop)}
               </div>
-              <button
-                type="button"
-                className="btn-outline flex w-full items-center justify-center gap-2"
-                onClick={() =>
-                  window.open(
-                    `/shop?shop_code=${selectedShop.shop_code}`,
-                    "_blank"
-                  )
-                }
-              >
-                <ExternalLink className="h-4 w-4" />
-                Xem trang shop
-              </button>
             </div>
           ) : (
             <p className="mt-4 text-sm text-slate-500">

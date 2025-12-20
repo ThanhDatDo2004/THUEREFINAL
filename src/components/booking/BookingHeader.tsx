@@ -6,10 +6,7 @@ interface BookingHeaderProps {
   loading: boolean;
 }
 
-/**
- * Header component for booking page
- * Displays field information and images
- */
+
 export const BookingHeader: React.FC<BookingHeaderProps> = ({ field, loading }) => {
   if (loading) {
     return (

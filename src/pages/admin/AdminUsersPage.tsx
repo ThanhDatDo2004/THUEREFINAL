@@ -404,7 +404,7 @@ const AdminUsersPage: React.FC = () => {
                   {selectedUser.user_name}
                 </p>
               </div>
-           
+
               <div>
                 <p className="text-xs uppercase text-slate-400">Email</p>
                 <a
@@ -434,18 +434,7 @@ const AdminUsersPage: React.FC = () => {
                   #{selectedUser.user_code}
                 </p>
               </div>
-              <button
-                type="button"
-                className="btn-primary w-full"
-                onClick={() =>
-                  window.open(
-                    `mailto:${selectedUser.email}?subject=Hỗ trợ từ Admin`,
-                    "_blank"
-                  )
-                }
-              >
-                Liên hệ qua email
-              </button>
+
               <button
                 type="button"
                 className={`w-full rounded-xl px-4 py-2 text-sm font-semibold ${

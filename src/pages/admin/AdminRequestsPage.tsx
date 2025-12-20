@@ -361,16 +361,6 @@ const AdminRequestsPage: React.FC = () => {
                 <p className="text-xs uppercase text-slate-400">Trạng thái</p>
                 {statusBadge(selected.status)}
               </div>
-              <button
-                type="button"
-                className="btn-outline flex w-full items-center justify-center gap-2"
-                onClick={() =>
-                  window.open(`mailto:${selected.email}`, "_blank")
-                }
-              >
-                <Mail className="h-4 w-4" />
-                Liên hệ qua email
-              </button>
             </div>
           ) : (
             <p className="mt-4 text-sm text-slate-500">

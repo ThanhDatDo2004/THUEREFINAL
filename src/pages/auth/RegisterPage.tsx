@@ -110,11 +110,7 @@ const RegisterPage: React.FC = () => {
         response?: { data?: { message?: string } };
         message?: string;
       };
-      return (
-        err.response?.data?.message ??
-        err.message ??
-        fallback
-      );
+      return err.response?.data?.message ?? err.message ?? fallback;
     }
     return fallback;
   };
@@ -158,7 +154,9 @@ const RegisterPage: React.FC = () => {
       });
 
       if (!data?.success) {
-        throw new Error(data?.message || "Mã xác minh không đúng hoặc đã hết hạn.");
+        throw new Error(
+          data?.message || "Mã xác minh không đúng hoặc đã hết hạn."
+        );
       }
       setVerifyPhase("verified");
       setServerMsg("Xác minh email thành công!");
@@ -232,7 +230,9 @@ const RegisterPage: React.FC = () => {
               </div>
               <div>
                 <h2 className="hero-card-title">Đăng ký tài khoản</h2>
-                <p className="hero-card-subtitle">Tạo tài khoản khách hàng của bạn</p>
+                <p className="hero-card-subtitle">
+                  Tạo tài khoản khách hàng của bạn
+                </p>
               </div>
             </div>
           </div>
@@ -241,7 +241,8 @@ const RegisterPage: React.FC = () => {
             <div className="grid grid-cols-1 gap-6">
               <div>
                 <label className="label text-white/80">
-                  <User className="w-4 h-4 inline mr-2" />Họ tên
+                  <User className="w-4 h-4 inline mr-2" />
+                  Họ tên
                 </label>
                 <input
                   type="text"
@@ -253,13 +254,16 @@ const RegisterPage: React.FC = () => {
                   placeholder="Nhập họ tên của bạn"
                 />
                 {errors.user_name && (
-                  <p className="text-red-400 text-sm mt-1">{errors.user_name.message}</p>
+                  <p className="text-red-400 text-sm mt-1">
+                    {errors.user_name.message}
+                  </p>
                 )}
               </div>
 
               <div>
                 <label className="label text-white/80">
-                  <Mail className="w-4 h-4 inline mr-2" />Email
+                  <Mail className="w-4 h-4 inline mr-2" />
+                  Email
                 </label>
                 <input
                   type="email"
@@ -275,14 +279,17 @@ const RegisterPage: React.FC = () => {
                   autoComplete="email"
                 />
                 {errors.email && (
-                  <p className="text-red-400 text-sm mt-1">{errors.email.message}</p>
+                  <p className="text-red-400 text-sm mt-1">
+                    {errors.email.message}
+                  </p>
                 )}
               </div>
 
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
                   <label className="label text-white/80">
-                    <Lock className="w-4 h-4 inline mr-2" />Mật khẩu
+                    <Lock className="w-4 h-4 inline mr-2" />
+                    Mật khẩu
                   </label>
                   <div className="relative">
                     <input
@@ -300,17 +307,24 @@ const RegisterPage: React.FC = () => {
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-300"
                     >
-                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                      {showPassword ? (
+                        <EyeOff className="w-5 h-5" />
+                      ) : (
+                        <Eye className="w-5 h-5" />
+                      )}
                     </button>
                   </div>
                   {errors.password && (
-                    <p className="text-red-400 text-sm mt-1">{errors.password.message}</p>
+                    <p className="text-red-400 text-sm mt-1">
+                      {errors.password.message}
+                    </p>
                   )}
                 </div>
 
                 <div>
                   <label className="label text-white/80">
-                    <Lock className="w-4 h-4 inline mr-2" />Xác nhận mật khẩu
+                    <Lock className="w-4 h-4 inline mr-2" />
+                    Xác nhận mật khẩu
                   </label>
                   <div className="relative">
                     <input
@@ -318,7 +332,8 @@ const RegisterPage: React.FC = () => {
                       {...register("confirmPassword", {
                         required: "Vui lòng xác nhận mật khẩu",
                         validate: (value) =>
-                          value === watch("password") || "Mật khẩu xác nhận không khớp",
+                          value === watch("password") ||
+                          "Mật khẩu xác nhận không khớp",
                       })}
                       className="input"
                       placeholder="Nhập lại mật khẩu"
@@ -326,21 +341,30 @@ const RegisterPage: React.FC = () => {
                     />
                     <button
                       type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      onClick={() =>
+                        setShowConfirmPassword(!showConfirmPassword)
+                      }
                       className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-300"
                     >
-                      {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                      {showConfirmPassword ? (
+                        <EyeOff className="w-5 h-5" />
+                      ) : (
+                        <Eye className="w-5 h-5" />
+                      )}
                     </button>
                   </div>
                   {errors.confirmPassword && (
-                    <p className="text-red-400 text-sm mt-1">{errors.confirmPassword.message}</p>
+                    <p className="text-red-400 text-sm mt-1">
+                      {errors.confirmPassword.message}
+                    </p>
                   )}
                 </div>
               </div>
 
               <div className="space-y-3">
                 <label className="label text-white/80 flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4" />Xác minh email
+                  <CheckCircle2 className="w-4 h-4" />
+                  Xác minh email
                 </label>
                 <div className="flex gap-2">
                   <button
@@ -349,7 +373,9 @@ const RegisterPage: React.FC = () => {
                     onClick={sendCode}
                     disabled={!canSendCode || verifyPhase === "sending"}
                   >
-                    {verifyPhase === "sending" ? "Đang gửi..." : "Gửi mã xác minh"}
+                    {verifyPhase === "sending"
+                      ? "Đang gửi..."
+                      : "Gửi mã xác minh"}
                   </button>
                   {resendIn > 0 && (
                     <div className="px-4 py-2 rounded-lg bg-white/10 text-white/80 flex items-center gap-2">
@@ -358,9 +384,13 @@ const RegisterPage: React.FC = () => {
                     </div>
                   )}
                 </div>
-                {serverMsg && <p className="text-sm text-amber-200">{serverMsg}</p>}
+                {serverMsg && (
+                  <p className="text-sm text-amber-200">{serverMsg}</p>
+                )}
 
-                {verifyPhase === "sent" || verifyPhase === "verifying" || verifyPhase === "verified" ? (
+                {verifyPhase === "sent" ||
+                verifyPhase === "verifying" ||
+                verifyPhase === "verified" ? (
                   <div className="space-y-3">
                     <div className="flex gap-3">
                       <input
@@ -376,10 +406,14 @@ const RegisterPage: React.FC = () => {
                         onClick={verifyCode}
                         disabled={verifyPhase === "verifying"}
                       >
-                        {verifyPhase === "verifying" ? "Đang kiểm tra..." : "Xác minh"}
+                        {verifyPhase === "verifying"
+                          ? "Đang kiểm tra..."
+                          : "Xác minh"}
                       </button>
                     </div>
-                    {otpError && <p className="text-sm text-red-400">{otpError}</p>}
+                    {otpError && (
+                      <p className="text-sm text-red-400">{otpError}</p>
+                    )}
                   </div>
                 ) : null}
 
